@@ -47,14 +47,16 @@ def icon(d, cx, cy, r, kind, col=(255, 248, 235)):
             d.rounded_rectangle([cx + i * r * .28 - r * .08, cy - h, cx + i * r * .28 + r * .08, cy + h], radius=4, fill=col)
 
 TILES = [("Rain", "rain"), ("Ocean", "wave"), ("Wind", "wind"), ("Fireplace", "fire"), ("Night", "moon"), ("Forest", "leaf"),
-         ("White Noise", "noise"), ("Creek", "wave"), ("Thunder", "rain")]
+         ("White Noise", "noise"), ("Creek", "wave"), ("Thunder", "rain"), ("Waterfall", "wave"), ("Fan", "wind"), ("Brown Noise", "noise"),
+         ("Snow", "rain"), ("Cave", "moon"), ("Lake", "wave")]
 
 def phone_screen(W, H, kind):
     s = W / 1290
     im = grad(W, H); d = ImageDraw.Draw(im)
     pad = int(60 * s)
-    d.text((pad, int(150 * s)), "Lulla", font=font("ExtraBold", int(100 * s)), fill=TXT)
-    d.text((pad, int(265 * s)), "Sleep sounds, softly.", font=font("Regular", int(42 * s)), fill=SUB)
+    if kind != "paywall":
+        d.text((pad, int(150 * s)), "Lulla", font=font("ExtraBold", int(100 * s)), fill=TXT)
+        d.text((pad, int(265 * s)), "Sleep sounds, softly.", font=font("Regular", int(42 * s)), fill=SUB)
 
     if kind in ("grid", "playing", "mix"):
         pill = "Free: 2:41 left" if kind == "grid" else "Premium"
@@ -103,9 +105,10 @@ def phone_screen(W, H, kind):
             f = font("SemiBold", int(48 * s)); w = d.textlength(t, font=f)
             d.text(((W - w) / 2, y + int(45 * s)), t, font=f, fill=TXT)
     elif kind == "paywall":
-        icon(d, W // 2, int(620 * s), int(150 * s), "moon")
-        for i, (xx, yy) in enumerate([(.2, .22), (.82, .3), (.7, .17), (.12, .38)]):
-            d.ellipse([W * xx - 8, H * yy - 8, W * xx + 8, H * yy + 8], fill=(255, 248, 235))
+        sz = int(300 * s)
+        ic = Image.open(sys.argv[2]).convert("RGB").resize((sz, sz), Image.LANCZOS)
+        m = Image.new("L", (sz, sz), 0); ImageDraw.Draw(m).rounded_rectangle([0, 0, sz, sz], radius=int(sz * .22), fill=255)
+        im.paste(ic, ((W - sz) // 2, int(470 * s)), m)
         t = "Sleep deeper with Lulla"; f = font("ExtraBold", int(78 * s)); w = d.textlength(t, font=f)
         d.text(((W - w) / 2, int(860 * s)), t, font=f, fill=TXT)
         for j, p in enumerate(["25+ high-quality sleep sounds", "Layer sounds into your own mix", "Sleep timer with gentle fade-out", "Plays in the background"]):
@@ -142,8 +145,9 @@ def shot(W, H, kind):
     return base
 
 for kind in CAPTIONS:
-    shot(1290, 2796, kind).save(f"{OUT}/ios_6.7in_{kind}.png")
-    shot(1080, 1920, kind).save(f"{OUT}/android_phone_{kind}.png")
+    shot(1320, 2868, kind).save(f"{OUT}/ios_6.9in_1320x2868_{kind}.png")
+    shot(1290, 2796, kind).save(f"{OUT}/ios_6.7in_1290x2796_{kind}.png")
+    shot(1080, 1920, kind).save(f"{OUT}/android_phone_1080x1920_{kind}.png")
 
 # Play feature graphic 1024x500
 fg = grad(1024, 500); d = ImageDraw.Draw(fg)
