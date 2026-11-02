@@ -1,25 +1,62 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "Lulla - Sleep Sounds",
+    "slug": "lulla",
+    "scheme": "lulla",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#150a2e",
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.samay.lulla",
+      "supportsTablet": false,
+      "buildNumber": "1",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.samay.lulla",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#150a2e",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": [
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "WAKE_LOCK"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "backgroundColor": "#150a2e",
+          "imageWidth": 200
+        }
+      ],
+      "expo-audio",
+      "expo-secure-store",
+      "expo-asset",
+      "expo-build-properties"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cf050aa6-2a3d-434d-ab15-f142be58d75c"
+      }
+    },
+    "owner": "krosz"
   }
 }
