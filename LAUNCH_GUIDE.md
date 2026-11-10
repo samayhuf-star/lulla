@@ -51,7 +51,7 @@ eas submit --platform android --latest
 Test first with TestFlight / Play internal testing + sandbox tester accounts. Verify: free minutes count down, paywall appears at 0:00, purchase unlocks, restore works.
 
 ### 5. Host the privacy policy
-`store/privacy-policy.md` must be live at a public URL. Update `PRIVACY_URL` in `app/src/config.ts` (currently placeholder `https://samayhuf-star.github.io/lulla/privacy`).
+`store/privacy-policy.md` must be live at a public URL. Update `PRIVACY_URL` in `app/src/config.ts` (currently placeholder `https://krosz-app-policies.netlify.app/privacy`).
 
 ## Known limits / decisions
 - Trial is device-local. A user who wipes keychain (Android reinstall) gets a new 3 minutes; acceptable at this price. Server-side enforcement would need accounts.

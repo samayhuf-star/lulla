@@ -12,5 +12,5 @@ export const PRODUCT_ID_ANNUAL = 'lulla_premium_yearly';
 export const RC_API_KEY_IOS = process.env.EXPO_PUBLIC_RC_IOS_KEY ?? 'appl_REPLACE_ME';
 export const RC_API_KEY_ANDROID = process.env.EXPO_PUBLIC_RC_ANDROID_KEY ?? 'goog_REPLACE_ME';
 
-export const PRIVACY_URL = 'https://samayhuf-star.github.io/lulla/privacy';
+export const PRIVACY_URL = 'https://krosz-app-policies.netlify.app/privacy';
 export const TERMS_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
