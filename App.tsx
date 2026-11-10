@@ -10,11 +10,13 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import type { PurchasesPackage } from 'react-native-purchases';
 
 import { CATEGORIES, SOUNDS, SOUND_BY_ID, TIMER_OPTIONS, Category } from './src/catalog';
-import { FREE_SECONDS, PRICE_LABEL, PRIVACY_URL, TERMS_URL } from './src/config';
+import {
+  ANNUAL_SAVE_PCT, FREE_SECONDS, PRICE_ANNUAL, PRICE_ANNUAL_PER_MONTH, PRICE_MONTHLY, PRIVACY_URL, TERMS_URL,
+} from './src/config';
 import { mixer } from './src/mixer';
 import { addUsed, loadUsed, persistUsed, remainingSeconds } from './src/trial';
 import {
-  getCustomerInfo, getMonthlyPackage, hasPremium, initPurchases, isConfigured,
+  getCustomerInfo, getPlans, hasPremium, initPurchases, isConfigured,
   onCustomerInfo, purchase, restore,
 } from './src/purchases';
 
@@ -263,17 +265,25 @@ function VolumeBar({ value, onChange }: { value: number; onChange: (v: number) =
   );
 }
 
+type PlanKey = 'annual' | 'monthly';
+
 function Paywall({ visible, onClose, onUnlocked, expired }: {
   visible: boolean; onClose: () => void; onUnlocked: () => void; expired: boolean;
 }) {
-  const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
+  const [plans, setPlans] = useState<{ monthly: PurchasesPackage | null; annual: PurchasesPackage | null }>({ monthly: null, annual: null });
+  const [plan, setPlan] = useState<PlanKey>('annual');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (visible) getMonthlyPackage().then(setPkg);
+    if (visible) { setPlan('annual'); getPlans().then(setPlans); }
   }, [visible]);
 
+  const monthlyPrice = plans.monthly?.product.priceString ?? PRICE_MONTHLY;
+  const annualPrice = plans.annual?.product.priceString ?? PRICE_ANNUAL;
+  const store = Platform.OS === 'ios' ? 'Apple ID' : 'Google Play';
+
   const buy = async () => {
+    const pkg = plans[plan];
     if (!isConfigured() || !pkg) {
       Alert.alert('Store unavailable', 'Subscriptions are not available right now. Please try again shortly.');
       return;
@@ -302,18 +312,31 @@ function Paywall({ visible, onClose, onUnlocked, expired }: {
         <SafeAreaView style={[styles.fill, { padding: 24 }]}>
           <Pressable onPress={onClose} style={{ alignSelf: 'flex-end' }}><Text style={styles.remove}>✕</Text></Pressable>
           <View style={{ flex: 1, justifyContent: 'center' }}>
-            <Text style={{ fontSize: 64, textAlign: 'center' }}>🌙</Text>
+            <Text style={{ fontSize: 56, textAlign: 'center' }}>🌙</Text>
             <Text style={styles.payTitle}>{expired ? 'Your free 3 minutes are up' : 'Sleep deeper with Lulla'}</Text>
             <Text style={styles.paySub}>Keep the calm going all night.</Text>
             {['25+ high-quality sleep sounds', 'Layer sounds into your own mix', 'Sleep timer with gentle fade-out', 'Plays in the background, screen off'].map((t) => (
               <Text key={t} style={styles.perk}>✓  {t}</Text>
             ))}
+            <View style={styles.planRow}>
+              <Pressable style={[styles.plan, plan === 'annual' && styles.planOn]} onPress={() => setPlan('annual')}>
+                <View style={styles.badge}><Text style={styles.badgeText}>SAVE {ANNUAL_SAVE_PCT}%</Text></View>
+                <Text style={styles.planName}>Yearly</Text>
+                <Text style={styles.planPrice}>{annualPrice}</Text>
+                <Text style={styles.planNote}>{PRICE_ANNUAL_PER_MONTH} / month</Text>
+              </Pressable>
+              <Pressable style={[styles.plan, plan === 'monthly' && styles.planOn]} onPress={() => setPlan('monthly')}>
+                <Text style={styles.planName}>Monthly</Text>
+                <Text style={styles.planPrice}>{monthlyPrice}</Text>
+                <Text style={styles.planNote}>per month</Text>
+              </Pressable>
+            </View>
           </View>
           <Pressable style={[styles.cta, busy && { opacity: 0.6 }]} disabled={busy} onPress={buy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Subscribe · {pkg?.product.priceString ?? '$1.99'} / month</Text>}
+            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>{plan === 'annual' ? `Continue · ${annualPrice} / year` : `Continue · ${monthlyPrice} / month`}</Text>}
           </Pressable>
           <Text style={styles.fine}>
-            {PRICE_LABEL}, auto-renews monthly until cancelled. Cancel anytime in your {Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.
+            {plan === 'annual' ? `${annualPrice} per year` : `${monthlyPrice} per month`}, auto-renews until cancelled. Cancel anytime in your {store} subscription settings, at least 24 hours before renewal.
           </Text>
           <View style={styles.links}>
             <Pressable onPress={doRestore}><Text style={styles.link}>Restore purchases</Text></Pressable>
@@ -365,6 +388,14 @@ const styles = StyleSheet.create({
   payTitle: { color: C.text, fontSize: 26, fontWeight: '800', textAlign: 'center', marginTop: 12 },
   paySub: { color: C.sub, textAlign: 'center', marginTop: 6, marginBottom: 24 },
   perk: { color: C.text, fontSize: 16, marginVertical: 6, paddingHorizontal: 24 },
+  planRow: { flexDirection: 'row', gap: 12, marginTop: 20, paddingHorizontal: 4 },
+  plan: { flex: 1, borderRadius: 18, paddingVertical: 18, paddingHorizontal: 10, alignItems: 'center', backgroundColor: C.card, borderWidth: 2, borderColor: 'transparent' },
+  planOn: { borderColor: C.accent, backgroundColor: C.cardOn },
+  badge: { position: 'absolute', top: -11, backgroundColor: C.accent2, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+  badgeText: { color: '#fff', fontSize: 11, fontWeight: '800' },
+  planName: { color: C.sub, fontWeight: '700', fontSize: 13 },
+  planPrice: { color: C.text, fontWeight: '800', fontSize: 22, marginTop: 4 },
+  planNote: { color: C.sub, fontSize: 12, marginTop: 2 },
   cta: { backgroundColor: C.accent2, paddingVertical: 18, borderRadius: 999, alignItems: 'center' },
   ctaText: { color: '#fff', fontSize: 17, fontWeight: '800' },
   fine: { color: C.sub, fontSize: 11, textAlign: 'center', marginTop: 12, lineHeight: 16 },

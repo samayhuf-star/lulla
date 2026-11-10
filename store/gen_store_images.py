@@ -114,7 +114,7 @@ def phone_screen(W, H, kind):
         for j, p in enumerate(["25+ high-quality sleep sounds", "Layer sounds into your own mix", "Sleep timer with gentle fade-out", "Plays in the background"]):
             d.text((pad + int(60 * s), int(1100 * s) + j * int(110 * s)), "✓  " + p if False else "+  " + p, font=font("Medium", int(50 * s)), fill=TXT)
         d.rounded_rectangle([pad, H - int(480 * s), W - pad, H - int(320 * s)], radius=int(80 * s), fill=ACC2)
-        t = "Subscribe · $1.99 / month"; f = font("Bold", int(56 * s)); w = d.textlength(t, font=f)
+        t = "Continue · $41.99 / year"; f = font("Bold", int(56 * s)); w = d.textlength(t, font=f)
         d.text(((W - w) / 2, H - int(430 * s)), t, font=f, fill=(255, 255, 255))
         t = "Auto-renews monthly. Cancel anytime."; f = font("Regular", int(34 * s)); w = d.textlength(t, font=f)
         d.text(((W - w) / 2, H - int(280 * s)), t, font=f, fill=SUB)
@@ -125,7 +125,7 @@ CAPTIONS = {
     "mix": ("Build your own mix", "Layer sounds, set each volume"),
     "timer": ("Sleep timer", "Fades out gently when time is up"),
     "playing": ("Keeps playing all night", "Works with the screen off"),
-    "paywall": ("Try free for 3 minutes", "Then just $1.99 per month"),
+    "paywall": ("Try free for 3 minutes", "Then $4.99/month or $41.99/year (save 30%)"),
 }
 
 def shot(W, H, kind):

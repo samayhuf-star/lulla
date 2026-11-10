@@ -36,14 +36,15 @@ export function onCustomerInfo(cb: (info: CustomerInfo) => void) {
   };
 }
 
-export async function getMonthlyPackage(): Promise<PurchasesPackage | null> {
-  if (!configured) return null;
+export type Plans = { monthly: PurchasesPackage | null; annual: PurchasesPackage | null };
+
+export async function getPlans(): Promise<Plans> {
+  if (!configured) return { monthly: null, annual: null };
   try {
-    const offerings = await Purchases.getOfferings();
-    const cur = offerings.current;
-    return cur?.monthly ?? cur?.availablePackages[0] ?? null;
+    const cur = (await Purchases.getOfferings()).current;
+    return { monthly: cur?.monthly ?? null, annual: cur?.annual ?? null };
   } catch {
-    return null;
+    return { monthly: null, annual: null };
   }
 }
 

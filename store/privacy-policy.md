@@ -9,6 +9,6 @@ Lulla ("the app") plays ambient sleep sounds. We collect as little data as possi
 
 **Children.** Lulla is not directed to children under 13 and does not knowingly collect their data.
 
-**Subscriptions.** Lulla Premium is $1.99 per month and renews automatically until cancelled. Manage or cancel in your Apple ID or Google Play subscription settings at least 24 hours before renewal.
+**Subscriptions.** Lulla Premium is $4.99 per month or $41.99 per year and renews automatically until cancelled. Manage or cancel in your Apple ID or Google Play subscription settings at least 24 hours before renewal.
 
 **Contact.** samayhuf@gmail.com

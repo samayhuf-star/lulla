@@ -1,6 +1,6 @@
 # Lulla - Sleep Sounds
 
-Expo (React Native) sleep-sounds app. 3 minutes free, then $1.99/month via RevenueCat.
+Expo (React Native) sleep-sounds app. 3 minutes free, then $4.99/month or $41.99/year via RevenueCat.
 
 - `App.tsx`, `src/` – app code
 - `assets/sounds/` – 25 original synthesized loops
