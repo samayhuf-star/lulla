@@ -4,7 +4,7 @@ export const ENTITLEMENT_ID = 'premium';
 // Products (must match App Store Connect / Play Console and RevenueCat):
 // monthly $4.99, annual = 30% off the monthly price ($41.99/yr)
 export const PRODUCT_ID_MONTHLY = 'lulla_premium_monthly';
-export const PRODUCT_ID_ANNUAL = 'lulla_premium_annual';
+export const PRODUCT_ID_YEARLY = 'lulla_premium_yearly';
 
 // RevenueCat PUBLIC SDK keys (safe to ship in the app). Replace before building.
 export const RC_API_KEY_IOS = process.env.EXPO_PUBLIC_RC_IOS_KEY ?? 'appl_REPLACE_ME';
