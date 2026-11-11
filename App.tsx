@@ -1,21 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Alert, FlatList, Linking, Modal, Platform, Pressable, SafeAreaView,
+  ActivityIndicator, Alert, FlatList, Modal, Platform, Pressable, SafeAreaView,
   ScrollView, StyleSheet, Text, View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import type { PurchasesPackage } from 'react-native-purchases';
+import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 
 import { CATEGORIES, SOUNDS, SOUND_BY_ID, TIMER_OPTIONS, Category } from './src/catalog';
-import { FREE_SECONDS, PRICE_LABEL, PRIVACY_URL, TERMS_URL } from './src/config';
+import { ENTITLEMENT_ID, FREE_SECONDS } from './src/config';
 import { mixer } from './src/mixer';
 import { addUsed, loadUsed, persistUsed, remainingSeconds } from './src/trial';
 import {
-  getCustomerInfo, getMonthlyPackage, hasPremium, initPurchases, isConfigured,
-  onCustomerInfo, purchase, restore,
+  getCustomerInfo, hasPremium, initPurchases, isConfigured, onCustomerInfo,
 } from './src/purchases';
 
 const C = {
@@ -139,9 +138,12 @@ export default function App() {
             <Text style={styles.subtitle}>Sleep sounds, softly.</Text>
           </View>
           {premium ? (
-            <View style={[styles.pill, { backgroundColor: 'rgba(52,211,153,0.2)' }]}>
+            <Pressable
+              style={[styles.pill, { backgroundColor: 'rgba(52,211,153,0.2)' }]}
+              onPress={() => { if (isConfigured()) RevenueCatUI.presentCustomerCenter().catch(() => {}); }}
+            >
               <Text style={[styles.pillText, { color: '#6ee7b7' }]}>Premium</Text>
-            </View>
+            </Pressable>
           ) : (
             <Pressable style={styles.pill} onPress={() => setShowPaywall(true)}>
               <Text style={styles.pillText}>
@@ -263,67 +265,39 @@ function VolumeBar({ value, onChange }: { value: number; onChange: (v: number) =
   );
 }
 
-function Paywall({ visible, onClose, onUnlocked, expired }: {
+function Paywall({ visible, onClose, onUnlocked }: {
   visible: boolean; onClose: () => void; onUnlocked: () => void; expired: boolean;
 }) {
-  const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
-  const [busy, setBusy] = useState(false);
-
+  // Presents RevenueCat's own hosted paywall (configured in the RevenueCat dashboard).
+  // It shows price, period, auto-renew text, Restore Purchases, Terms and Privacy.
   useEffect(() => {
-    if (visible) getMonthlyPackage().then(setPkg);
+    if (!visible) return;
+    let cancelled = false;
+    (async () => {
+      if (!isConfigured()) {
+        Alert.alert('Store unavailable', 'Subscriptions are not available right now. Please try again shortly.');
+        onClose();
+        return;
+      }
+      try {
+        const result = await RevenueCatUI.presentPaywallIfNeeded({ requiredEntitlementIdentifier: ENTITLEMENT_ID });
+        if (cancelled) return;
+        if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED || result === PAYWALL_RESULT.NOT_PRESENTED) {
+          const info = await getCustomerInfo();
+          if (hasPremium(info)) { onUnlocked(); return; }
+        }
+        onClose();
+      } catch (e: any) {
+        if (!cancelled) {
+          Alert.alert('Something went wrong', e?.message ?? 'Please try again.');
+          onClose();
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
-
-  const buy = async () => {
-    if (!isConfigured() || !pkg) {
-      Alert.alert('Store unavailable', 'Subscriptions are not available right now. Please try again shortly.');
-      return;
-    }
-    setBusy(true);
-    try {
-      if (await purchase(pkg)) onUnlocked();
-    } catch (e: any) {
-      Alert.alert('Purchase failed', e?.message ?? 'Please try again.');
-    } finally { setBusy(false); }
-  };
-
-  const doRestore = async () => {
-    setBusy(true);
-    try {
-      if (await restore()) onUnlocked();
-      else Alert.alert('Nothing to restore', 'No active subscription was found for this account.');
-    } catch (e: any) {
-      Alert.alert('Restore failed', e?.message ?? 'Please try again.');
-    } finally { setBusy(false); }
-  };
-
-  return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <LinearGradient colors={[C.bg1, C.bg2, C.bg3]} style={styles.fill}>
-        <SafeAreaView style={[styles.fill, { padding: 24 }]}>
-          <Pressable onPress={onClose} style={{ alignSelf: 'flex-end' }}><Text style={styles.remove}>✕</Text></Pressable>
-          <View style={{ flex: 1, justifyContent: 'center' }}>
-            <Text style={{ fontSize: 64, textAlign: 'center' }}>🌙</Text>
-            <Text style={styles.payTitle}>{expired ? 'Your free 3 minutes are up' : 'Sleep deeper with Lulla'}</Text>
-            <Text style={styles.paySub}>Keep the calm going all night.</Text>
-            {['25+ high-quality sleep sounds', 'Layer sounds into your own mix', 'Sleep timer with gentle fade-out', 'Plays in the background, screen off'].map((t) => (
-              <Text key={t} style={styles.perk}>✓  {t}</Text>
-            ))}
-          </View>
-          <Pressable style={[styles.cta, busy && { opacity: 0.6 }]} disabled={busy} onPress={buy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Subscribe · {pkg?.product.priceString ?? '$1.99'} / month</Text>}
-          </Pressable>
-          <Text style={styles.fine}>
-            {PRICE_LABEL}, auto-renews monthly until cancelled. Cancel anytime in your {Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.
-          </Text>
-          <View style={styles.links}>
-            <Pressable onPress={doRestore}><Text style={styles.link}>Restore purchases</Text></Pressable>
-            <Pressable onPress={() => Linking.openURL(TERMS_URL)}><Text style={styles.link}>Terms</Text></Pressable>
-            <Pressable onPress={() => Linking.openURL(PRIVACY_URL)}><Text style={styles.link}>Privacy</Text></Pressable>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-    </Modal>
-  );
+  return null;
 }
 
 const styles = StyleSheet.create({

@@ -10,6 +10,8 @@ export function initPurchases(): boolean {
   if (!key || key.includes('REPLACE_ME')) return false; // not configured yet (dev)
   Purchases.configure({ apiKey: key });
   configured = true;
+  Purchases.setAttributes({ app: 'lulla', platform: Platform.OS });
+  Purchases.collectDeviceIdentifiers();
   return true;
 }
 

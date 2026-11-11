@@ -15,9 +15,9 @@ Fall asleep faster with Lulla. Pick a sound, layer your own mix, set a timer, an
 • Sleep timer from 10 minutes to 3 hours with a gentle fade-out
 • Keeps playing with the screen off
 
-Try it free for 3 minutes. Lulla Premium is $1.99 per month, auto-renews until cancelled, and can be cancelled anytime in your Apple ID or Google Play settings.
+Try it free for 3 minutes. Lulla Premium is $4.99 per month, or choose the annual plan and save 30% ($41.99 per year). Subscriptions auto-renew until cancelled and can be cancelled anytime in your Apple ID or Google Play settings.
 
 **Category:** Health & Fitness · **Age rating:** 4+ / Everyone
-**Subscription display name:** Lulla Premium · **Duration:** 1 month · **Price:** $1.99
+**Subscription group:** Lulla Premium · **Monthly:** lulla_premium_monthly, 1 month, $4.99 · **Annual:** lulla_premium_annual, 1 year, $41.99 (30% off monthly)
 
 **Screenshots to capture (6.9" iPhone + Android phone):** 1 sound grid, 2 mix sheet, 3 sleep timer, 4 playing state, 5 paywall. Capture from a real build; use original captions only.
