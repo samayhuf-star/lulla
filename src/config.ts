@@ -10,5 +10,5 @@ export const PRODUCT_ID_YEARLY = 'lulla_premium_yearly';
 export const RC_API_KEY_IOS = process.env.EXPO_PUBLIC_RC_IOS_KEY ?? 'appl_REPLACE_ME';
 export const RC_API_KEY_ANDROID = process.env.EXPO_PUBLIC_RC_ANDROID_KEY ?? 'goog_REPLACE_ME';
 
-export const PRIVACY_URL = 'https://momentumbysamay.com/lulla/privacy';
-export const TERMS_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+export const PRIVACY_URL = 'https://samay-app-legal.netlify.app/lulla/privacy/';
+export const TERMS_URL = 'https://samay-app-legal.netlify.app/lulla/terms/';

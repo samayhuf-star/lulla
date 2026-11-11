@@ -10,7 +10,7 @@
 Fall asleep faster with Lulla. Pick a sound, layer your own mix, set a timer, and drift off.
 
 • 25+ calming sounds: rain, rain on window, ocean, creek, waterfall, wind, forest, fireplace, thunder and more
-• White, pink and brown noise for focus, babies and tinnitus relief
+• White, pink and brown noise for focus and relaxation (not a medical device)
 • Mix any sounds together and set each volume
 • Sleep timer from 10 minutes to 3 hours with a gentle fade-out
 • Keeps playing with the screen off
