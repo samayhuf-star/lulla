@@ -1,6 +1,6 @@
 // Central product config. Change here only.
 export const FREE_SECONDS = 180; // 3 minutes of free listening, then paywall
-export const PRICE_LABEL = '$1.99 / month';
+export const PRICE_LABEL = '$4.99 / month';
 export const ENTITLEMENT_ID = 'premium';
 export const PRODUCT_ID_IOS = 'lulla_premium_monthly';
 export const PRODUCT_ID_ANDROID = 'lulla_premium_monthly';

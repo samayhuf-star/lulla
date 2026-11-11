@@ -1,6 +1,6 @@
 # Lulla – Launch Guide (iOS + Android)
 
-Paid model: **3 minutes free listening, then $1.99 / month auto-renewing subscription.**
+Paid model: **3 minutes free listening, then $4.99 / month (or $41.99 / year) auto-renewing subscription.**
 Stack: Expo (React Native) + RevenueCat. Bundle ID / package: `com.samay.lulla` (change in `app/app.json` before first build if you want another).
 
 ## What is built
@@ -20,14 +20,14 @@ Stack: Expo (React Native) + RevenueCat. Bundle ID / package: `com.samay.lulla` 
 
 ### 1. Apple App Store Connect
 1. Create app: name **Lulla - Sleep Sounds**, bundle ID `com.samay.lulla`, SKU `lulla`.
-2. Monetization > Subscriptions > new group `Lulla Premium` > product ID `lulla_premium_monthly`, duration 1 month, price **$1.99**. Add localization + review screenshot of paywall.
+2. Monetization > Subscriptions > new group `Lulla Premium` > product ID `lulla_premium_monthly`, duration 1 month, price **$4.99**. Add localization + review screenshot of paywall.
 3. Agreements, Tax, Banking must be Active (paid apps agreement).
 4. App Privacy: "Data Not Collected" is accurate unless you add analytics (RevenueCat collects an anonymous ID – declare "Purchases" / "Identifiers" as not linked to user if prompted).
 5. Category: Health & Fitness (or Lifestyle). Age rating 4+.
 
 ### 2. Google Play Console
 1. Create app, package `com.samay.lulla`, Paid features = in-app subscriptions (app itself is Free to download).
-2. Monetize > Subscriptions > product ID `lulla_premium_monthly`, base plan monthly, **$1.99**.
+2. Monetize > Subscriptions > product ID `lulla_premium_monthly`, base plan monthly, **$4.99**.
 3. Fill Data safety (no data collected / purchases only), content rating, target audience 13+.
 4. First upload must be done manually once in Play Console (internal testing) before API submit works; EAS `submit` needs a Play service-account JSON.
 

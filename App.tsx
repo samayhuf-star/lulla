@@ -17,6 +17,7 @@ import {
   getCustomerInfo, getMonthlyPackage, hasPremium, initPurchases, isConfigured,
   onCustomerInfo, purchase, restore,
 } from './src/purchases';
+import { openCustomerCenter, setCustomAttributes } from './src/revenuecat';
 
 const C = {
   bg1: '#150a2e', bg2: '#2a1050', bg3: '#0b2a4a',
@@ -139,9 +140,9 @@ export default function App() {
             <Text style={styles.subtitle}>Sleep sounds, softly.</Text>
           </View>
           {premium ? (
-            <View style={[styles.pill, { backgroundColor: 'rgba(52,211,153,0.2)' }]}>
+            <Pressable style={[styles.pill, { backgroundColor: 'rgba(52,211,153,0.2)' }]} onPress={openCustomerCenter}>
               <Text style={[styles.pillText, { color: '#6ee7b7' }]}>Premium</Text>
-            </View>
+            </Pressable>
           ) : (
             <Pressable style={styles.pill} onPress={() => setShowPaywall(true)}>
               <Text style={styles.pillText}>
@@ -270,7 +271,10 @@ function Paywall({ visible, onClose, onUnlocked, expired }: {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (visible) getMonthlyPackage().then(setPkg);
+    if (visible) {
+      setCustomAttributes({ last_paywall_source: expired ? 'free_time_up' : 'pill', last_paywall_at: new Date().toISOString() });
+      getMonthlyPackage().then(setPkg);
+    }
   }, [visible]);
 
   const buy = async () => {
@@ -310,7 +314,7 @@ function Paywall({ visible, onClose, onUnlocked, expired }: {
             ))}
           </View>
           <Pressable style={[styles.cta, busy && { opacity: 0.6 }]} disabled={busy} onPress={buy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Subscribe · {pkg?.product.priceString ?? '$1.99'} / month</Text>}
+            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Subscribe · {pkg?.product.priceString ?? '$4.99'} / month</Text>}
           </Pressable>
           <Text style={styles.fine}>
             {PRICE_LABEL}, auto-renews monthly until cancelled. Cancel anytime in your {Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.
