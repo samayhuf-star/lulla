@@ -58,3 +58,7 @@ Test first with TestFlight / Play internal testing + sandbox tester accounts. Ve
 - Sound loops are synthesized (noise-based), so they're clean and license-free but less "recorded" than field recordings. Swap in licensed recordings later by replacing files in `app/assets/sounds/` (same names).
 - Apple reviewers require the paywall to show price, period, auto-renew text, Restore, Terms and Privacy. All present.
 - Do not copy another listing's name, icon, screenshots or description. Lulla's are original.
+
+## Plans (RevenueCat offering `default`)
+- Entitlement: `premium`. Packages: `$rc_monthly` -> `lulla_premium_monthly` ($4.99) and `$rc_annual` -> `lulla_premium_annual` ($41.99).
+- The paywall is RevenueCat's own (designed in the dashboard), so both plans show without an app update.

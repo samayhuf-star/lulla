@@ -7,17 +7,16 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import type { PurchasesPackage } from 'react-native-purchases';
 
 import { CATEGORIES, SOUNDS, SOUND_BY_ID, TIMER_OPTIONS, Category } from './src/catalog';
-import { FREE_SECONDS, PRICE_LABEL, PRIVACY_URL, TERMS_URL } from './src/config';
+import { FREE_SECONDS } from './src/config';
 import { mixer } from './src/mixer';
 import { addUsed, loadUsed, persistUsed, remainingSeconds } from './src/trial';
 import {
-  getCustomerInfo, getMonthlyPackage, hasPremium, initPurchases, isConfigured,
-  onCustomerInfo, purchase, restore,
+  getCustomerInfo, hasPremium, initPurchases, isConfigured,
+  onCustomerInfo,
 } from './src/purchases';
-import { openCustomerCenter, setCustomAttributes } from './src/revenuecat';
+import { openCustomerCenter, presentPaywall } from './src/revenuecat';
 
 const C = {
   bg1: '#150a2e', bg2: '#2a1050', bg3: '#0b2a4a',
@@ -46,6 +45,16 @@ export default function App() {
   premiumRef.current = premium;
   const lastTick = useRef(Date.now());
   const sinceSave = useRef(0);
+
+  // RevenueCat-hosted paywall (design, prices, monthly + annual plans come from the RevenueCat dashboard).
+  useEffect(() => {
+    if (!showPaywall) return;
+    initPurchases();
+    presentPaywall(remaining <= 0 ? 'free_time_up' : 'pill').then((ok) => {
+      if (ok) setPremium(true);
+      setShowPaywall(false);
+    });
+  }, [showPaywall]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // boot
   useEffect(() => {
@@ -239,14 +248,6 @@ export default function App() {
           ))}
         </View>
       </Modal>
-
-      {/* Paywall */}
-      <Paywall
-        visible={showPaywall}
-        onClose={() => setShowPaywall(false)}
-        onUnlocked={() => { setPremium(true); setShowPaywall(false); }}
-        expired={remaining <= 0}
-      />
     </LinearGradient>
   );
 }
@@ -261,72 +262,6 @@ function VolumeBar({ value, onChange }: { value: number; onChange: (v: number) =
         </Pressable>
       ))}
     </View>
-  );
-}
-
-function Paywall({ visible, onClose, onUnlocked, expired }: {
-  visible: boolean; onClose: () => void; onUnlocked: () => void; expired: boolean;
-}) {
-  const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (visible) {
-      setCustomAttributes({ last_paywall_source: expired ? 'free_time_up' : 'pill', last_paywall_at: new Date().toISOString() });
-      getMonthlyPackage().then(setPkg);
-    }
-  }, [visible]);
-
-  const buy = async () => {
-    if (!isConfigured() || !pkg) {
-      Alert.alert('Store unavailable', 'Subscriptions are not available right now. Please try again shortly.');
-      return;
-    }
-    setBusy(true);
-    try {
-      if (await purchase(pkg)) onUnlocked();
-    } catch (e: any) {
-      Alert.alert('Purchase failed', e?.message ?? 'Please try again.');
-    } finally { setBusy(false); }
-  };
-
-  const doRestore = async () => {
-    setBusy(true);
-    try {
-      if (await restore()) onUnlocked();
-      else Alert.alert('Nothing to restore', 'No active subscription was found for this account.');
-    } catch (e: any) {
-      Alert.alert('Restore failed', e?.message ?? 'Please try again.');
-    } finally { setBusy(false); }
-  };
-
-  return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <LinearGradient colors={[C.bg1, C.bg2, C.bg3]} style={styles.fill}>
-        <SafeAreaView style={[styles.fill, { padding: 24 }]}>
-          <Pressable onPress={onClose} style={{ alignSelf: 'flex-end' }}><Text style={styles.remove}>✕</Text></Pressable>
-          <View style={{ flex: 1, justifyContent: 'center' }}>
-            <Text style={{ fontSize: 64, textAlign: 'center' }}>🌙</Text>
-            <Text style={styles.payTitle}>{expired ? 'Your free 3 minutes are up' : 'Sleep deeper with Lulla'}</Text>
-            <Text style={styles.paySub}>Keep the calm going all night.</Text>
-            {['25+ high-quality sleep sounds', 'Layer sounds into your own mix', 'Sleep timer with gentle fade-out', 'Plays in the background, screen off'].map((t) => (
-              <Text key={t} style={styles.perk}>✓  {t}</Text>
-            ))}
-          </View>
-          <Pressable style={[styles.cta, busy && { opacity: 0.6 }]} disabled={busy} onPress={buy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Subscribe · {pkg?.product.priceString ?? '$4.99'} / month</Text>}
-          </Pressable>
-          <Text style={styles.fine}>
-            {PRICE_LABEL}, auto-renews monthly until cancelled. Cancel anytime in your {Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.
-          </Text>
-          <View style={styles.links}>
-            <Pressable onPress={doRestore}><Text style={styles.link}>Restore purchases</Text></Pressable>
-            <Pressable onPress={() => Linking.openURL(TERMS_URL)}><Text style={styles.link}>Terms</Text></Pressable>
-            <Pressable onPress={() => Linking.openURL(PRIVACY_URL)}><Text style={styles.link}>Privacy</Text></Pressable>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-    </Modal>
   );
 }
 
