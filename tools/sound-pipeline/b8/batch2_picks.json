@@ -1,0 +1,5 @@
+{
+ "snow": {"id": "22606", "backup_id": "683347", "loop_s": 200, "af": "lowpass=f=10000:poles=2,highshelf=f=5000:g=-6:t=q:w=0.7"},
+ "cave": {"id": "196713", "backup_id": "131584", "loop_s": 240, "af": "lowpass=f=10000:poles=2,highshelf=f=6000:g=-4:t=q:w=0.7"},
+ "farm": {"id": "840052", "backup_id": "588216", "loop_s": 240, "af": "highpass=f=60:poles=2,highshelf=f=7000:g=-4:t=q:w=0.7"}
+}

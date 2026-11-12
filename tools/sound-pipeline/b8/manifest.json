@@ -1,0 +1,259 @@
+{
+ "_comment": "Recorded sounds for build 8. loop_s is the full planned loop; config.json loop_mode=cap3 caps these at 180 s. Generated sounds come from generate.py.",
+ "recorded": {
+  "rain": {
+   "app_name": "Rain",
+   "freesound_id": "527500",
+   "file": "rain.m4a",
+   "loop_s": 88,
+   "af": "lowpass=f=11000:poles=2,highshelf=f=6500:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Rain"
+  },
+  "rain_roof": {
+   "app_name": "Deep Rain on Roof",
+   "freesound_id": "406502",
+   "file": "rain_roof.m4a",
+   "loop_s": 240,
+   "af": "lowpass=f=11000:poles=2,highshelf=f=6500:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Rain"
+  },
+  "rain_tent": {
+   "app_name": "Rain on Tent",
+   "freesound_id": "251233",
+   "file": "rain_tent.m4a",
+   "loop_s": 240,
+   "af": "lowpass=f=11000:poles=2,highshelf=f=6500:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Rain"
+  },
+  "rain_window": {
+   "app_name": "Rain on Window",
+   "freesound_id": "158690",
+   "file": "rain_window.m4a",
+   "loop_s": 270,
+   "af": "lowpass=f=11000:poles=2,highshelf=f=6500:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Rain"
+  },
+  "rain_umbrella": {
+   "app_name": "Rain on Umbrella",
+   "freesound_id": "593191",
+   "file": "rain_umbrella.m4a",
+   "loop_s": 135,
+   "af": "lowpass=f=11000:poles=2,highshelf=f=6500:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Rain"
+  },
+  "thunder": {
+   "app_name": "Distant Thunder",
+   "freesound_id": "352850",
+   "file": "thunder.m4a",
+   "loop_s": 240,
+   "af": "lowpass=f=12000:poles=2",
+   "kind": "recorded",
+   "category": "Rain"
+  },
+  "ocean": {
+   "app_name": "Slow Ocean Waves",
+   "freesound_id": "176617",
+   "file": "ocean.m4a",
+   "loop_s": 240,
+   "af": "highshelf=f=7000:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Water"
+  },
+  "lake": {
+   "app_name": "Lake",
+   "freesound_id": "523392",
+   "file": "lake.m4a",
+   "loop_s": 120,
+   "af": "highshelf=f=7000:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Water"
+  },
+  "creek": {
+   "app_name": "Creek",
+   "freesound_id": "580796",
+   "file": "creek.m4a",
+   "loop_s": 230,
+   "af": "highshelf=f=7000:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Water"
+  },
+  "waterfall": {
+   "app_name": "Waterfall",
+   "freesound_id": "650699",
+   "file": "waterfall.m4a",
+   "loop_s": 115,
+   "af": "highshelf=f=7000:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Water"
+  },
+  "underwater": {
+   "app_name": "Underwater",
+   "freesound_id": "482167",
+   "file": "underwater.m4a",
+   "loop_s": 115,
+   "af": "highshelf=f=7000:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Water"
+  },
+  "wind": {
+   "app_name": "Wind",
+   "freesound_id": "760241",
+   "file": "wind.m4a",
+   "loop_s": 240,
+   "af": "highshelf=f=7000:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Nature"
+  },
+  "wind_leaves": {
+   "app_name": "Wind & Leaves",
+   "freesound_id": "150174",
+   "file": "wind_leaves.m4a",
+   "loop_s": 115,
+   "af": "highshelf=f=7000:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Nature"
+  },
+  "forest": {
+   "app_name": "Forest",
+   "freesound_id": "856018",
+   "file": "forest.m4a",
+   "loop_s": 240,
+   "af": "highshelf=f=7000:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Nature"
+  },
+  "night": {
+   "app_name": "Night Crickets",
+   "freesound_id": "522299",
+   "file": "night.m4a",
+   "loop_s": 210,
+   "af": "highshelf=f=7000:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Nature"
+  },
+  "fire": {
+   "app_name": "Crackling Fireplace",
+   "freesound_id": "501417",
+   "file": "fire.m4a",
+   "loop_s": 240,
+   "af": "lowpass=f=11000:poles=2,highshelf=f=6500:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Warmth"
+  },
+  "fan": {
+   "app_name": "Fan",
+   "freesound_id": "631405",
+   "file": "fan.m4a",
+   "loop_s": 195,
+   "af": "lowpass=f=10000:poles=2,highshelf=f=7000:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Hum"
+  },
+  "air_conditioner": {
+   "app_name": "Air Conditioner",
+   "freesound_id": "482874",
+   "file": "air_conditioner.m4a",
+   "loop_s": 240,
+   "af": "lowpass=f=10000:poles=2",
+   "kind": "recorded",
+   "category": "Hum"
+  },
+  "airplane": {
+   "app_name": "Airplane Cabin",
+   "freesound_id": "868888",
+   "file": "airplane.m4a",
+   "loop_s": 240,
+   "af": "lowpass=f=10000:poles=2",
+   "kind": "recorded",
+   "category": "Hum"
+  },
+  "heartbeat": {
+   "app_name": "Heartbeat",
+   "freesound_id": "369017",
+   "file": "heartbeat.m4a",
+   "loop_s": 120,
+   "af": "lowpass=f=4000:poles=2",
+   "kind": "recorded",
+   "category": "Calm"
+  },
+  "singing_bowls": {
+   "app_name": "Singing Bowls",
+   "freesound_id": "699447",
+   "file": "singing_bowls.m4a",
+   "loop_s": 240,
+   "af": "highshelf=f=7000:g=-4:t=q:w=0.7",
+   "kind": "recorded",
+   "category": "Calm"
+  },
+  "rain_puddle": {
+   "app_name": "Rain on Puddle",
+   "freesound_id": "735468",
+   "file": "rain_puddle.m4a",
+   "loop_s": 240,
+   "extend": true,
+   "kind": "recorded",
+   "category": "Rain",
+   "af": "acompressor=threshold=0.05:ratio=3:attack=0.5:release=60:knee=4,lowpass=f=12000:poles=2,highshelf=f=7000:g=-4:t=q:w=0.7",
+   "note": "81 s original, drop transients gently compressed,, extended into a 4 min non-periodic texture"
+  },
+  "drip": {
+   "app_name": "Drip",
+   "freesound_id": "506072",
+   "file": "drip.m4a",
+   "loop_s": 240,
+   "extend": true,
+   "kind": "recorded",
+   "category": "Water",
+   "af": "acompressor=threshold=0.06:ratio=3:attack=0.3:release=80:knee=4,lowpass=f=8000:poles=2,highshelf=f=4000:g=-6:t=q:w=0.7",
+   "note": "113 s original, transients softened, extended into a 4 min texture"
+  },
+  "grassland": {
+   "app_name": "Grassland",
+   "freesound_id": "164656",
+   "file": "grassland.m4a",
+   "loop_s": 200,
+   "kind": "recorded",
+   "category": "Nature",
+   "af": "equalizer=f=179:t=q:w=8:g=-8,equalizer=f=357:t=q:w=8:g=-12,equalizer=f=536:t=q:w=8:g=-9,equalizer=f=718:t=q:w=8:g=-8,equalizer=f=902:t=q:w=8:g=-6,equalizer=f=1093:t=q:w=8:g=-4,lowpass=f=9000:poles=2,highshelf=f=6000:g=-5:t=q:w=0.7",
+   "note": "insect buzz harmonics (179 Hz series) notched, high insect whine above 9 kHz cut"
+  },
+  "snow": {
+   "app_name": "Snow",
+   "freesound_id": "22606",
+   "backup_id": "683347",
+   "file": "snow.m4a",
+   "loop_s": 200,
+   "kind": "recorded",
+   "category": "Rain",
+   "af": "lowpass=f=10000:poles=2,highshelf=f=5000:g=-6:t=q:w=0.7",
+   "note": "Batch 2 new source"
+  },
+  "cave": {
+   "app_name": "Cave",
+   "freesound_id": "196713",
+   "backup_id": "131584",
+   "file": "cave.m4a",
+   "loop_s": 240,
+   "kind": "recorded",
+   "category": "Nature",
+   "af": "lowpass=f=10000:poles=2,highshelf=f=6000:g=-4:t=q:w=0.7",
+   "note": "Batch 2 new source"
+  },
+  "farm": {
+   "app_name": "Farm",
+   "freesound_id": "840052",
+   "backup_id": "588216",
+   "file": "farm.m4a",
+   "loop_s": 240,
+   "kind": "recorded",
+   "category": "Nature",
+   "af": "highpass=f=60:poles=2,highshelf=f=7000:g=-4:t=q:w=0.7",
+   "note": "Batch 2 new source"
+  }
+ }
+}

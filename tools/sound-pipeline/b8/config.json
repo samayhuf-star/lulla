@@ -1,0 +1,14 @@
+{
+  "_comment": "Build 8 mastering settings. loop_mode: 'full' = each sound's planned loop length (Samay, 12:30 AM BDT 13 Nov 2026); 'cap3' = cap recorded loops at 180 s. Flip this one value to switch.",
+  "loop_mode": "full",
+  "cap_seconds": 180,
+  "sample_rate": 48000,
+  "aac_bitrate": "160k",
+  "target_lufs": -20.0,
+  "true_peak_max_dbtp": -1.0,
+  "max_limit_db": 6.0,
+  "crossfade_s": 5.0,
+  "originals_dir": "/home/box/shared/app-monitor/reports/lulla-b8/originals",
+  "out_dir": "out",
+  "report_dir": "/home/box/shared/app-monitor/reports/lulla-b8/masters"
+}
