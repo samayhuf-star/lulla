@@ -1,0 +1,102 @@
+# Lulla iOS Simulator run (build 8 pre-TestFlight check).
+# Manual trigger ONLY (workflow_dispatch). Pushing never starts it.
+# Compiles a Release iphonesimulator .app on the runner with EXPO_PUBLIC_LULLA_QA=1, which
+# turns on the QA deep links (lulla://qa/play/<id>) and the playback-position overlay.
+# Store/EAS builds never set that variable. No secrets are used.
+name: Lulla iOS Simulator QA
+
+on:
+  workflow_dispatch:
+    inputs:
+      sounds:
+        description: Comma-separated sound ids to play and screenshot
+        required: false
+        default: snow,cave,drip,farm,grassland,rain_puddle
+
+concurrency:
+  group: lulla-sim-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sim-qa:
+    name: Simulator QA
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      BUNDLE_ID: com.samay.lulla
+      OUT: /tmp/lulla-sim-qa
+      DERIVED_DATA: ${{ github.workspace }}/ios/DerivedData
+      EXPO_PUBLIC_LULLA_QA: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Boot iPhone simulator
+        run: |
+          set -euo pipefail
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json,sys
+          d=json.load(sys.stdin)["devices"]
+          ph=[(r,x["name"],x["udid"]) for r,v in d.items() if "iOS" in r for x in v if x["name"].startswith("iPhone")]
+          pref=["iPhone 16 Pro Max","iPhone 16 Plus","iPhone 16","iPhone 15 Pro Max","iPhone 15"]
+          ph.sort(key=lambda p: pref.index(p[1]) if p[1] in pref else 99)
+          print(ph[0][2])')
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 || true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Expo prebuild (iOS)
+        run: npx expo prebuild --platform ios --non-interactive --no-install
+
+      - uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock', 'package-lock.json') }}
+          restore-keys: ${{ runner.os }}-pods-
+
+      - name: Pods
+        working-directory: ios
+        run: pod install
+
+      - name: Build Release simulator app
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUT"
+          WS=$(ls -d ios/*.xcworkspace | head -n1)
+          SCHEME=$(basename "$WS" .xcworkspace)
+          xcodebuild build -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator \
+            -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED_DATA" CODE_SIGNING_ALLOWED=NO \
+            | tee "$OUT/xcodebuild.log" | tail -n 40
+
+      - name: Install, launch and play each sound
+        run: |
+          set -euo pipefail
+          APP=$(find "$DERIVED_DATA" -name '*.app' -path '*Release-iphonesimulator*' | head -n1)
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl launch "$UDID" "$BUNDLE_ID"
+          sleep 8
+          xcrun simctl io "$UDID" screenshot "$OUT/00-home.png"
+          IFS=',' read -ra IDS <<< "${{ github.event.inputs.sounds }}"
+          for id in "${IDS[@]}"; do
+            xcrun simctl openurl "$UDID" "lulla://qa/play/$id"
+            sleep 6
+            xcrun simctl io "$UDID" screenshot "$OUT/$id-a.png"
+            sleep 4
+            xcrun simctl io "$UDID" screenshot "$OUT/$id-b.png"   # overlay position must have advanced vs -a
+          done
+          xcrun simctl openurl "$UDID" "lulla://qa/stop"
+          xcrun simctl spawn "$UDID" log show --last 5m --predicate 'process == "Lulla"' > "$OUT/app.log" 2>&1 || true
+
+      - name: Upload screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lulla-sim-qa
+          path: /tmp/lulla-sim-qa/**
