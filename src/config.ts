@@ -9,5 +9,5 @@ export const PRODUCT_ID_ANDROID = 'lulla_premium_monthly';
 export const RC_API_KEY_IOS = process.env.EXPO_PUBLIC_RC_IOS_KEY ?? 'appl_REPLACE_ME';
 export const RC_API_KEY_ANDROID = process.env.EXPO_PUBLIC_RC_ANDROID_KEY ?? 'goog_REPLACE_ME';
 
-export const PRIVACY_URL = 'https://momentumbysamay.com/lulla/privacy';
-export const TERMS_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+export const PRIVACY_URL = 'https://samayhuf-star.github.io/lulla/privacy.html';
+export const TERMS_URL = 'https://samayhuf-star.github.io/lulla/terms.html';
