@@ -1,0 +1,222 @@
+{
+ "rain": {
+  "name": "rain",
+  "src": "527500",
+  "window_start_s": 3.0,
+  "loop_s": 66.0,
+  "gain_db": -0.3,
+  "limit_db": 0.0,
+  "pre_I": -19.7,
+  "pre_TP": -3.6
+ },
+ "rain_window": {
+  "name": "rain_window",
+  "src": "243781",
+  "window_start_s": 0.0,
+  "loop_s": 60.53,
+  "gain_db": 7.2,
+  "limit_db": 2.7,
+  "pre_I": -27.2,
+  "pre_TP": -5.7
+ },
+ "rain_roof": {
+  "name": "rain_roof",
+  "src": "450360",
+  "window_start_s": 26.0,
+  "loop_s": 66.0,
+  "gain_db": 12.8,
+  "limit_db": 5.5,
+  "pre_I": -32.8,
+  "pre_TP": -8.5
+ },
+ "rain_umbrella": {
+  "name": "rain_umbrella",
+  "src": "376530",
+  "window_start_s": 0.0,
+  "loop_s": 66.0,
+  "gain_db": 10.3,
+  "limit_db": 8.0,
+  "pre_I": -39.7,
+  "pre_TP": -3.5
+ },
+ "rain_puddle": {
+  "name": "rain_puddle",
+  "src": "735468",
+  "window_start_s": 0.0,
+  "loop_s": 66.0,
+  "gain_db": 8.6,
+  "limit_db": 6.6,
+  "pre_I": -28.6,
+  "pre_TP": -3.2
+ },
+ "snow": {
+  "name": "snow",
+  "src": "551118",
+  "window_start_s": 52.0,
+  "loop_s": 66.0,
+  "gain_db": 5.4,
+  "limit_db": 8.0,
+  "pre_I": -25.7,
+  "pre_TP": 1.4
+ },
+ "ocean": {
+  "name": "ocean",
+  "src": "549334",
+  "window_start_s": 30.0,
+  "loop_s": 66.0,
+  "gain_db": 3.4,
+  "limit_db": 3.2,
+  "pre_I": -23.4,
+  "pre_TP": -1.4
+ },
+ "lake": {
+  "name": "lake",
+  "src": "523392",
+  "window_start_s": 12.0,
+  "loop_s": 66.0,
+  "gain_db": 18.7,
+  "limit_db": 0.0,
+  "pre_I": -38.7,
+  "pre_TP": -24.0
+ },
+ "creek": {
+  "name": "creek",
+  "src": "237328",
+  "window_start_s": 0.0,
+  "loop_s": 61.06,
+  "gain_db": 5.2,
+  "limit_db": 0.0,
+  "pre_I": -25.2,
+  "pre_TP": -9.1
+ },
+ "waterfall": {
+  "name": "waterfall",
+  "src": "650699",
+  "window_start_s": 48.0,
+  "loop_s": 66.0,
+  "gain_db": 17.1,
+  "limit_db": 2.1,
+  "pre_I": -37.1,
+  "pre_TP": -16.2
+ },
+ "underwater": {
+  "name": "underwater",
+  "src": "482167",
+  "window_start_s": 1.0,
+  "loop_s": 66.0,
+  "gain_db": 6.5,
+  "limit_db": 0.0,
+  "pre_I": -26.5,
+  "pre_TP": -11.4
+ },
+ "drip": {
+  "name": "drip",
+  "src": "506072",
+  "window_start_s": 42.0,
+  "loop_s": 66.0,
+  "gain_db": 3.9,
+  "limit_db": 5.1,
+  "pre_I": -23.9,
+  "pre_TP": 0.0
+ },
+ "wind": {
+  "name": "wind",
+  "src": "760241",
+  "window_start_s": 183.0,
+  "loop_s": 66.0,
+  "gain_db": 9.2,
+  "limit_db": 0.0,
+  "pre_I": -29.2,
+  "pre_TP": -14.1
+ },
+ "wind_leaves": {
+  "name": "wind_leaves",
+  "src": "150174",
+  "window_start_s": 15.0,
+  "loop_s": 66.0,
+  "gain_db": 14.4,
+  "limit_db": 0.0,
+  "pre_I": -34.4,
+  "pre_TP": -18.3
+ },
+ "forest": {
+  "name": "forest",
+  "src": "826326",
+  "window_start_s": 7.0,
+  "loop_s": 66.0,
+  "gain_db": 15.1,
+  "limit_db": 8.0,
+  "pre_I": -37.9,
+  "pre_TP": -8.3
+ },
+ "night": {
+  "name": "night",
+  "src": "522299",
+  "window_start_s": 52.0,
+  "loop_s": 66.0,
+  "gain_db": 16.9,
+  "limit_db": 0.0,
+  "pre_I": -36.9,
+  "pre_TP": -24.4
+ },
+ "cave": {
+  "name": "cave",
+  "src": "343742",
+  "window_start_s": 1.0,
+  "loop_s": 66.0,
+  "gain_db": 24.5,
+  "limit_db": 8.0,
+  "pre_I": -46.2,
+  "pre_TP": -17.7
+ },
+ "grassland": {
+  "name": "grassland",
+  "src": "164656",
+  "window_start_s": 107.0,
+  "loop_s": 66.0,
+  "gain_db": 14.4,
+  "limit_db": 0.0,
+  "pre_I": -34.4,
+  "pre_TP": -16.7
+ },
+ "farm": {
+  "name": "farm",
+  "src": "488050",
+  "window_start_s": 10.0,
+  "loop_s": 66.0,
+  "gain_db": 9.4,
+  "limit_db": 0.0,
+  "pre_I": -29.4,
+  "pre_TP": -14.0
+ },
+ "fire": {
+  "name": "fire",
+  "src": "484338",
+  "window_start_s": 31.0,
+  "loop_s": 66.0,
+  "gain_db": 5.1,
+  "limit_db": 8.0,
+  "pre_I": -31.5,
+  "pre_TP": 1.7
+ },
+ "thunder": {
+  "name": "thunder",
+  "src": "425174",
+  "window_start_s": 8.0,
+  "loop_s": 66.0,
+  "gain_db": -2.6,
+  "limit_db": 0.0,
+  "pre_I": -17.4,
+  "pre_TP": 0.9
+ },
+ "fan": {
+  "name": "fan",
+  "src": "437342",
+  "window_start_s": 22.0,
+  "loop_s": 66.0,
+  "gain_db": 19.4,
+  "limit_db": 0.0,
+  "pre_I": -39.4,
+  "pre_TP": -27.8
+ }
+}
