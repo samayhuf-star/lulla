@@ -18,6 +18,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 CFG = json.load(open(os.path.join(HERE, 'config.json')))
 SR = CFG['sample_rate']
+SIX = {'snow', 'cave', 'drip', 'farm', 'grassland', 'rain_puddle'}  # held to the 3 to 5 min standard
 
 
 def ff(args, inp=None):
@@ -60,8 +61,9 @@ def rms_db(x, win):
     return 20 * np.log10(r + 1e-9)
 
 
-def pick_window(x, n_needed):
-    """Start of the steadiest window (lowest 1 s loudness variance, no near-clips)."""
+def pick_window(x, n_needed, avoid=None):
+    """Start of the steadiest window (lowest 1 s loudness variance, no near-clips).
+    avoid: list of [start_s, end_s] ranges (e.g. a close animal call) the window must not touch."""
     if len(x) <= n_needed:
         return 0
     rd = rms_db(x, SR)
@@ -73,6 +75,9 @@ def pick_window(x, n_needed):
         if a + n_needed > len(x):
             break
         sc = rd[s:s + w].std() + 100 * clip[a:a + n_needed].sum()
+        for lo, hi in (avoid or []):
+            if a < hi * SR and a + n_needed > lo * SR:
+                sc += 1000
         if best is None or sc < best[0]:
             best = (sc, a)
     return best[1] if best else 0
@@ -171,6 +176,7 @@ def master(name, spec, loop_mode, use_backup=False):
     k = int(CFG['crossfade_s'] * SR)
     n = int(L * SR)
     extended = False
+    a = 0
     if len(x) < n + k + SR:
         if not spec.get('extend'):
             L = round((len(x) - k - SR) / SR, 2)
@@ -180,7 +186,7 @@ def master(name, spec, loop_mode, use_backup=False):
             extended = True
             seg = extend_texture(x, n, k, seed=int(spec['freesound_id']))
     else:
-        a = pick_window(x, n + k)
+        a = pick_window(x, n + k, spec.get('avoid_s'))
         seg = x[a:a + n + k]
     lp = make_loop(seg, n, k)
     I, LRA, TP = ebur(lp)
@@ -202,14 +208,29 @@ def master(name, spec, loop_mode, use_backup=False):
         y = y * 10 ** ((CFG['true_peak_max_dbtp'] - 0.3 - TP2) / 20)
     d = decode(fn)
     I2, LRA2, TP2 = ebur(d)
+    # Post-encode level trim: if the file landed low and there is true-peak headroom, lift it.
+    for _ in range(3):
+        up = CFG['target_lufs'] - I2
+        if up <= 0.3 or TP2 + up > CFG['true_peak_max_dbtp'] - 0.4:
+            break
+        y2 = y * 10 ** (up / 20)
+        encode(y2, fn)
+        d2 = decode(fn)
+        I3, LRA3, TP3 = ebur(d2)
+        if TP3 > CFG['true_peak_max_dbtp']:  # AAC overshoot: keep the previous, compliant level
+            encode(y, fn)
+            d = decode(fn)
+            I2, LRA2, TP2 = ebur(d)
+            break
+        y, d, I2, LRA2, TP2 = y2, d2, I3, LRA3, TP3
     res = dict(
         name=name, status='OK', file=spec['file'], freesound_id=spec['freesound_id'], original=os.path.basename(src),
         original_s=round(src_s, 2), loop_mode=loop_mode, loop_s=round(len(d) / SR, 2), extended_texture=extended,
         eq=spec.get('af', ''), gain_db=round(g, 1), limit_db=round(lim, 1), pre_I=I, pre_TP=TP,
         lufs=I2, lra=LRA2, true_peak=TP2, seam=round(seam_ratio(d), 2), steadiness_3s_sd=round(float(rms_db(d, 3 * SR).std()), 2),
-        bytes=os.path.getsize(fn),
+        bytes=os.path.getsize(fn), window_start_s=round(a / SR, 1) if not extended and len(x) >= n + k + SR else None,
         pass_lufs=abs(I2 - CFG['target_lufs']) <= 0.5, pass_tp=TP2 <= CFG['true_peak_max_dbtp'], pass_limit=lim <= CFG['max_limit_db'],
-        pass_len=(len(d) / SR) >= (179 if loop_mode == 'full' and spec.get('kind', 'recorded') == 'recorded' else 0),
+        pass_len=(179 <= len(d) / SR <= 301) if name in SIX else (len(d) / SR) >= min(float(spec['loop_s']), 180 if loop_mode == 'cap3' else 1e9) - 2,
     )
     res['pass_seam'] = res['seam'] < 3
     return res
@@ -231,6 +252,19 @@ def main():
     out = {}
     for name in names:
         r = master(name, man[name], a.loop_mode, a.backup)
+        # Peaky sources (rain drops on fabric, drips) cannot reach -20 LUFS inside the 6 dB
+        # limiter budget. Retry with a gentle, slow compressor ladder ahead of the EQ.
+        if r.get('status') == 'OK' and not r['pass_lufs']:
+            pre = round(-20 - r['pre_I'], 1)  # bring the mean level to about -20 LUFS for the compressor, then back
+            for thr, ratio in [(0.2, 2), (0.15, 3), (0.1, 4), (0.08, 6), (0.06, 8)]:
+                spec = dict(man[name])
+                comp = 'volume=%sdB,acompressor=threshold=%s:ratio=%s:attack=0.5:release=80:knee=4,volume=%sdB' % (pre, thr, ratio, -pre)
+                spec['af'] = comp + (',' + spec['af'] if spec.get('af') else '')
+                r2 = master(name, spec, a.loop_mode, a.backup)
+                r2['auto_comp'] = comp
+                r = r2
+                if all(v for k, v in r2.items() if k.startswith('pass_')):
+                    break
         out[name] = r
         print(json.dumps(r), flush=True)
     os.makedirs(CFG['report_dir'], exist_ok=True)

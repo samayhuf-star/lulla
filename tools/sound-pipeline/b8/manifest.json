@@ -24,9 +24,10 @@
    "freesound_id": "251233",
    "file": "rain_tent.m4a",
    "loop_s": 240,
-   "af": "lowpass=f=11000:poles=2,highshelf=f=6500:g=-4:t=q:w=0.7",
+   "af": "volume=34dB,acompressor=threshold=0.06:ratio=8:attack=0.2:release=50:knee=4,acompressor=threshold=0.08:ratio=6:attack=0.05:release=30:knee=2,volume=-34dB,lowpass=f=11000:poles=2,highshelf=f=6500:g=-4:t=q:w=0.7",
    "kind": "recorded",
-   "category": "Rain"
+   "category": "Rain",
+   "note": "drop transients two-stage compressed so the bed reaches -20 LUFS inside the 6 dB limiter budget"
   },
   "rain_window": {
    "app_name": "Rain on Window",
@@ -249,11 +250,17 @@
    "freesound_id": "840052",
    "backup_id": "588216",
    "file": "farm.m4a",
-   "loop_s": 240,
+   "loop_s": 188,
    "kind": "recorded",
    "category": "Nature",
    "af": "highpass=f=60:poles=2,highshelf=f=7000:g=-4:t=q:w=0.7",
-   "note": "Batch 2 new source"
+   "note": "184-187 s holds a +10 dB low (100-125 Hz) close event (animal or vehicle); loop window kept clear of it, so the loop is 188 s",
+   "avoid_s": [
+    [
+     181,
+     190
+    ]
+   ]
   }
  }
 }
