@@ -65,6 +65,8 @@ describe('QA deep links', () => {
     assert.deepEqual(parseQaUrl('lulla://qa/play/snow'), { kind: 'play', ids: ['snow'] });
     assert.deepEqual(parseQaUrl('lulla://qa/play/rain,snow'), { kind: 'play', ids: ['rain', 'snow'] });
     assert.deepEqual(parseQaUrl('lulla://qa/stop'), { kind: 'stop' });
+    assert.deepEqual(parseQaUrl('lulla://qa/paywall'), { kind: 'paywall' });
+    assert.equal(parseQaUrl('lulla://qa/paywall/x'), null);
     assert.equal(parseQaUrl('lulla://qa/play/'), null);
     assert.equal(parseQaUrl('https://evil.example/qa/play/snow'), null);
     assert.equal(parseQaUrl(null), null);

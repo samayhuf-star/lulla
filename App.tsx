@@ -134,6 +134,8 @@ export default function App() {
       const cmd = parseQaUrl(url);
       if (!cmd) return;
       mixer.clear();
+      if (cmd.kind === 'paywall') { setShowPaywall(true); return; }
+      setShowPaywall(false);
       if (cmd.kind === 'play') {
         setTimeout(() => {
           cmd.ids.forEach((id) => { if (SOUND_BY_ID[id]) mixer.toggle(id); });
