@@ -1,22 +1,21 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Alert, FlatList, Linking, Modal, Platform, Pressable, SafeAreaView,
+  AccessibilityInfo, ActivityIndicator, Alert, FlatList, Linking, Modal, Platform, Pressable, SafeAreaView,
   ScrollView, StyleSheet, Text, View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import * as SplashScreen from 'expo-splash-screen';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import type { PurchasesPackage } from 'react-native-purchases';
 
 import { CATEGORIES, SOUNDS, SOUND_BY_ID, TIMER_OPTIONS, Category } from './src/catalog';
-import { FREE_SECONDS, PRICE_LABEL, PRIVACY_URL, TERMS_URL } from './src/config';
+import { FREE_SECONDS, PRIVACY_URL, SUPPORT_URL, TERMS_URL } from './src/config';
 import { mixer } from './src/mixer';
 import { addUsed, loadUsed, persistUsed, remainingSeconds } from './src/trial';
-import {
-  getCustomerInfo, getMonthlyPackage, hasPremium, initPurchases, isConfigured,
-  onCustomerInfo, purchase, restore,
-} from './src/purchases';
+import { buy, initIAP, loadPlans, onEntitlementChange, refreshEntitlements, restore, type Plan } from './src/purchases';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const C = {
   bg1: '#150a2e', bg2: '#2a1050', bg3: '#0b2a4a',
@@ -29,8 +28,9 @@ const fmt = (s: number) => {
   return `${m}:${r.toString().padStart(2, '0')}`;
 };
 
+const nowMs = (): number => Date.now();
+
 export default function App() {
-  const [ready, setReady] = useState(false);
   const [premium, setPremium] = useState(false);
   const [remaining, setRemaining] = useState(FREE_SECONDS);
   const [, force] = useState(0);
@@ -40,26 +40,41 @@ export default function App() {
   const [showMix, setShowMix] = useState(false);
   const [timerEnd, setTimerEnd] = useState<number | null>(null);
   const [timerLeft, setTimerLeft] = useState(0);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   const premiumRef = useRef(false);
-  premiumRef.current = premium;
-  const lastTick = useRef(Date.now());
+  const lastTick = useRef(0);
   const sinceSave = useRef(0);
 
-  // boot
   useEffect(() => {
+    premiumRef.current = premium;
+  }, [premium]);
+
+  // boot — hide the splash as soon as the UI is mounted. Never wait on StoreKit.
+  useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {});
+    if (!lastTick.current) lastTick.current = nowMs();
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {});
+    const motion = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+
     (async () => {
       await mixer.init();
       await loadUsed();
       setRemaining(remainingSeconds());
-      initPurchases();
-      const info = await getCustomerInfo();
-      setPremium(hasPremium(info));
-      setReady(true);
     })();
+
+    (async () => {
+      await initIAP();
+      setPremium(await refreshEntitlements());
+    })();
+
     const un1 = mixer.subscribe(() => force((n) => n + 1));
-    const un2 = onCustomerInfo((info) => setPremium(hasPremium(info)));
-    return () => { un1(); un2(); };
+    const un2 = onEntitlementChange(setPremium);
+    return () => {
+      un1();
+      un2();
+      motion.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -69,7 +84,7 @@ export default function App() {
   // 1s heartbeat: trial accounting (timestamp-based, robust to JS throttling) + sleep timer
   useEffect(() => {
     const id = setInterval(() => {
-      const now = Date.now();
+      const now = nowMs();
       const delta = Math.min(5, Math.max(0, (now - lastTick.current) / 1000));
       lastTick.current = now;
 
@@ -104,30 +119,27 @@ export default function App() {
     return true;
   }, []);
 
+  const tap = () => {
+    if (!reduceMotion) Haptics.selectionAsync().catch(() => {});
+  };
+
   const onTile = (id: string) => {
-    Haptics.selectionAsync().catch(() => {});
+    tap();
     if (!gate()) return;
     const wasEmpty = mixer.active().length === 0;
     mixer.toggle(id);
-    if (wasEmpty && mixer.active().length > 0) { lastTick.current = Date.now(); mixer.play(); }
+    if (wasEmpty && mixer.active().length > 0) { lastTick.current = nowMs(); mixer.play(); }
   };
 
   const onPlayPause = () => {
     if (mixer.active().length === 0) return;
     if (mixer.playing) mixer.pause();
-    else if (gate()) { lastTick.current = Date.now(); mixer.play(); }
+    else if (gate()) { lastTick.current = nowMs(); mixer.play(); }
   };
 
   const list = useMemo(() => (cat === 'All' ? SOUNDS : SOUNDS.filter((s) => s.category === cat)), [cat]);
   const active = mixer.active();
-
-  if (!ready) {
-    return (
-      <View style={[styles.fill, { backgroundColor: C.bg1, alignItems: 'center', justifyContent: 'center' }]}>
-        <ActivityIndicator color={C.accent} />
-      </View>
-    );
-  }
+  const sheetAnim = reduceMotion ? 'none' : 'slide';
 
   return (
     <LinearGradient colors={[C.bg1, C.bg2, C.bg3]} style={styles.fill}>
@@ -194,7 +206,7 @@ export default function App() {
       </SafeAreaView>
 
       {/* Mix sheet */}
-      <Modal visible={showMix} transparent animationType="slide" onRequestClose={() => setShowMix(false)}>
+      <Modal visible={showMix} transparent animationType={sheetAnim} onRequestClose={() => setShowMix(false)}>
         <Pressable style={styles.backdrop} onPress={() => setShowMix(false)} />
         <View style={styles.sheet}>
           <Text style={styles.sheetTitle}>Your mix</Text>
@@ -218,7 +230,7 @@ export default function App() {
       </Modal>
 
       {/* Timer sheet */}
-      <Modal visible={showTimer} transparent animationType="slide" onRequestClose={() => setShowTimer(false)}>
+      <Modal visible={showTimer} transparent animationType={sheetAnim} onRequestClose={() => setShowTimer(false)}>
         <Pressable style={styles.backdrop} onPress={() => setShowTimer(false)} />
         <View style={styles.sheet}>
           <Text style={styles.sheetTitle}>Sleep timer</Text>
@@ -228,7 +240,7 @@ export default function App() {
               style={styles.timerRow}
               onPress={() => {
                 mixer.setMaster(1);
-                setTimerEnd(o.minutes ? Date.now() + o.minutes * 60000 : null);
+                setTimerEnd(o.minutes ? nowMs() + o.minutes * 60000 : null);
                 setTimerLeft(o.minutes * 60);
                 setShowTimer(false);
               }}
@@ -245,6 +257,7 @@ export default function App() {
         onClose={() => setShowPaywall(false)}
         onUnlocked={() => { setPremium(true); setShowPaywall(false); }}
         expired={remaining <= 0}
+        reduceMotion={reduceMotion}
       />
     </LinearGradient>
   );
@@ -263,26 +276,33 @@ function VolumeBar({ value, onChange }: { value: number; onChange: (v: number) =
   );
 }
 
-function Paywall({ visible, onClose, onUnlocked, expired }: {
-  visible: boolean; onClose: () => void; onUnlocked: () => void; expired: boolean;
+function Paywall({ visible, onClose, onUnlocked, expired, reduceMotion }: {
+  visible: boolean; onClose: () => void; onUnlocked: () => void; expired: boolean; reduceMotion: boolean;
 }) {
-  const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [plansError, setPlansError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (visible) getMonthlyPackage().then(setPkg);
+    if (!visible) return;
+    let cancelled = false;
+    loadPlans().then((result) => {
+      if (cancelled) return;
+      setPlans(result.plans);
+      setPlansError(result.error);
+    });
+    return () => { cancelled = true; };
   }, [visible]);
 
-  const buy = async () => {
-    if (!isConfigured() || !pkg) {
-      Alert.alert('Store unavailable', 'Subscriptions are not available right now. Please try again shortly.');
-      return;
-    }
+  const onBuy = async (plan: Plan) => {
     setBusy(true);
     try {
-      if (await purchase(pkg)) onUnlocked();
-    } catch (e: any) {
-      Alert.alert('Purchase failed', e?.message ?? 'Please try again.');
+      const result = await buy(plan);
+      if (result === 'purchased') onUnlocked();
+      else if (result === 'pending') Alert.alert('Purchase pending', 'This purchase is waiting for approval.');
+      else if (result === 'error') Alert.alert('Purchase failed', 'Please try again.');
+    } catch (e: unknown) {
+      Alert.alert('Purchase failed', e instanceof Error ? e.message : 'Please try again.');
     } finally { setBusy(false); }
   };
 
@@ -291,13 +311,15 @@ function Paywall({ visible, onClose, onUnlocked, expired }: {
     try {
       if (await restore()) onUnlocked();
       else Alert.alert('Nothing to restore', 'No active subscription was found for this account.');
-    } catch (e: any) {
-      Alert.alert('Restore failed', e?.message ?? 'Please try again.');
+    } catch (e: unknown) {
+      Alert.alert('Restore failed', e instanceof Error ? e.message : 'Please try again.');
     } finally { setBusy(false); }
   };
 
+  const periodLabel = (plan: Plan) => (plan.kind === 'yearly' ? 'year' : 'month');
+
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} animationType={reduceMotion ? 'none' : 'slide'} onRequestClose={onClose}>
       <LinearGradient colors={[C.bg1, C.bg2, C.bg3]} style={styles.fill}>
         <SafeAreaView style={[styles.fill, { padding: 24 }]}>
           <Pressable onPress={onClose} style={{ alignSelf: 'flex-end' }}><Text style={styles.remove}>✕</Text></Pressable>
@@ -305,20 +327,38 @@ function Paywall({ visible, onClose, onUnlocked, expired }: {
             <Text style={{ fontSize: 64, textAlign: 'center' }}>🌙</Text>
             <Text style={styles.payTitle}>{expired ? 'Your free 3 minutes are up' : 'Sleep deeper with Lulla'}</Text>
             <Text style={styles.paySub}>Keep the calm going all night.</Text>
-            {['25+ high-quality sleep sounds', 'Layer sounds into your own mix', 'Sleep timer with gentle fade-out', 'Plays in the background, screen off'].map((t) => (
+            {['25 high-quality sleep sounds', 'Layer sounds into your own mix', 'Sleep timer with gentle fade-out', 'Plays in the background, screen off'].map((t) => (
               <Text key={t} style={styles.perk}>✓  {t}</Text>
             ))}
           </View>
-          <Pressable style={[styles.cta, busy && { opacity: 0.6 }]} disabled={busy} onPress={buy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Subscribe · {pkg?.product.priceString ?? '$1.99'} / month</Text>}
-          </Pressable>
+          {plans.length === 0 ? (
+            <View style={[styles.cta, { backgroundColor: 'rgba(124,58,237,0.35)' }]}>
+              {busy ? <ActivityIndicator color="#fff" /> : (
+                <Text style={styles.ctaText}>{plansError ?? 'Prices will appear here when the store is ready.'}</Text>
+              )}
+            </View>
+          ) : plans.map((plan) => (
+            <Pressable
+              key={plan.id}
+              style={[styles.cta, { marginTop: 10 }, busy && { opacity: 0.6 }]}
+              disabled={busy}
+              onPress={() => onBuy(plan)}
+            >
+              {busy ? <ActivityIndicator color="#fff" /> : (
+                <Text style={styles.ctaText}>{plan.label} · {plan.price} / {periodLabel(plan)}</Text>
+              )}
+            </Pressable>
+          ))}
           <Text style={styles.fine}>
-            {PRICE_LABEL}, auto-renews monthly until cancelled. Cancel anytime in your {Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.
+            {plans.length
+              ? `Subscriptions auto-renew until cancelled. Cancel anytime in your ${Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.`
+              : 'Subscription prices come from the App Store or Google Play and will show here once they load.'}
           </Text>
           <View style={styles.links}>
             <Pressable onPress={doRestore}><Text style={styles.link}>Restore purchases</Text></Pressable>
             <Pressable onPress={() => Linking.openURL(TERMS_URL)}><Text style={styles.link}>Terms</Text></Pressable>
             <Pressable onPress={() => Linking.openURL(PRIVACY_URL)}><Text style={styles.link}>Privacy</Text></Pressable>
+            <Pressable onPress={() => Linking.openURL(SUPPORT_URL)}><Text style={styles.link}>Support</Text></Pressable>
           </View>
         </SafeAreaView>
       </LinearGradient>
@@ -366,8 +406,8 @@ const styles = StyleSheet.create({
   paySub: { color: C.sub, textAlign: 'center', marginTop: 6, marginBottom: 24 },
   perk: { color: C.text, fontSize: 16, marginVertical: 6, paddingHorizontal: 24 },
   cta: { backgroundColor: C.accent2, paddingVertical: 18, borderRadius: 999, alignItems: 'center' },
-  ctaText: { color: '#fff', fontSize: 17, fontWeight: '800' },
+  ctaText: { color: '#fff', fontSize: 17, fontWeight: '800', textAlign: 'center', paddingHorizontal: 12 },
   fine: { color: C.sub, fontSize: 11, textAlign: 'center', marginTop: 12, lineHeight: 16 },
-  links: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 14 },
+  links: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 14, flexWrap: 'wrap' },
   link: { color: C.sub, fontSize: 12, textDecorationLine: 'underline' },
 });

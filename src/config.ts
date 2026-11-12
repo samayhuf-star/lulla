@@ -1,13 +1,20 @@
-// Central product config. Change here only.
+// Central product and legal config. Change here only.
 export const FREE_SECONDS = 180; // 3 minutes of free listening, then paywall
-export const PRICE_LABEL = '$1.99 / month';
-export const ENTITLEMENT_ID = 'premium';
-export const PRODUCT_ID_IOS = 'lulla_premium_monthly';
-export const PRODUCT_ID_ANDROID = 'lulla_premium_monthly';
 
-// RevenueCat PUBLIC SDK keys (safe to ship in the app). Replace before building.
-export const RC_API_KEY_IOS = process.env.EXPO_PUBLIC_RC_IOS_KEY ?? 'appl_REPLACE_ME';
-export const RC_API_KEY_ANDROID = process.env.EXPO_PUBLIC_RC_ANDROID_KEY ?? 'goog_REPLACE_ME';
+export const PRODUCT_IDS = {
+  yearly: 'lulla_premium_yearly',
+  monthly: 'lulla_premium_monthly',
+} as const;
 
-export const PRIVACY_URL = 'https://samayhuf-star.github.io/lulla/privacy.html';
-export const TERMS_URL = 'https://samayhuf-star.github.io/lulla/terms.html';
+export const PRODUCT_CATALOG = [
+  { id: PRODUCT_IDS.yearly, kind: 'yearly' as const, type: 'subs' as const, label: 'Yearly', period: 'year' },
+  { id: PRODUCT_IDS.monthly, kind: 'monthly' as const, type: 'subs' as const, label: 'Monthly', period: 'month' },
+];
+
+export const ALL_PRODUCT_IDS = PRODUCT_CATALOG.map((p) => p.id);
+
+export const isKnownProduct = (id: string) => ALL_PRODUCT_IDS.includes(id as (typeof ALL_PRODUCT_IDS)[number]);
+
+export const PRIVACY_URL = 'https://samayhuf-star.github.io/app-legal/lulla/privacy.html';
+export const TERMS_URL = 'https://samayhuf-star.github.io/app-legal/lulla/terms.html';
+export const SUPPORT_URL = 'https://samayhuf-star.github.io/app-legal/lulla/support.html';

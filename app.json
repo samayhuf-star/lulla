@@ -5,7 +5,7 @@
     "scheme": "lulla",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-v2.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#150a2e",
     "ios": {
@@ -16,7 +16,8 @@
         "UIBackgroundModes": [
           "audio"
         ],
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSHumanReadableCopyright": "Copyright \u00a9 2026 Samay Vashsht"
       }
     },
     "android": {
@@ -24,8 +25,8 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#150a2e",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
+        "foregroundImage": "./assets/android-icon-foreground-v2.png",
+        "backgroundImage": "./assets/android-icon-background-v2.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
@@ -42,7 +43,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
+          "image": "./assets/splash-icon-v2.png",
           "backgroundColor": "#150a2e",
           "imageWidth": 200
         }
@@ -50,7 +51,8 @@
       "expo-audio",
       "expo-secure-store",
       "expo-asset",
-      "expo-build-properties"
+      "expo-build-properties",
+      "expo-iap"
     ],
     "extra": {
       "eas": {

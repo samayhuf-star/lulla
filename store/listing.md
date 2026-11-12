@@ -9,15 +9,23 @@
 **Full description**
 Fall asleep faster with Lulla. Pick a sound, layer your own mix, set a timer, and drift off.
 
-• 25+ calming sounds: rain, rain on window, ocean, creek, waterfall, wind, forest, fireplace, thunder and more
+• 25 calming sounds: rain, rain on window, ocean, creek, waterfall, wind, forest, fireplace, thunder and more
 • White, pink and brown noise for focus, babies and tinnitus relief
 • Mix any sounds together and set each volume
 • Sleep timer from 10 minutes to 3 hours with a gentle fade-out
 • Keeps playing with the screen off
 
-Try it free for 3 minutes. Lulla Premium is $1.99 per month, auto-renews until cancelled, and can be cancelled anytime in your Apple ID or Google Play settings.
+Try it free for 3 minutes. Lulla Premium is an auto-renewing yearly or monthly subscription. The price is shown in the app before you buy, and you can cancel anytime in your Apple ID or Google Play settings.
 
 **Category:** Health & Fitness · **Age rating:** 4+ / Everyone
-**Subscription display name:** Lulla Premium · **Duration:** 1 month · **Price:** $1.99
+**Subscription display name:** Lulla Premium
+**Product IDs:** `lulla_premium_yearly` (1 year), `lulla_premium_monthly` (1 month)
+**Prices:** shown in the app from the store (App Store Connect USA list prices as of 12 Nov 2026: $41.99 / year, $4.99 / month)
+
+**Privacy:** https://samayhuf-star.github.io/app-legal/lulla/privacy.html
+**Terms:** https://samayhuf-star.github.io/app-legal/lulla/terms.html
+**Support:** https://samayhuf-star.github.io/app-legal/lulla/support.html
+**Copyright:** Samay Vashsht
+**Contact:** samayhuf@gmail.com
 
 **Screenshots to capture (6.9" iPhone + Android phone):** 1 sound grid, 2 mix sheet, 3 sleep timer, 4 playing state, 5 paywall. Capture from a real build; use original captions only.
