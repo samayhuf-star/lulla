@@ -39,18 +39,31 @@ describe('fades', () => {
 describe('sound catalog', () => {
   const catalog = read('src/catalog.ts');
   const files = [...catalog.matchAll(/require\('\.\.\/assets\/sounds\/([a-z_]+\.m4a)'\)/g)].map((m) => m[1]);
-  it('keeps all 25 sound slots, all as AAC m4a', () => {
-    assert.equal(files.length, 25);
+  it('has all 38 build 8 sound slots, all as AAC m4a', () => {
+    assert.equal(files.length, 38);
+    assert.equal(new Set(files).size, 38);
     assert.ok(!catalog.includes('.mp3'));
   });
-  it('every sound file exists, is a real-sized loop and has a licence entry', () => {
-    const lic = read('SOUND_LICENSES.md');
+  const pending: string[] = JSON.parse(read('assets/sounds/PENDING.json')).pending;
+  it('every sound file exists; finished masters are real-sized loops with a licence entry', () => {
+    const lic = read('ASSET_LICENSES.md');
     for (const f of files) {
       const p = join(root, 'assets/sounds', f);
       assert.ok(existsSync(p), f);
-      assert.ok(statSync(p).size > 1_000_000, `${f} too small for a 60 s 256 kbps loop`);
-      assert.ok(lic.includes(f), `${f} missing from SOUND_LICENSES.md`);
+      if (pending.includes(f.replace('.m4a', ''))) continue; // checked by npm run check:sounds before any build
+      assert.ok(statSync(p).size > 1_500_000, `${f} too small for a 90 s 160 kbps loop`);
+      assert.ok(lic.includes('`' + f + '`'), `${f} missing from ASSET_LICENSES.md`);
     }
+  });
+  it('pending list only names catalog sounds', () => {
+    for (const id of pending) assert.ok(files.includes(`${id}.m4a`), id);
+  });
+  it('new categories exist and only binaural sounds carry the headphones badge', () => {
+    for (const c of ['Hum', 'Calm', 'Lullaby', 'Binaural']) assert.ok(catalog.includes(`'${c}'`), c);
+    const hp = [...catalog.matchAll(/category: '(\w+)', headphones: true/g)].map((m) => m[1]);
+    assert.ok(hp.length >= 1);
+    assert.ok(hp.every((c) => c === 'Binaural'));
+    assert.ok(read('App.tsx').includes('Use headphones'));
   });
 });
 

@@ -218,6 +218,11 @@ export default function App() {
               <Pressable onPress={() => onTile(item.id)} style={[styles.tile, on && styles.tileOn]}>
                 <Text style={styles.emoji}>{item.emoji}</Text>
                 <Text style={styles.tileName} numberOfLines={2}>{item.name}</Text>
+                {item.headphones ? (
+                  <View style={styles.badge} accessibilityLabel="Use headphones">
+                    <Text style={styles.badgeText}>Use headphones</Text>
+                  </View>
+                ) : null}
               </Pressable>
             );
           }}
@@ -252,7 +257,10 @@ export default function App() {
             <ScrollView style={{ maxHeight: 360 }}>
               {active.map((id) => (
                 <View key={id} style={styles.mixRow}>
-                  <Text style={styles.mixName}>{SOUND_BY_ID[id].emoji} {SOUND_BY_ID[id].name}</Text>
+                  <View style={{ width: 130 }}>
+                    <Text style={styles.mixName}>{SOUND_BY_ID[id].emoji} {SOUND_BY_ID[id].name}</Text>
+                    {SOUND_BY_ID[id].headphones ? <Text style={styles.badgeInline}>Use headphones</Text> : null}
+                  </View>
                   <VolumeBar value={mixer.volume(id)} onChange={(v) => mixer.setVolume(id, v)} />
                   <Pressable onPress={() => mixer.toggle(id)}><Text style={styles.remove}>✕</Text></Pressable>
                 </View>
@@ -404,6 +412,9 @@ function Paywall({ visible, onClose, onUnlocked, expired, reduceMotion }: {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  badge: { marginTop: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(167,139,250,0.3)' },
+  badgeText: { color: C.text, fontSize: 9, fontWeight: '700' },
+  badgeInline: { color: C.sub, fontSize: 11, marginTop: 2 },
   qa: { position: 'absolute', top: 54, left: 12, right: 12, color: '#fde68a', fontSize: 11, textAlign: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
   title: { color: C.text, fontSize: 30, fontWeight: '800', letterSpacing: 0.5 },

@@ -91,18 +91,43 @@ TWINKLE_CHORDS = [('C3', 4), ('F3', 2), ('C3', 2), ('F3', 2), ('C3', 2), ('G3', 
                   ('C3', 2), ('F3', 2), ('C3', 2), ('G3', 2), ('C3', 2), ('F3', 2), ('C3', 2), ('G3', 2),
                   ('C3', 4), ('F3', 2), ('C3', 2), ('F3', 2), ('C3', 2), ('G3', 2), ('C3', 2)]
 
-BRAHMS = [  # Brahms, Wiegenlied Op. 49 No. 4 (1868, PD), 3/4, C major
-    ('E4', .5), ('E4', .5), ('G4', 1.5), ('E4', .5), ('E4', 1), ('G4', 2), ('E4', .5), ('G4', .5),
-    ('C5', 1), ('B4', 1.5), ('A4', .5), ('A4', 1), ('G4', 1), ('D4', .5), ('E4', .5),
-    ('F4', 1), ('D4', 1), ('D4', .5), ('E4', .5), ('F4', 2), ('D4', .5), ('F4', .5),
-    ('B4', .5), ('A4', .5), ('G4', 1), ('B4', 1), ('C5', 2), ('C4', .5), ('C4', .5),
-    ('C5', 2), ('A4', .5), ('F4', .5), ('G4', 2), ('E4', .5), ('C4', .5),
-    ('F4', 1), ('G4', 1), ('A4', 1), ('G4', 2), ('C4', .5), ('C4', .5),
-    ('C5', 2), ('A4', .5), ('F4', .5), ('G4', 2), ('E4', .5), ('C4', .5),
-    ('F4', 1), ('E4', .5), ('D4', .5), ('C4', 1), (None, 2),
+BRAHMS = [  # Brahms, Wiegenlied Op. 49 No. 4 (1868, PD), 3/4, transposed Eb -> C.
+    # Checked note by note against the CC0 OpenScore Lieder edition (lc5701612), voice part bars 2-18.
+    ('E4', .5), ('E4', .5),
+    ('G4', 1.5), ('E4', .5), ('E4', 1),
+    ('G4', 1), (None, 1), ('E4', .5), ('G4', .5),
+    ('C5', 1), ('B4', 1.5), ('A4', .5),
+    ('A4', 1), ('G4', 1), ('D4', .5), ('E4', .5),
+    ('F4', 1), ('D4', 1), ('D4', .5), ('E4', .5),
+    ('F4', 1), (None, 1), ('D4', .5), ('F4', .5),
+    ('B4', .5), ('A4', .5), ('G4', 1), ('B4', 1),
+    ('C5', 1), (None, 1), ('C4', .5), ('C4', .5),
+    ('C5', 2), ('A4', .5), ('F4', .5),
+    ('G4', 2), ('E4', .5), ('C4', .5),
+    ('F4', 1), ('G4', 1), ('A4', 1),
+    ('G4', 2), ('C4', .5), ('C4', .5),
+    ('C5', 2), ('A4', .5), ('F4', .5),
+    ('G4', 2), ('E4', .5), ('C4', .5),
+    ('F4', 1), ('E4', 1), ('D4', 1),
+    ('C4', 2),  # the next cycle's pickup completes this bar
 ]
-BRAHMS_BASS = [('C3', 3), ('C3', 3), ('G3', 3), ('C3', 3), ('G3', 3), ('G3', 3), ('G3', 3), ('C3', 3),
-               ('F3', 3), ('C3', 3), ('F3', 3), ('C3', 3), ('F3', 3), ('C3', 3), ('G3', 3), ('C3', 3)]
+BRAHMS_BASS = [(None, 1)] + [(r, 3) for r in ['C3', 'C3', 'G3', 'G3', 'G3', 'G3', 'G3', 'C3', 'F3', 'C3', 'F3', 'C3', 'F3', 'C3', 'G3']] + [('C3', 2)]
+
+# Schubert, Wiegenlied D 498 (1816, PD), 4/4, original key A-flat major. Melody transcribed in-house
+# from the public-domain Mutopia Project typesetting (Mutopia-2007/10/03-1040, "Public Domain").
+Ab3, Bb3, C4_, Db4, Eb4, G4_, Ab4, Bb4, C5_, Db5, Eb5 = 56, 58, 60, 61, 63, 67, 68, 70, 72, 73, 75
+SCHUBERT = [
+    (C5_, 1), (Eb5, 1), (Bb4, .75), (C5_, .25), (Db5, 1),
+    (C5_, .5), (C5_, .5), (Bb4, .25), (Ab4, .25), (G4_, .25), (Ab4, .25), (Bb4, 1), (Eb4, 1),
+    (C5_, 1), (Eb5, 1), (Bb4, .75), (C5_, .25), (Db5, 1),
+    (C5_, .5), (C5_, .5), (Bb4, .25), (C5_, .25), (Db5, .25), (Bb4, .25), (Ab4, 1), (None, 1),
+    (Bb4, 1.5), (Bb4, .5), (C5_, .75), (Bb4, .25), (Ab4, 1),
+    (Eb5, 1), (Db5, .5), (C5_, .5), (Bb4, 1), (Eb4, 1),
+    (C5_, 1), (Eb5, 1), (Bb4, .75), (C5_, .25), (Db5, 1),
+    (C5_, .5), (C5_, .5), (Bb4, .25), (C5_, .25), (Db5, .25), (Bb4, .25), (Ab4, 1), (None, 1),
+]
+AB2, EB2 = 44, 39
+SCHUBERT_BASS = [(AB2, 4), (EB2, 4), (AB2, 4), (EB2, 2), (AB2, 2), (EB2, 4), (AB2, 2), (EB2, 2), (AB2, 4), (EB2, 2), (AB2, 2)]
 
 
 def write_midi(path, tracks, bpm):
@@ -164,7 +189,7 @@ def beats(seq):
 def gen_all(only):
     rng = np.random.default_rng(20261113)
     res = {}
-    todo = only or ['brown_noise', 'pink_noise', 'green_noise', 'white_noise', 'om_drone', 'delta_waves', 'brahms_musicbox', 'twinkle_piano', 'ambient_pad']
+    todo = only or ['brown_noise', 'pink_noise', 'green_noise', 'white_noise', 'om_drone', 'delta_waves', 'brahms_musicbox', 'twinkle_piano', 'schubert_piano', 'ambient_pad', 'womb']
     n90 = int(90 * SR)
     for name in todo:
         if name == 'brown_noise':
@@ -208,6 +233,39 @@ def gen_all(only):
             bpm = 66
             body, n = repeat_render([(10, 0, BRAHMS, 50), (0, 1, BRAHMS_BASS, 28)], bpm, 3, beats(BRAHMS))
             res[name] = finish(name, body, n / SR, True, 'lowpass=f=8000:poles=2', 'FluidR3_GM Music Box (GM 11) + soft piano bass, Brahms Op. 49 No. 4 (PD), MIDI written in-house, 66 bpm')
+        elif name == 'schubert_piano':
+            bpm = 56
+            body, n = repeat_render([(0, 0, SCHUBERT, 50), (0, 1, SCHUBERT_BASS, 30)], bpm, 4, beats(SCHUBERT))
+            res[name] = finish(name, body, n / SR, True, 'lowpass=f=7000:poles=2', 'FluidR3_GM Acoustic Grand Piano, Schubert D 498 (PD), melody from the public-domain Mutopia typesetting, MIDI written in-house, 56 bpm')
+        elif name == 'womb':
+            src = M.find_original({'freesound_id': '369017'})
+            if not src:
+                res[name] = dict(name=name, status='MISSING_ORIGINAL', freesound_id='369017')
+                print(json.dumps(res[name]), flush=True)
+                continue
+            hb = M.decode(src, 'highpass=f=20:poles=2,asetrate=%d,aresample=%d,lowpass=f=600:poles=2' % (int(SR * 0.92), SR))
+            # beat period from the envelope autocorrelation, so the loop is a whole number of beats
+            env = np.abs(hb.mean(1))
+            hop = 480
+            e = env[: len(env) // hop * hop].reshape(-1, hop).mean(1)
+            e = e - e.mean()
+            ac = np.correlate(e, e, 'full')[len(e) - 1:]
+            lo, hi = int(0.5 * SR / hop), int(1.5 * SR / hop)  # 40 to 120 bpm
+            period = (lo + int(np.argmax(ac[lo:hi]))) * hop
+            beats_n = int(120 * SR // period)
+            n = beats_n * period
+            a = M.pick_window(hb, n)
+            hbl = hb[a:a + n]
+            if len(hbl) < n:
+                hbl = np.tile(hb, (int(np.ceil(n / len(hb))) + 1, 1))[:n]
+            wh = colored(n, rng, 2.0)
+            t = np.arange(n) / SR
+            swell = (0.8 + 0.2 * np.sin(2 * np.pi * (round(n / SR / 8) / (n / SR)) * t))[:, None]
+            wh = fx(wh, 'lowpass=f=400:poles=2') * swell
+            hbl = hbl / (np.sqrt((hbl ** 2).mean()) + 1e-9)
+            wh = wh / (np.sqrt((wh ** 2).mean()) + 1e-9)
+            x = (0.55 * hbl + 0.45 * wh).astype(np.float32)
+            res[name] = finish(name, x, n / SR, True, None, 'Heartbeat (Freesound #369017 by patobottos, CC0) slowed 8 percent and low-passed, over low-passed generated brown noise; loop is a whole number of beats')
         elif name == 'ambient_pad':
             bpm = 40
             prog = [(['C4', 'E4', 'G4'], 8), (['A3', 'C4', 'E4'], 8), (['F3', 'A3', 'C4'], 8), (['G3', 'B3', 'D4'], 8)]

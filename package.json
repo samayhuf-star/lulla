@@ -32,7 +32,8 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint App.tsx src",
-    "test": "node --experimental-strip-types --test scripts/*.test.ts"
+    "test": "node --experimental-strip-types --test scripts/*.test.ts",
+    "check:sounds": "node scripts/check-sounds.mjs"
   },
   "private": true
 }

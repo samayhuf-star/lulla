@@ -1,29 +1,32 @@
+// Build 8 catalog: 38 sounds. Masters still being produced are listed in
+// assets/sounds/PENDING.json; `npm run check:sounds` must pass before any store build.
 export type SoundId =
-  | 'rain' | 'rain_window' | 'rain_roof' | 'rain_umbrella' | 'rain_puddle' | 'snow'
-  | 'ocean' | 'lake' | 'creek' | 'waterfall' | 'underwater' | 'drip'
-  | 'wind' | 'wind_leaves' | 'forest' | 'night' | 'cave' | 'grassland' | 'farm'
-  | 'fire' | 'thunder' | 'fan' | 'white_noise' | 'pink_noise' | 'brown_noise';
+  'rain' | 'rain_roof' | 'rain_tent' | 'rain_window' | 'rain_umbrella' | 'rain_puddle' | 'thunder' | 'snow' | 'ocean' | 'lake' | 'creek' | 'waterfall' | 'underwater' | 'drip' | 'wind' | 'wind_leaves' | 'forest' | 'night' | 'cave' | 'grassland' | 'farm' | 'fire' | 'fan' | 'air_conditioner' | 'airplane' | 'heartbeat' | 'womb' | 'singing_bowls' | 'om_drone' | 'brahms_musicbox' | 'twinkle_piano' | 'schubert_piano' | 'ambient_pad' | 'delta_waves' | 'white_noise' | 'pink_noise' | 'green_noise' | 'brown_noise';
 
-export type Category = 'Rain' | 'Water' | 'Nature' | 'Warmth' | 'Noise';
+export type Category = 'Rain' | 'Water' | 'Nature' | 'Warmth' | 'Hum' | 'Calm' | 'Lullaby' | 'Binaural' | 'Noise';
 
 export interface Sound {
   id: SoundId;
   name: string;
   emoji: string;
   category: Category;
+  /** Binaural beats only work on headphones; the tile and mix row show a badge. */
+  headphones?: boolean;
   source: number;
 }
 
-export const CATEGORIES: Category[] = ['Rain', 'Water', 'Nature', 'Warmth', 'Noise'];
+export const CATEGORIES: Category[] = ['Rain', 'Water', 'Nature', 'Warmth', 'Hum', 'Calm', 'Lullaby', 'Binaural', 'Noise'];
 
 export const SOUNDS: Sound[] = [
   { id: 'rain', name: 'Rain', emoji: '🌧️', category: 'Rain', source: require('../assets/sounds/rain.m4a') },
+  { id: 'rain_roof', name: 'Deep Rain on Roof', emoji: '🏠', category: 'Rain', source: require('../assets/sounds/rain_roof.m4a') },
+  { id: 'rain_tent', name: 'Rain on Tent', emoji: '⛺', category: 'Rain', source: require('../assets/sounds/rain_tent.m4a') },
   { id: 'rain_window', name: 'Rain on Window', emoji: '🪟', category: 'Rain', source: require('../assets/sounds/rain_window.m4a') },
-  { id: 'rain_roof', name: 'Rain on Roof', emoji: '🏠', category: 'Rain', source: require('../assets/sounds/rain_roof.m4a') },
   { id: 'rain_umbrella', name: 'Rain on Umbrella', emoji: '☂️', category: 'Rain', source: require('../assets/sounds/rain_umbrella.m4a') },
   { id: 'rain_puddle', name: 'Rain on Puddle', emoji: '💧', category: 'Rain', source: require('../assets/sounds/rain_puddle.m4a') },
+  { id: 'thunder', name: 'Distant Thunder', emoji: '⛈️', category: 'Rain', source: require('../assets/sounds/thunder.m4a') },
   { id: 'snow', name: 'Snow', emoji: '❄️', category: 'Rain', source: require('../assets/sounds/snow.m4a') },
-  { id: 'ocean', name: 'Ocean', emoji: '🌊', category: 'Water', source: require('../assets/sounds/ocean.m4a') },
+  { id: 'ocean', name: 'Slow Ocean Waves', emoji: '🌊', category: 'Water', source: require('../assets/sounds/ocean.m4a') },
   { id: 'lake', name: 'Lake', emoji: '🏞️', category: 'Water', source: require('../assets/sounds/lake.m4a') },
   { id: 'creek', name: 'Creek', emoji: '🪨', category: 'Water', source: require('../assets/sounds/creek.m4a') },
   { id: 'waterfall', name: 'Waterfall', emoji: '⛲', category: 'Water', source: require('../assets/sounds/waterfall.m4a') },
@@ -32,15 +35,26 @@ export const SOUNDS: Sound[] = [
   { id: 'wind', name: 'Wind', emoji: '🌬️', category: 'Nature', source: require('../assets/sounds/wind.m4a') },
   { id: 'wind_leaves', name: 'Wind & Leaves', emoji: '🍃', category: 'Nature', source: require('../assets/sounds/wind_leaves.m4a') },
   { id: 'forest', name: 'Forest', emoji: '🌲', category: 'Nature', source: require('../assets/sounds/forest.m4a') },
-  { id: 'night', name: 'Night', emoji: '🌙', category: 'Nature', source: require('../assets/sounds/night.m4a') },
+  { id: 'night', name: 'Night Crickets', emoji: '🌙', category: 'Nature', source: require('../assets/sounds/night.m4a') },
   { id: 'cave', name: 'Cave', emoji: '🕳️', category: 'Nature', source: require('../assets/sounds/cave.m4a') },
   { id: 'grassland', name: 'Grassland', emoji: '🌾', category: 'Nature', source: require('../assets/sounds/grassland.m4a') },
   { id: 'farm', name: 'Farm', emoji: '🚜', category: 'Nature', source: require('../assets/sounds/farm.m4a') },
-  { id: 'fire', name: 'Fireplace', emoji: '🔥', category: 'Warmth', source: require('../assets/sounds/fire.m4a') },
-  { id: 'thunder', name: 'Thunder', emoji: '⛈️', category: 'Warmth', source: require('../assets/sounds/thunder.m4a') },
-  { id: 'fan', name: 'Fan', emoji: '🌀', category: 'Warmth', source: require('../assets/sounds/fan.m4a') },
+  { id: 'fire', name: 'Crackling Fireplace', emoji: '🔥', category: 'Warmth', source: require('../assets/sounds/fire.m4a') },
+  { id: 'fan', name: 'Fan', emoji: '🌀', category: 'Hum', source: require('../assets/sounds/fan.m4a') },
+  { id: 'air_conditioner', name: 'Air Conditioner', emoji: '🧊', category: 'Hum', source: require('../assets/sounds/air_conditioner.m4a') },
+  { id: 'airplane', name: 'Airplane Cabin', emoji: '✈️', category: 'Hum', source: require('../assets/sounds/airplane.m4a') },
+  { id: 'heartbeat', name: 'Heartbeat', emoji: '💗', category: 'Calm', source: require('../assets/sounds/heartbeat.m4a') },
+  { id: 'womb', name: 'Womb', emoji: '🤱', category: 'Calm', source: require('../assets/sounds/womb.m4a') },
+  { id: 'singing_bowls', name: 'Singing Bowls', emoji: '🥣', category: 'Calm', source: require('../assets/sounds/singing_bowls.m4a') },
+  { id: 'om_drone', name: 'Om Drone', emoji: '🕉️', category: 'Calm', source: require('../assets/sounds/om_drone.m4a') },
+  { id: 'brahms_musicbox', name: 'Brahms Lullaby', emoji: '🎶', category: 'Lullaby', source: require('../assets/sounds/brahms_musicbox.m4a') },
+  { id: 'twinkle_piano', name: 'Twinkle Twinkle', emoji: '⭐', category: 'Lullaby', source: require('../assets/sounds/twinkle_piano.m4a') },
+  { id: 'schubert_piano', name: 'Schubert Lullaby', emoji: '🎹', category: 'Lullaby', source: require('../assets/sounds/schubert_piano.m4a') },
+  { id: 'ambient_pad', name: 'Ambient Pad', emoji: '🌌', category: 'Lullaby', source: require('../assets/sounds/ambient_pad.m4a') },
+  { id: 'delta_waves', name: 'Delta Waves', emoji: '🎧', category: 'Binaural', headphones: true, source: require('../assets/sounds/delta_waves.m4a') },
   { id: 'white_noise', name: 'White Noise', emoji: '⚪', category: 'Noise', source: require('../assets/sounds/white_noise.m4a') },
   { id: 'pink_noise', name: 'Pink Noise', emoji: '🌸', category: 'Noise', source: require('../assets/sounds/pink_noise.m4a') },
+  { id: 'green_noise', name: 'Green Noise', emoji: '🟢', category: 'Noise', source: require('../assets/sounds/green_noise.m4a') },
   { id: 'brown_noise', name: 'Brown Noise', emoji: '🟤', category: 'Noise', source: require('../assets/sounds/brown_noise.m4a') },
 ];
 

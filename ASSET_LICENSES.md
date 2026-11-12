@@ -21,18 +21,20 @@ Pending download (see `reports/lulla-sounds/freesound-needed.md`, Batches 2 and 
 | App sound | File | Source | Licence |
 |---|---|---|---|
 | Lock screen control (silent) | `assets/silence.m4a` | Digital silence, generated with ffmpeg `anullsrc` | Own work, CC0 |
+| Brown Noise | `brown_noise.m4a` | Generated brown noise (1/f^2), independent L/R | Own work, CC0 (FluidR3 renders: soundfont MIT) |
+| Pink Noise | `pink_noise.m4a` | Generated pink noise (1/f), independent L/R | Own work, CC0 (FluidR3 renders: soundfont MIT) |
+| Green Noise | `green_noise.m4a` | Generated pink noise band-passed 200 Hz to 1.5 kHz, centred near 500 Hz | Own work, CC0 (FluidR3 renders: soundfont MIT) |
+| White Noise | `white_noise.m4a` | Generated white noise, -6 dB shelf above 6 kHz | Own work, CC0 (FluidR3 renders: soundfont MIT) |
+| Om Drone | `om_drone.m4a` | Generated 136.1 Hz drone with soft harmonics, 0.1 Hz swell, light echo | Own work, CC0 (FluidR3 renders: soundfont MIT) |
+| Delta Waves | `delta_waves.m4a` | Generated binaural beat: 200 Hz left, 202 Hz right (2 Hz delta), pink noise bed at -18 dB | Own work, CC0 (FluidR3 renders: soundfont MIT) |
+| Brahms Musicbox | `brahms_musicbox.m4a` | FluidR3_GM Music Box (GM 11) + soft piano bass, Brahms Op. 49 No. 4 (PD), MIDI written in-house, 66 bpm | Own work, CC0 (FluidR3 renders: soundfont MIT) |
+| Twinkle Piano | `twinkle_piano.m4a` | FluidR3_GM Acoustic Grand Piano, trad. melody (PD), MIDI written in-house, 62 bpm | Own work, CC0 (FluidR3 renders: soundfont MIT) |
+| Ambient Pad | `ambient_pad.m4a` | FluidR3_GM Pad 2 warm + Pad 8 sweep, own I-vi-IV-V progression, 40 bpm | Own work, CC0 (FluidR3 renders: soundfont MIT) |
+| Schubert Piano | `schubert_piano.m4a` | FluidR3_GM Acoustic Grand Piano, Schubert D 498 (PD), melody from the public-domain Mutopia typesetting, MIDI written in-house, 56 bpm | Own work, CC0 (FluidR3 renders: soundfont MIT) |
 
-| Brown Noise | `brown_noise.m4a` | Generated brown noise (1/f^2), independent L/R | Own work, CC0 |
-| Pink Noise | `pink_noise.m4a` | Generated pink noise (1/f), independent L/R | Own work, CC0 |
-| Green Noise | `green_noise.m4a` | Generated pink noise band-passed 200 Hz to 1.5 kHz, centred near 500 Hz | Own work, CC0 |
-| White Noise | `white_noise.m4a` | Generated white noise, -6 dB shelf above 6 kHz | Own work, CC0 |
-| Om Drone | `om_drone.m4a` | Generated 136.1 Hz drone with soft harmonics, 0.1 Hz swell, light echo | Own work, CC0 |
-| Delta Waves | `delta_waves.m4a` | Generated binaural beat: 200 Hz left, 202 Hz right (2 Hz delta), pink noise bed at -18 dB | Own work, CC0 |
-| Brahms Musicbox | `brahms_musicbox.m4a` | FluidR3_GM Music Box (GM 11) + soft piano bass, Brahms Op. 49 No. 4 (PD), MIDI written in-house, 66 bpm | Own work, CC0 |
-| Twinkle Piano | `twinkle_piano.m4a` | FluidR3_GM Acoustic Grand Piano, trad. melody (PD), MIDI written in-house, 62 bpm | Own work, CC0 |
-| Ambient Pad | `ambient_pad.m4a` | FluidR3_GM Pad 2 warm + Pad 8 sweep, own I-vi-IV-V progression, 40 bpm | Own work, CC0 |
+Lullaby melodies: Brahms Wiegenlied Op. 49 No. 4 (1868) and trad. "Ah! vous dirai-je, maman" are public domain; the MIDI is written in-house in `tools/sound-pipeline/b8/generate.py` (no edition copied). Schubert Wiegenlied D 498 (1816) is public domain; its melody was transcribed in-house from the public-domain Mutopia Project typesetting (Mutopia-2007/10/03-1040, marked "Public Domain", https://www.mutopiaproject.org/ftp/SchubertF/D498/schubert_wiegen_lied/). The Brahms melody was checked note by note against the CC0 OpenScore Lieder edition (github.com/OpenScore/Lieder, lc5701612).
 
-Lullaby melodies: Brahms Wiegenlied Op. 49 No. 4 (1868) and trad. "Ah! vous dirai-je, maman" are public domain; the MIDI is written in-house in `tools/sound-pipeline/b8/generate.py` (no edition copied). Schubert D 498 is not rendered yet.
+Womb (`womb.m4a`) is pending: it is mixed from Heartbeat #369017 (CC0) once that original is downloaded.
 
 ## Soundfont
 

@@ -1,0 +1,30 @@
+{
+ "_comment": "Sounds whose build 8 master is not in assets/sounds yet. Interim files are the build 7 masters, or a 1 s silent placeholder for new sounds. Remove an id when its master is copied in. npm run check:sounds fails while this list is non-empty.",
+ "pending": [
+  "rain",
+  "rain_roof",
+  "rain_tent",
+  "rain_window",
+  "rain_umbrella",
+  "thunder",
+  "snow",
+  "ocean",
+  "lake",
+  "creek",
+  "waterfall",
+  "underwater",
+  "wind",
+  "wind_leaves",
+  "forest",
+  "night",
+  "cave",
+  "farm",
+  "fire",
+  "fan",
+  "air_conditioner",
+  "airplane",
+  "heartbeat",
+  "womb",
+  "singing_bowls"
+ ]
+}
