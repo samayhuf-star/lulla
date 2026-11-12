@@ -18,3 +18,6 @@ export const isKnownProduct = (id: string) => ALL_PRODUCT_IDS.includes(id as (ty
 export const PRIVACY_URL = 'https://samayhuf-star.github.io/app-legal/lulla/privacy.html';
 export const TERMS_URL = 'https://samayhuf-star.github.io/app-legal/lulla/terms.html';
 export const SUPPORT_URL = 'https://samayhuf-star.github.io/app-legal/lulla/support.html';
+
+// QA builds only. Set EXPO_PUBLIC_LULLA_QA=1 for the CI simulator run; store builds never set it.
+export const QA_MODE = process.env.EXPO_PUBLIC_LULLA_QA === '1';

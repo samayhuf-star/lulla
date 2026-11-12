@@ -10,7 +10,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 import { CATEGORIES, SOUNDS, SOUND_BY_ID, TIMER_OPTIONS, Category } from './src/catalog';
-import { FREE_SECONDS, PRIVACY_URL, SUPPORT_URL, TERMS_URL } from './src/config';
+import { FREE_SECONDS, PRIVACY_URL, QA_MODE, SUPPORT_URL, TERMS_URL } from './src/config';
+import { parseQaUrl } from './src/qa';
 import { mixer } from './src/mixer';
 import { addUsed, loadUsed, persistUsed, remainingSeconds } from './src/trial';
 import { buy, initIAP, loadPlans, onEntitlementChange, refreshEntitlements, restore, type Plan } from './src/purchases';
@@ -41,6 +42,7 @@ export default function App() {
   const [timerEnd, setTimerEnd] = useState<number | null>(null);
   const [timerLeft, setTimerLeft] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [qaLine, setQaLine] = useState('');
 
   const premiumRef = useRef(false);
   const lastTick = useRef(0);
@@ -68,6 +70,14 @@ export default function App() {
       setPremium(await refreshEntitlements());
     })();
 
+    // Lock screen / Control Center play goes through the same trial gate as the play button.
+    mixer.setRemotePlayGuard(() => {
+      if (premiumRef.current || QA_MODE) return true;
+      if (remainingSeconds() <= 0) { setShowPaywall(true); return false; }
+      lastTick.current = nowMs();
+      return true;
+    });
+
     const un1 = mixer.subscribe(() => force((n) => n + 1));
     const un2 = onEntitlementChange(setPremium);
     return () => {
@@ -88,7 +98,7 @@ export default function App() {
       const delta = Math.min(5, Math.max(0, (now - lastTick.current) / 1000));
       lastTick.current = now;
 
-      if (mixer.playing && !premiumRef.current) {
+      if (mixer.playing && !premiumRef.current && !QA_MODE) {
         const left = addUsed(delta);
         sinceSave.current += delta;
         setRemaining(left);
@@ -102,19 +112,43 @@ export default function App() {
       if (timerEnd) {
         const tl = (timerEnd - now) / 1000;
         setTimerLeft(Math.max(0, tl));
+        mixer.setTimerLeft(tl > 0 ? tl : null);
         if (tl <= 10 && tl > 0) mixer.setMaster(tl / 10); // gentle fade-out
         if (tl <= 0) {
           mixer.pause();
           mixer.setMaster(1);
           setTimerEnd(null);
         }
+      } else {
+        mixer.setTimerLeft(null);
       }
+      if (QA_MODE) setQaLine(Object.entries(mixer.positions()).map(([k, v]) => `${k} ${v.toFixed(1)}s`).join('  '));
     }, 1000);
     return () => clearInterval(id);
   }, [timerEnd]);
 
+  // QA builds only (EXPO_PUBLIC_LULLA_QA=1, never set for store builds): lulla://qa/play/<id>
+  useEffect(() => {
+    if (!QA_MODE) return;
+    const handle = (url: string | null | undefined) => {
+      const cmd = parseQaUrl(url);
+      if (!cmd) return;
+      mixer.clear();
+      if (cmd.kind === 'play') {
+        setTimeout(() => {
+          cmd.ids.forEach((id) => { if (SOUND_BY_ID[id]) mixer.toggle(id); });
+          lastTick.current = nowMs();
+          mixer.play();
+        }, 1000);
+      }
+    };
+    Linking.getInitialURL().then(handle).catch(() => {});
+    const sub = Linking.addEventListener('url', (e) => handle(e.url));
+    return () => sub.remove();
+  }, []);
+
   const gate = useCallback((): boolean => {
-    if (premiumRef.current) return true;
+    if (premiumRef.current || QA_MODE) return true;
     if (remainingSeconds() <= 0) { setShowPaywall(true); return false; }
     return true;
   }, []);
@@ -188,6 +222,8 @@ export default function App() {
             );
           }}
         />
+
+        {QA_MODE && qaLine ? <Text style={styles.qa} testID="qa-positions">{qaLine}</Text> : null}
 
         {/* Bottom player */}
         <View style={styles.player}>
@@ -327,7 +363,7 @@ function Paywall({ visible, onClose, onUnlocked, expired, reduceMotion }: {
             <Text style={{ fontSize: 64, textAlign: 'center' }}>🌙</Text>
             <Text style={styles.payTitle}>{expired ? 'Your free 3 minutes are up' : 'Sleep deeper with Lulla'}</Text>
             <Text style={styles.paySub}>Keep the calm going all night.</Text>
-            {['25 high-quality sleep sounds', 'Layer sounds into your own mix', 'Sleep timer with gentle fade-out', 'Plays in the background, screen off'].map((t) => (
+            {[`${SOUNDS.length} high-quality sleep sounds`, 'Layer sounds into your own mix', 'Sleep timer with gentle fade-out', 'Plays in the background, screen off'].map((t) => (
               <Text key={t} style={styles.perk}>✓  {t}</Text>
             ))}
           </View>
@@ -368,6 +404,7 @@ function Paywall({ visible, onClose, onUnlocked, expired, reduceMotion }: {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  qa: { position: 'absolute', top: 54, left: 12, right: 12, color: '#fde68a', fontSize: 11, textAlign: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
   title: { color: C.text, fontSize: 30, fontWeight: '800', letterSpacing: 0.5 },
   subtitle: { color: C.sub, fontSize: 13, marginTop: 2 },

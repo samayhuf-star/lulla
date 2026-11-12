@@ -2,6 +2,7 @@ import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { Asset } from 'expo-asset';
 import { SOUND_BY_ID } from './catalog';
 import { CROSSFADE_MS, DEFAULT_VOLUME, FADE_IN_MS, FADE_OUT_MS, clamp01, rampGain } from './fade';
+import { RemoteCommandTracker, mixTitle } from './lockControl';
 
 type Listener = () => void;
 
@@ -19,8 +20,10 @@ const TICK_MS = 30;
  *   so there is no gap at the loop point.
  * - Starting, stopping, adding and removing sounds always ramp with an equal-power curve,
  *   so nothing ever starts or stops at full level (no pops).
- * - One player is registered with the lock screen (Now Playing + remote play/pause/toggle).
- *   When the lock screen pauses or plays it, the whole mix follows.
+ * - The lock screen (Now Playing + remote play/pause/toggle) is bound to a silent looping
+ *   control player, never to a real sound. A remote pause only stops that silent player
+ *   natively; the mixer then fades every real sound out together, and a remote play fades
+ *   them all back in. Remote play goes through the same trial gate as the in-app button.
  */
 class Mixer {
   private tracks = new Map<string, Track>();
@@ -28,13 +31,29 @@ class Mixer {
   private listeners = new Set<Listener>();
   private master = 1; // used for the sleep timer fade-out
   private pausedMaster = 1; // master level frozen while a pause fade-out runs
-  private lockWasPlaying = false;
   private timer: ReturnType<typeof setInterval> | null = null;
-  private lockId: string | null = null;
-  private lockSub: { remove: () => void } | null = null;
+  private control: AudioPlayer | null = null;
+  private controlActive = false;
+  private controlSub: { remove: () => void } | null = null;
+  private remote = new RemoteCommandTracker();
+  private remotePlayGuard: () => boolean = () => true;
+  private timerLeftSec: number | null = null;
   private artworkUrl: string | undefined;
   private internalChange = 0; // >0 while the mixer itself is changing play state
   playing = false;
+
+  /** Called before a lock-screen play is honoured; return false to refuse (e.g. trial used up). */
+  setRemotePlayGuard(guard: () => boolean) {
+    this.remotePlayGuard = guard;
+  }
+
+  /** Sleep timer remaining, shown in the lock screen title. Pass null when no timer runs. */
+  setTimerLeft(sec: number | null) {
+    const prevMin = this.timerLeftSec == null ? null : Math.ceil(this.timerLeftSec / 60);
+    const nextMin = sec == null ? null : Math.ceil(sec / 60);
+    this.timerLeftSec = sec;
+    if (prevMin !== nextMin) this.updateLockScreen();
+  }
 
   async init() {
     try {
@@ -45,6 +64,23 @@ class Mixer {
       });
     } catch {
       /* ignore */
+    }
+    try {
+      const control = createAudioPlayer(require('../assets/silence.m4a'));
+      control.loop = true;
+      control.volume = 1; // the file itself is digital silence
+      this.control = control;
+      this.controlSub = control.addListener('playbackStatusUpdate', (st) => {
+        const action = this.remote.onStatus(st, this.internalChange > 0, this.playing);
+        if (action === 'play') {
+          if (this.volumes.size > 0 && this.remotePlayGuard()) this.play();
+          else this.setControlPlaying(false); // refused: put the lock screen back to paused
+        } else if (action === 'pause') {
+          this.pause();
+        }
+      });
+    } catch {
+      /* lock screen control is best effort */
     }
     try {
       const icon = Asset.fromModule(require('../assets/icon-v2.png'));
@@ -70,6 +106,18 @@ class Mixer {
   }
   has(id: string) {
     return this.volumes.has(id);
+  }
+  /** Playback position (s) per active sound. Used by the QA overlay only. */
+  positions(): Record<string, number> {
+    const out: Record<string, number> = {};
+    this.tracks.forEach((t, id) => {
+      try {
+        out[id] = t.player.currentTime;
+      } catch {
+        out[id] = -1;
+      }
+    });
+    return out;
   }
   volume(id: string) {
     return this.volumes.get(id) ?? DEFAULT_VOLUME;
@@ -140,7 +188,6 @@ class Mixer {
     this.internalChange++;
     try {
       t.player.pause();
-      if (this.lockId === id) this.detachLock();
       t.player.remove();
     } catch {
       /* ignore */
@@ -169,59 +216,56 @@ class Mixer {
     this.internalChange--;
   }
 
-  // ---- lock screen / Now Playing ----
+  // ---- lock screen / Now Playing (silent control player) ----
 
   private title(): string {
-    const names = this.active().map((id) => SOUND_BY_ID[id]?.name).filter(Boolean);
-    if (names.length <= 2) return names.join(' + ');
-    return `${names[0]} + ${names.length - 1} more`;
+    const names = this.active().map((id) => SOUND_BY_ID[id]?.name).filter(Boolean) as string[];
+    return mixTitle(names, this.timerLeftSec);
   }
 
-  private detachLock() {
-    this.lockSub?.remove();
-    this.lockSub = null;
-    const t = this.lockId ? this.tracks.get(this.lockId) : undefined;
+  private setControlPlaying(on: boolean) {
+    const c = this.control;
+    if (!c) return;
+    this.internalChange++;
     try {
-      t?.player.clearLockScreenControls();
+      if (on) c.play();
+      else c.pause();
     } catch {
       /* ignore */
     }
-    this.lockId = null;
+    this.internalChange--;
+    this.remote.sync(on);
+  }
+
+  private detachLock() {
+    if (!this.control || !this.controlActive) return;
+    this.setControlPlaying(false);
+    try {
+      this.control.clearLockScreenControls();
+    } catch {
+      /* ignore */
+    }
+    this.controlActive = false;
   }
 
   private updateLockScreen() {
-    const ids = this.active().filter((id) => this.tracks.has(id));
-    if (ids.length === 0) {
+    if (!this.control) return;
+    if (this.volumes.size === 0) {
       this.detachLock();
       return;
     }
-    const metadata = { title: this.title() || 'Lulla', artist: 'Lulla', albumTitle: 'Sleep Sounds', artworkUrl: this.artworkUrl };
+    const metadata = { title: this.title(), artist: 'Lulla', albumTitle: 'Sleep Sounds', artworkUrl: this.artworkUrl };
     try {
-      if (this.lockId && this.tracks.has(this.lockId) && ids.includes(this.lockId)) {
-        this.tracks.get(this.lockId)!.player.updateLockScreenMetadata(metadata);
-        return;
+      if (this.controlActive) {
+        this.control.updateLockScreenMetadata(metadata);
+      } else {
+        this.control.setActiveForLockScreen(true, metadata, {
+          isLiveStream: true,
+          showSeekForward: false,
+          showSeekBackward: false,
+        });
+        this.controlActive = true;
       }
-      this.detachLock();
-      const id = ids[0];
-      const t = this.tracks.get(id)!;
-      t.player.setActiveForLockScreen(true, metadata, {
-        isLiveStream: true,
-        showSeekForward: false,
-        showSeekBackward: false,
-      });
-      this.lockId = id;
-      // Remote play / pause / toggle act on this player natively; mirror them on the whole mix.
-      this.lockWasPlaying = false;
-      this.lockSub = t.player.addListener('playbackStatusUpdate', (s) => {
-        if (this.internalChange > 0 || !s.isLoaded) return;
-        if (s.playing) {
-          this.lockWasPlaying = true;
-          if (!this.playing) this.play(); // remote play from lock screen / Control Center
-        } else if (this.lockWasPlaying && !s.isBuffering && !s.didJustFinish) {
-          this.lockWasPlaying = false;
-          if (this.playing) this.pause(); // remote pause from lock screen / Control Center
-        }
-      });
     } catch {
       /* lock screen is best effort */
     }
@@ -276,6 +320,7 @@ class Mixer {
       this.rampTo(id, 1, FADE_IN_MS);
     });
     this.updateLockScreen();
+    this.setControlPlaying(true);
     this.emit();
   }
 
@@ -287,6 +332,7 @@ class Mixer {
         if (!this.playing) this.pauseTrack(t);
       });
     });
+    this.setControlPlaying(false);
     this.emit();
   }
 
@@ -300,6 +346,7 @@ class Mixer {
       if (wasPlaying) this.rampTo(id, 0, FADE_OUT_MS, () => this.release(id));
       else this.release(id);
     });
+    this.detachLock();
     this.emit();
   }
 }
