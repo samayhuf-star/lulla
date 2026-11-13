@@ -10,6 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 import { CATEGORIES, SOUNDS, SOUND_BY_ID, TIMER_OPTIONS, Category } from './src/catalog';
+import { planTimer, timerDone, timerGain, type TimerMinutes, type TimerPlan } from './src/timer';
 import { FREE_SECONDS, PRIVACY_URL, QA_MODE, SUPPORT_URL, TERMS_URL } from './src/config';
 import { parseQaUrl } from './src/qa';
 import { mixer } from './src/mixer';
@@ -28,8 +29,14 @@ const C = {
 };
 
 const fmt = (s: number) => {
-  const m = Math.floor(s / 60), r = Math.floor(s % 60);
-  return `${m}:${r.toString().padStart(2, '0')}`;
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = Math.floor(s % 60);
+  const mm = h ? m.toString().padStart(2, '0') : `${m}`;
+  return `${h ? `${h}:` : ''}${mm}:${r.toString().padStart(2, '0')}`;
+};
+
+const qaLog = (msg: string) => {
+  // QA builds only. console.error reaches the device log in a Release build (os_log).
+  if (QA_MODE) console.error(`[QA] ${msg}`);
 };
 
 const nowMs = (): number => Date.now();
@@ -57,8 +64,10 @@ export default function App() {
   const [showTimer, setShowTimer] = useState(false);
   const [showMix, setShowMix] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [timerEnd, setTimerEnd] = useState<number | null>(null);
+  const [timerPlan, setTimerPlan] = useState<TimerPlan | null>(null);
+  const [allNight, setAllNight] = useState(false);
   const [timerLeft, setTimerLeft] = useState(0);
+  const [qaTimer, setQaTimer] = useState('');
   const [reduceMotion, setReduceMotion] = useState(false);
   const [qaLine, setQaLine] = useState('');
 
@@ -69,6 +78,23 @@ export default function App() {
   useEffect(() => {
     premiumRef.current = premium;
   }, [premium]);
+
+  /** Pick a sleep timer option. All night (null) schedules nothing: the loops play until stopped. */
+  const applyTimer = (minutes: TimerMinutes) => {
+    mixer.setMaster(1);
+    const now = nowMs();
+    const plan = planTimer(now, minutes);
+    setTimerPlan(plan);
+    setAllNight(minutes === null);
+    setTimerLeft(plan ? (plan.endMs - now) / 1000 : 0);
+    if (QA_MODE) {
+      const line = plan
+        ? `timer ${minutes} min: start ${new Date(plan.startMs).toISOString()} fade ${new Date(plan.fadeStartMs).toISOString()} end ${new Date(plan.endMs).toISOString()}`
+        : `timer ${minutes === null ? 'All night: no stop scheduled' : 'off'}`;
+      setQaTimer(line);
+      qaLog(line);
+    }
+  };
 
   /**
    * Before the mix (re)starts: drop any premium sounds the listener cannot play right now.
@@ -146,23 +172,27 @@ export default function App() {
         }
       }
 
-      if (timerEnd) {
-        const tl = (timerEnd - now) / 1000;
+      if (timerPlan) {
+        const tl = (timerPlan.endMs - now) / 1000;
         setTimerLeft(Math.max(0, tl));
         mixer.setTimerLeft(tl > 0 ? tl : null);
-        if (tl <= 10 && tl > 0) mixer.setMaster(tl / 10); // gentle fade-out
-        if (tl <= 0) {
+        if (now > timerPlan.fadeStartMs) mixer.setMaster(timerGain(now, timerPlan)); // last 60 s fade-out
+        if (timerDone(now, timerPlan)) {
           mixer.pause();
           mixer.setMaster(1);
-          setTimerEnd(null);
+          setTimerPlan(null);
         }
       } else {
         mixer.setTimerLeft(null);
       }
-      if (QA_MODE) setQaLine(Object.entries(mixer.positions()).map(([k, v]) => `${k} ${v.toFixed(1)}s`).join('  '));
+      if (QA_MODE) {
+        const line = Object.entries(mixer.positions()).map(([k, v]) => `${k} ${v.toFixed(1)}s`).join('  ');
+        setQaLine(line);
+        if (line) qaLog(`pos ${new Date(now).toISOString()} ${line}`);
+      }
     }, 1000);
     return () => clearInterval(id);
-  }, [timerEnd]);
+  }, [timerPlan]);
 
   // QA builds only (EXPO_PUBLIC_LULLA_QA=1, never set for store builds): lulla://qa/play/<id>
   useEffect(() => {
@@ -175,9 +205,30 @@ export default function App() {
         tapTile(cmd.id, premiumRef.current, () => setShowPaywall(true), () => { lastTick.current = nowMs(); });
         return;
       }
-      if (cmd.kind === 'close') { setShowPaywall(false); setShowSettings(false); return; }
+      if (cmd.kind === 'close') { setShowPaywall(false); setShowSettings(false); setShowTimer(false); return; }
       if (cmd.kind === 'settings') { setShowPaywall(false); setShowSettings(true); return; }
       if (cmd.kind === 'preview') { setRemaining(setUsedForQa(cmd.state === 'used' ? FREE_SECONDS : 0)); return; }
+      if (cmd.kind === 'timer') { setShowTimer(false); applyTimer(cmd.minutes); return; }
+      if (cmd.kind === 'timersheet') { setShowPaywall(false); setShowTimer(true); return; }
+      if (cmd.kind === 'cat') {
+        const c = CATEGORIES.find((x) => x.toLowerCase().split(/[^a-z]/)[0] === cmd.slug);
+        setCat(cmd.slug === 'all' || !c ? 'All' : c);
+        return;
+      }
+      if (cmd.kind === 'wrap') {
+        mixer.clear();
+        setTimeout(() => {
+          if (!SOUND_BY_ID[cmd.id]) return;
+          mixer.toggle(cmd.id);
+          lastTick.current = nowMs();
+          mixer.play();
+          setTimeout(() => {
+            mixer.seekForQa(cmd.id, 4);
+            qaLog(`wrap ${cmd.id}: loop length ${mixer.durationForQa(cmd.id).toFixed(3)} s, jumped to 4 s before the loop point`);
+          }, 2500);
+        }, 1000);
+        return;
+      }
       mixer.clear();
       if (cmd.kind === 'paywall') { setShowPaywall(true); return; }
       setShowPaywall(false);
@@ -272,6 +323,7 @@ export default function App() {
                 style={[styles.tile, on && styles.tileOn]}
                 accessibilityRole="button"
                 accessibilityLabel={locked ? `${item.name}, Premium` : item.name}
+                accessibilityHint={item.description}
               >
                 {locked ? (
                   <View style={styles.lock} testID={`premium-${item.id}`}>
@@ -290,7 +342,9 @@ export default function App() {
           }}
         />
 
-        {QA_MODE && qaLine ? <Text style={styles.qa} testID="qa-positions">{qaLine}</Text> : null}
+        {QA_MODE && (qaLine || qaTimer) ? (
+          <Text style={styles.qa} testID="qa-positions">{[qaLine, qaTimer].filter(Boolean).join('\n')}</Text>
+        ) : null}
 
         {/* Bottom player */}
         <View style={styles.player}>
@@ -303,7 +357,7 @@ export default function App() {
           </Pressable>
           <Pressable style={styles.sideBtn} onPress={() => setShowTimer(true)}>
             <Text style={styles.sideIcon}>⏱️</Text>
-            <Text style={styles.sideLabel}>{timerEnd ? fmt(timerLeft) : 'Timer'}</Text>
+            <Text style={styles.sideLabel}>{timerPlan ? fmt(timerLeft) : allNight ? 'All night' : 'Timer'}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -340,20 +394,20 @@ export default function App() {
         <Pressable style={styles.backdrop} onPress={() => setShowTimer(false)} />
         <View style={styles.sheet}>
           <Text style={styles.sheetTitle}>Sleep timer</Text>
-          {TIMER_OPTIONS.map((o) => (
-            <Pressable
-              key={o.label}
-              style={styles.timerRow}
-              onPress={() => {
-                mixer.setMaster(1);
-                setTimerEnd(o.minutes ? nowMs() + o.minutes * 60000 : null);
-                setTimerLeft(o.minutes * 60);
-                setShowTimer(false);
-              }}
-            >
-              <Text style={styles.timerText}>{o.label}</Text>
-            </Pressable>
-          ))}
+          <ScrollView style={{ maxHeight: 560 }}>
+            {TIMER_OPTIONS.map((o) => (
+              <Pressable
+                key={o.label}
+                style={styles.timerRow}
+                onPress={() => {
+                  applyTimer(o.minutes);
+                  setShowTimer(false);
+                }}
+              >
+                <Text style={styles.timerText}>{o.label}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
         </View>
       </Modal>
 
@@ -370,7 +424,7 @@ export default function App() {
         <Pressable style={styles.backdrop} onPress={() => setShowSettings(false)} />
         <View style={styles.sheet}>
           <Text style={styles.sheetTitle}>Settings</Text>
-          <Text style={[styles.sub, { marginBottom: 8 }]}>{premium ? 'Premium is active. Thank you.' : 'Rain, ocean, forest, fan, white and brown noise are free to play anytime.'}</Text>
+          <Text style={[styles.sub, { marginBottom: 8 }]}>{premium ? 'Premium is active. Thank you.' : 'Rain, ocean, forest, fan, white and brown noise and 432 Hz Deep Sleep are free to play anytime.'}</Text>
           <Pressable style={styles.timerRow} onPress={() => runRestore(() => { setPremium(true); setShowSettings(false); })} accessibilityRole="button">
             <Text style={styles.timerText}>Restore purchases</Text>
           </Pressable>

@@ -5,7 +5,7 @@
 // sound is in the playing mix). Once the preview is used, tapping a premium sound opens
 // the paywall. The preview never limits the free sounds.
 
-export const FREE_SOUND_IDS = ['rain', 'ocean', 'white_noise', 'brown_noise', 'fan', 'forest'] as const;
+export const FREE_SOUND_IDS = ['rain', 'ocean', 'white_noise', 'brown_noise', 'fan', 'forest', 'freq_432'] as const;
 
 const FREE = new Set<string>(FREE_SOUND_IDS);
 

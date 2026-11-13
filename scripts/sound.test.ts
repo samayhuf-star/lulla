@@ -38,10 +38,10 @@ describe('fades', () => {
 
 describe('sound catalog', () => {
   const catalog = read('src/catalog.ts');
-  const files = [...catalog.matchAll(/require\('\.\.\/assets\/sounds\/([a-z_]+\.m4a)'\)/g)].map((m) => m[1]);
-  it('has all 38 build 8 sound slots, all as AAC m4a', () => {
-    assert.equal(files.length, 38);
-    assert.equal(new Set(files).size, 38);
+  const files = [...catalog.matchAll(/require\('\.\.\/assets\/sounds\/([a-z0-9_]+\.m4a)'\)/g)].map((m) => m[1]);
+  it('has all 43 build 8 sound slots, all as AAC m4a', () => {
+    assert.equal(files.length, 43);
+    assert.equal(new Set(files).size, 43);
     assert.ok(!catalog.includes('.mp3'));
   });
   const pending: string[] = JSON.parse(read('assets/sounds/PENDING.json')).pending;

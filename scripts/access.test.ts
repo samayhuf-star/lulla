@@ -22,10 +22,10 @@ const PREMIUM = { premium: true, previewLeft: 0 };
 
 describe('free tier', () => {
   it('has about six free sounds, all real catalog ids', () => {
-    assert.equal(catalogIds.length, 38);
+    assert.equal(catalogIds.length, 43);
     assert.ok(FREE_SOUND_IDS.length >= 5 && FREE_SOUND_IDS.length <= 8);
     for (const id of FREE_SOUND_IDS) assert.ok(catalogIds.includes(id), `${id} is not in the catalog`);
-    assert.deepEqual([...FREE_SOUND_IDS].sort(), ['brown_noise', 'fan', 'forest', 'ocean', 'rain', 'white_noise']);
+    assert.deepEqual([...FREE_SOUND_IDS].sort(), ['brown_noise', 'fan', 'forest', 'freq_432', 'ocean', 'rain', 'white_noise']);
   });
 
   it('free sounds play with the preview used up, forever', () => {
@@ -52,7 +52,7 @@ describe('free tier', () => {
 
 describe('premium sounds', () => {
   it('every other sound carries the Premium badge until premium is active', () => {
-    assert.equal(PREMIUM_IDS.length, 38 - FREE_SOUND_IDS.length);
+    assert.equal(PREMIUM_IDS.length, 43 - FREE_SOUND_IDS.length);
     for (const id of PREMIUM_IDS) {
       assert.equal(isLocked(id, false), true, id);
       assert.equal(isLocked(id, true), false, id);
@@ -131,6 +131,12 @@ describe('QA deep links for the free tier run', () => {
     assert.deepEqual(parseQaUrl('lulla://qa/preview/reset'), { kind: 'preview', state: 'reset' });
     assert.equal(parseQaUrl('lulla://qa/preview/forever'), null);
     assert.equal(parseQaUrl('lulla://qa/close/x'), null);
+    assert.deepEqual(parseQaUrl('lulla://qa/timer/120'), { kind: 'timer', minutes: 120 });
+    assert.deepEqual(parseQaUrl('lulla://qa/timer/allnight'), { kind: 'timer', minutes: null });
+    assert.equal(parseQaUrl('lulla://qa/timer/0'), null);
+    assert.deepEqual(parseQaUrl('lulla://qa/timersheet'), { kind: 'timersheet' });
+    assert.deepEqual(parseQaUrl('lulla://qa/cat/healing'), { kind: 'cat', slug: 'healing' });
+    assert.deepEqual(parseQaUrl('lulla://qa/wrap/freq_432'), { kind: 'wrap', id: 'freq_432' });
   });
 
   it('a QA tap goes through the same tapTile path as a finger tap', () => {

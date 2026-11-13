@@ -8,6 +8,10 @@
 //   lulla://qa/settings           open the settings sheet (Restore purchases)
 //   lulla://qa/preview/used       mark the premium preview as used up (memory only)
 //   lulla://qa/preview/reset      give the premium preview back (memory only)
+//   lulla://qa/timer/120          pick a sleep timer option (minutes, or allnight), logs end and fade start
+//   lulla://qa/timersheet         open the sleep timer sheet
+//   lulla://qa/cat/healing        pick a category chip by its first word (all = All)
+//   lulla://qa/wrap/freq_432      play one sound and jump to 4 s before its loop point
 export type QaCommand =
   | { kind: 'play'; ids: string[] }
   | { kind: 'tap'; id: string }
@@ -15,11 +19,15 @@ export type QaCommand =
   | { kind: 'paywall' }
   | { kind: 'close' }
   | { kind: 'settings' }
-  | { kind: 'preview'; state: 'used' | 'reset' };
+  | { kind: 'preview'; state: 'used' | 'reset' }
+  | { kind: 'timer'; minutes: number | null }
+  | { kind: 'timersheet' }
+  | { kind: 'cat'; slug: string }
+  | { kind: 'wrap'; id: string };
 
 export function parseQaUrl(url: string | null | undefined): QaCommand | null {
   if (!url) return null;
-  const m = /^lulla:\/\/qa\/(play|stop|paywall|tap|close|settings|preview)(?:\/([a-z0-9_,]+))?\/?$/.exec(url.trim());
+  const m = /^lulla:\/\/qa\/(play|stop|paywall|tap|close|settings|preview|timer|timersheet|cat|wrap)(?:\/([a-z0-9_,]+))?\/?$/.exec(url.trim());
   if (!m) return null;
   const arg = m[2];
   switch (m[1]) {
@@ -27,7 +35,15 @@ export function parseQaUrl(url: string | null | undefined): QaCommand | null {
     case 'paywall':
     case 'close':
     case 'settings':
+    case 'timersheet':
       return arg ? null : { kind: m[1] };
+    case 'timer':
+      if (arg === 'allnight') return { kind: 'timer', minutes: null };
+      return arg && /^\d{1,3}$/.test(arg) && +arg > 0 ? { kind: 'timer', minutes: +arg } : null;
+    case 'cat':
+      return arg && /^[a-z]+$/.test(arg) ? { kind: 'cat', slug: arg } : null;
+    case 'wrap':
+      return arg && !arg.includes(',') ? { kind: 'wrap', id: arg } : null;
     case 'tap':
       return arg && !arg.includes(',') ? { kind: 'tap', id: arg } : null;
     case 'preview':

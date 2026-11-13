@@ -336,6 +336,27 @@ class Mixer {
     this.emit();
   }
 
+  /** QA builds only: jump a playing sound to `before` seconds ahead of its loop point. */
+  seekForQa(id: string, before: number) {
+    const t = this.tracks.get(id);
+    if (!t) return;
+    try {
+      const d = t.player.duration;
+      if (d > before) t.player.seekTo(d - before);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /** QA builds only: loop length of a loaded sound, in seconds. */
+  durationForQa(id: string): number {
+    try {
+      return this.tracks.get(id)?.player.duration ?? 0;
+    } catch {
+      return 0;
+    }
+  }
+
   clear() {
     const ids = Array.from(this.tracks.keys());
     this.volumes.clear();

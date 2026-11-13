@@ -1,9 +1,9 @@
-// Build 8 catalog: 38 sounds. Masters still being produced are listed in
+// Build 8 catalog: 43 sounds. Masters still being produced are listed in
 // assets/sounds/PENDING.json; `npm run check:sounds` must pass before any store build.
 export type SoundId =
-  'rain' | 'rain_roof' | 'rain_tent' | 'rain_window' | 'rain_umbrella' | 'rain_puddle' | 'thunder' | 'snow' | 'ocean' | 'lake' | 'creek' | 'waterfall' | 'underwater' | 'drip' | 'wind' | 'wind_leaves' | 'forest' | 'night' | 'cave' | 'grassland' | 'farm' | 'fire' | 'fan' | 'air_conditioner' | 'airplane' | 'heartbeat' | 'womb' | 'singing_bowls' | 'om_drone' | 'brahms_musicbox' | 'twinkle_piano' | 'schubert_piano' | 'ambient_pad' | 'delta_waves' | 'white_noise' | 'pink_noise' | 'green_noise' | 'brown_noise';
+  'rain' | 'rain_roof' | 'rain_tent' | 'rain_window' | 'rain_umbrella' | 'rain_puddle' | 'thunder' | 'snow' | 'ocean' | 'lake' | 'creek' | 'waterfall' | 'underwater' | 'drip' | 'wind' | 'wind_leaves' | 'forest' | 'night' | 'cave' | 'grassland' | 'farm' | 'fire' | 'fan' | 'air_conditioner' | 'airplane' | 'heartbeat' | 'womb' | 'singing_bowls' | 'om_drone' | 'brahms_musicbox' | 'twinkle_piano' | 'schubert_piano' | 'ambient_pad' | 'delta_waves' | 'white_noise' | 'pink_noise' | 'green_noise' | 'brown_noise' | 'freq_432' | 'freq_528' | 'freq_963' | 'freq_blend' | 'deep_drone';
 
-export type Category = 'Rain' | 'Water' | 'Nature' | 'Warmth' | 'Hum' | 'Calm' | 'Lullaby' | 'Binaural' | 'Noise';
+export type Category = 'Rain' | 'Water' | 'Nature' | 'Warmth' | 'Hum' | 'Calm' | 'Lullaby' | 'Binaural' | 'Noise' | 'Healing / Frequencies';
 
 export interface Sound {
   id: SoundId;
@@ -12,10 +12,12 @@ export interface Sound {
   category: Category;
   /** Binaural beats only work on headphones; the tile and mix row show a badge. */
   headphones?: boolean;
+  /** Short neutral description (read by VoiceOver). Never a health claim. */
+  description?: string;
   source: number;
 }
 
-export const CATEGORIES: Category[] = ['Rain', 'Water', 'Nature', 'Warmth', 'Hum', 'Calm', 'Lullaby', 'Binaural', 'Noise'];
+export const CATEGORIES: Category[] = ['Rain', 'Water', 'Nature', 'Warmth', 'Hum', 'Calm', 'Lullaby', 'Binaural', 'Noise', 'Healing / Frequencies'];
 
 export const SOUNDS: Sound[] = [
   { id: 'rain', name: 'Rain', emoji: '🌧️', category: 'Rain', source: require('../assets/sounds/rain.m4a') },
@@ -56,12 +58,18 @@ export const SOUNDS: Sound[] = [
   { id: 'pink_noise', name: 'Pink Noise', emoji: '🌸', category: 'Noise', source: require('../assets/sounds/pink_noise.m4a') },
   { id: 'green_noise', name: 'Green Noise', emoji: '🟢', category: 'Noise', source: require('../assets/sounds/green_noise.m4a') },
   { id: 'brown_noise', name: 'Brown Noise', emoji: '🟤', category: 'Noise', source: require('../assets/sounds/brown_noise.m4a') },
+  // Original synth pads (own work, Samay Vashsht). Neutral wording only, no health claims.
+  { id: 'freq_432', name: '432 Hz Deep Sleep', emoji: '🌙', category: 'Healing / Frequencies', description: 'Soft 432 Hz tone under a warm low pad for sleep and relaxation', source: require('../assets/sounds/freq_432.m4a') },
+  { id: 'freq_528', name: '528 Hz Calm', emoji: '🕊️', category: 'Healing / Frequencies', description: 'Gentle 528 Hz tone over a slow warm pad', source: require('../assets/sounds/freq_528.m4a') },
+  { id: 'freq_963', name: '963 Hz Night', emoji: '✨', category: 'Healing / Frequencies', description: 'Quiet 963 Hz shimmer and its lower octave under a soft night pad', source: require('../assets/sounds/freq_963.m4a') },
+  { id: 'freq_blend', name: '432+528 Blend', emoji: '🎐', category: 'Healing / Frequencies', description: 'Soft 432 Hz and 528 Hz tones together over a warm pad', source: require('../assets/sounds/freq_blend.m4a') },
+  { id: 'deep_drone', name: 'Deep Drone', emoji: '🌑', category: 'Healing / Frequencies', description: 'Warm low drone for sleep and relaxation', source: require('../assets/sounds/deep_drone.m4a') },
 ];
 
 export const SOUND_BY_ID: Record<string, Sound> = Object.fromEntries(SOUNDS.map((s) => [s.id, s]));
 
-export const TIMER_OPTIONS: { label: string; minutes: number }[] = [
-  { label: 'No timer', minutes: 0 },
+// minutes: null = All night: no auto-stop, the loops keep playing until you stop them.
+export const TIMER_OPTIONS: { label: string; minutes: number | null }[] = [
   { label: '10 minutes', minutes: 10 },
   { label: '15 minutes', minutes: 15 },
   { label: '30 minutes', minutes: 30 },
@@ -69,4 +77,6 @@ export const TIMER_OPTIONS: { label: string; minutes: number }[] = [
   { label: '1 hour', minutes: 60 },
   { label: '2 hours', minutes: 120 },
   { label: '3 hours', minutes: 180 },
+  { label: '4 hours', minutes: 240 },
+  { label: 'All night', minutes: null },
 ];
