@@ -71,22 +71,25 @@ describe('background playback config', () => {
   });
 });
 
-describe('Healing / Frequencies category', () => {
+describe('Frequencies category', () => {
   const entries = [...catalog.matchAll(/\{ id: '([a-z0-9_]+)', name: '([^']+)'[^\n]*\}/g)].map((m) => ({ id: m[1], name: m[2], line: m[0] }));
   it('has the 5 original loops, one of them free', () => {
-    const heal = entries.filter((e) => e.line.includes("category: 'Healing / Frequencies'"));
+    const heal = entries.filter((e) => e.line.includes("category: 'Frequencies'"));
     assert.deepEqual(heal.map((e) => e.name), ['432 Hz Deep Sleep', '528 Hz Calm', '963 Hz Night', '432+528 Blend', 'Deep Drone']);
-    assert.ok(catalog.includes("'Healing / Frequencies'];"));
+    assert.ok(catalog.includes("'Frequencies'];"));
   });
-  it('titles and descriptions make no medical or health claims (App Review 1.4.1)', () => {
-    const BANNED = /\b(cure[sd]?|curing|heals? you|heals|treat(s|ment|ing)?|therap(y|eutic)|repairs?|DNA|anxiety|depression|insomnia|pain|detox|medical|medicine|clinically|doctor|disease|immune|chakra|miracle|regenerat\w*|stress relief|reduces? stress|lowers? blood)\b/i;
+  it('titles, descriptions and category names make no medical or health claims (App Review 1.4.1)', () => {
+    const BANNED = /\b(cure[sd]?|curing|heal\w*|treat(s|ment|ing)?|therap(y|eutic)|repairs?|DNA|anxiety|depression|insomnia|pain|detox|medical|medicine|clinically|doctor|disease|immune|chakra|miracle|regenerat\w*|stress relief|reduces? stress|lowers? blood)\b/i;
     const texts: string[] = [];
     for (const e of entries) {
       texts.push(e.name);
       const d = /description: '([^']+)'/.exec(e.line);
       if (d) texts.push(d[1]);
     }
-    assert.ok(texts.length >= 48);
+    const cats = /export const CATEGORIES: Category\[\] = \[([^\]]+)\]/.exec(catalog)![1];
+    texts.push(...[...cats.matchAll(/'([^']+)'/g)].map((m) => m[1]));
+    assert.ok(texts.includes('Frequencies'));
+    assert.ok(texts.length >= 58);
     for (const t of texts) assert.doesNotMatch(t, BANNED, t);
     const listing = read('store/listing.md');
     for (const phrase of ['heals you', 'repairs DNA', 'reduces anxiety', 'cures']) {

@@ -10,7 +10,7 @@
 //   lulla://qa/preview/reset      give the premium preview back (memory only)
 //   lulla://qa/timer/120          pick a sleep timer option (minutes, or allnight), logs end and fade start
 //   lulla://qa/timersheet         open the sleep timer sheet
-//   lulla://qa/cat/healing        pick a category chip by its first word (all = All)
+//   lulla://qa/cat/frequencies    pick a category chip by its first word (all = All)
 //   lulla://qa/wrap/freq_432      play one sound and jump to 4 s before its loop point
 export type QaCommand =
   | { kind: 'play'; ids: string[] }

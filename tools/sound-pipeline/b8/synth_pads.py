@@ -1,4 +1,4 @@
-"""Build 8: three original synth-pad loops (Healing / Frequencies category).
+"""Build 8: five original synth-pad loops (Frequencies category).
 
 Original work by Samay Vashsht. Pure additive synthesis with numpy: detuned partials,
 slow amplitude LFOs and a slow LFO-swept low-pass applied per partial. No samples, no

@@ -135,7 +135,7 @@ describe('QA deep links for the free tier run', () => {
     assert.deepEqual(parseQaUrl('lulla://qa/timer/allnight'), { kind: 'timer', minutes: null });
     assert.equal(parseQaUrl('lulla://qa/timer/0'), null);
     assert.deepEqual(parseQaUrl('lulla://qa/timersheet'), { kind: 'timersheet' });
-    assert.deepEqual(parseQaUrl('lulla://qa/cat/healing'), { kind: 'cat', slug: 'healing' });
+    assert.deepEqual(parseQaUrl('lulla://qa/cat/frequencies'), { kind: 'cat', slug: 'frequencies' });
     assert.deepEqual(parseQaUrl('lulla://qa/wrap/freq_432'), { kind: 'wrap', id: 'freq_432' });
   });
 

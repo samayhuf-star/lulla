@@ -66,7 +66,7 @@ Lullaby melodies: Brahms Wiegenlied Op. 49 No. 4 (1868) and trad. "Ah! vous dira
 
 Womb (`womb.m4a`): own mix from Heartbeat #369017 by patobottos (CC0 1.0), slowed 8 percent and low-passed, looped on whole beats, over low-passed generated brown noise.
 
-## Original synth pads (Healing / Frequencies)
+## Original synth pads (Frequencies)
 
 Original work by Samay Vashsht (samayhuf@gmail.com). Synthesised from scratch in `tools/sound-pipeline/b8/synth_pads.py` (numpy additive synthesis: detuned partials, slow amplitude LFOs and an LFO-swept low-pass per partial). No samples, recordings or third-party audio were used, sampled or resynthesised, so no third-party licence applies. Each file is a 300 s loop that is periodic by construction (every frequency and LFO is a whole number of cycles per loop), mastered to -20 LUFS, true peak at or below -1 dBTP, no limiting, AAC-LC 96 kbps 48 kHz stereo. Lossless sources: `/home/box/shared/app-monitor/reports/lulla-b8/originals/<id>_original.wav`. Measurements: `reports/lulla-b8/masters/synth-pads.json`.
 
