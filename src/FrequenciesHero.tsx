@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { HERO_SUB, HERO_TITLE, heroMotion } from './hero';
@@ -12,6 +12,8 @@ export function FrequenciesHero({ selected, reduceMotion, onPress }: {
   selected: boolean; reduceMotion: boolean; onPress: () => void;
 }) {
   const m = heroMotion(reduceMotion);
+  // 400:132 at default text size; grows (never clips) at large Dynamic Type sizes.
+  const minHeight = Math.round(((useWindowDimensions().width - 32) * 132) / 400);
   const glow = useSharedValue(m.rest);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export function FrequenciesHero({ selected, reduceMotion, onPress }: {
       <ImageBackground
         source={HERO_ART}
         resizeMode="cover"
-        style={[styles.card, selected && styles.cardOn]}
+        style={[styles.card, { minHeight }, selected && styles.cardOn]}
         imageStyle={styles.art}
         testID="frequencies-hero-art"
       >
@@ -54,7 +56,7 @@ export function FrequenciesHero({ selected, reduceMotion, onPress }: {
         />
         <View style={styles.text}>
           <Text style={styles.title}>{HERO_TITLE}</Text>
-          <Text style={styles.sub} numberOfLines={3}>{HERO_SUB}</Text>
+          <Text style={styles.sub}>{HERO_SUB}</Text>
         </View>
         <Text style={styles.chev}>›</Text>
       </ImageBackground>
@@ -69,7 +71,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(167,139,250,0.35)',
     shadowColor: '#a78bfa', shadowOpacity: 0.9, shadowRadius: 18, shadowOffset: { width: 0, height: 0 },
   },
-  card: { flexDirection: 'row', alignItems: 'center', aspectRatio: 400 / 132, borderRadius: 22, overflow: 'hidden', paddingHorizontal: 18, borderWidth: 1, borderColor: 'rgba(196,181,253,0.35)', backgroundColor: '#0a0c2e' },
+  card: { flexDirection: 'row', alignItems: 'center', borderRadius: 22, overflow: 'hidden', paddingHorizontal: 18, paddingVertical: 12, borderWidth: 1, borderColor: 'rgba(196,181,253,0.35)', backgroundColor: '#0a0c2e' },
   art: { borderRadius: 22 },
   text: { width: '52%' },
   cardOn: { borderColor: '#f5f3ff', borderWidth: 1.5 },

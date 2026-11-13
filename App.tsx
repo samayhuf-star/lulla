@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo, ActivityIndicator, Alert, FlatList, Linking, Modal, Platform, Pressable, SafeAreaView,
-  ScrollView, StyleSheet, Text, View,
+  ScrollView, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -76,6 +76,8 @@ export default function App() {
   const [remaining, setRemaining] = useState(FREE_SECONDS);
   const [, force] = useState(0);
   const [cat, setCat] = useState<Category | 'All'>('All');
+  // Square at default text size; taller (never clipped) when Dynamic Type makes the name wrap.
+  const tileMin = Math.floor((useWindowDimensions().width - 24 - 20) / 3);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [showMix, setShowMix] = useState(false);
@@ -328,14 +330,14 @@ export default function App() {
             accessibilityLabel="Settings"
             hitSlop={8}
           >
-            <Text style={styles.gearIcon}>⚙️</Text>
+            <Text style={styles.gearIcon} maxFontSizeMultiplier={1.3}>⚙️</Text>
           </Pressable>
           </View>
         </View>
 
         <FrequenciesHero selected={cat === HERO_CATEGORY} reduceMotion={reduceMotion} onPress={onHero} />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catRow} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catRow} contentContainerStyle={styles.catRowContent}>
           {(['All', ...CATEGORIES] as const).map((c) => (
             <Pressable key={c} onPress={() => setCat(c)} style={[styles.chip, cat === c && styles.chipOn]}>
               <Text style={[styles.chipText, cat === c && { color: '#fff' }]}>{c}</Text>
@@ -356,7 +358,7 @@ export default function App() {
             return (
               <Pressable
                 onPress={() => onTile(item.id)}
-                style={[styles.tile, on && styles.tileOn]}
+                style={[styles.tile, { minHeight: tileMin }, on && styles.tileOn]}
                 accessibilityRole="button"
                 accessibilityLabel={locked ? `${item.name}, Premium` : item.name}
                 accessibilityHint={item.description}
@@ -367,7 +369,7 @@ export default function App() {
                   </View>
                 ) : null}
                 <Text style={styles.emoji}>{item.emoji}</Text>
-                <Text style={styles.tileName} numberOfLines={2}>{item.name}</Text>
+                <Text style={styles.tileName}>{item.name}</Text>
                 {item.headphones ? (
                   <View style={styles.badge} accessibilityLabel="Use headphones">
                     <Text style={styles.badgeText}>Use headphones</Text>
@@ -389,7 +391,7 @@ export default function App() {
             <Text style={styles.sideLabel}>Mix{active.length ? ` · ${active.length}` : ''}</Text>
           </Pressable>
           <Pressable style={[styles.playBtn, active.length === 0 && { opacity: 0.4 }]} onPress={onPlayPause}>
-            <Text style={styles.playIcon}>{mixer.playing ? '❚❚' : '▶'}</Text>
+            <Text style={styles.playIcon} maxFontSizeMultiplier={1.6}>{mixer.playing ? '❚❚' : '▶'}</Text>
           </Pressable>
           <Pressable style={styles.sideBtn} onPress={() => setShowTimer(true)}>
             <Text style={styles.sideIcon}>⏱️</Text>
@@ -650,11 +652,15 @@ const styles = StyleSheet.create({
   subtitle: { color: C.sub, fontSize: 13, marginTop: 2 },
   pill: { backgroundColor: 'rgba(167,139,250,0.25)', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999 },
   pillText: { color: C.text, fontWeight: '700', fontSize: 13 },
-  catRow: { flexGrow: 0, marginVertical: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: C.card },
+  // flexShrink 0: the row keeps its full height next to the sound grid instead of being squeezed
+  // (a squeezed horizontal ScrollView clips the chip labels top and bottom).
+  catRow: { flexGrow: 0, flexShrink: 0, marginVertical: 8 },
+  catRowContent: { paddingHorizontal: 16, gap: 8, alignItems: 'center' },
+  // No fixed height and no lineHeight: chips grow with Dynamic Type.
+  chip: { minHeight: 36, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: C.card, justifyContent: 'center' },
   chipOn: { backgroundColor: C.accent2 },
-  chipText: { color: C.sub, fontWeight: '600' },
-  tile: { flex: 1 / 3, aspectRatio: 1, backgroundColor: C.card, borderRadius: 18, alignItems: 'center', justifyContent: 'center', padding: 8, borderWidth: 1, borderColor: 'transparent' },
+  chipText: { color: C.sub, fontSize: 14, fontWeight: '600', textAlign: 'center' },
+  tile: { flex: 1 / 3, backgroundColor: C.card, borderRadius: 18, alignItems: 'center', justifyContent: 'center', padding: 8, borderWidth: 1, borderColor: 'transparent' },
   tileOn: { backgroundColor: C.cardOn, borderColor: C.accent },
   emoji: { fontSize: 34, marginBottom: 6 },
   tileName: { color: C.text, fontSize: 12, textAlign: 'center', fontWeight: '600' },
