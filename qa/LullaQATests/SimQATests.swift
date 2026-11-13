@@ -140,4 +140,233 @@ final class SimQATests: XCTestCase {
         } while Date() < deadline
         return false
     }
+
+    // MARK: - Purchase and Restore only (qa/sim-qa/flow-iap.sh)
+
+    private var iapResults: [[String: Any]] = []
+
+    private func iapShot(_ name: String) {
+        let s = XCUIScreen.main.screenshot()
+        try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+        try? s.pngRepresentation.write(to: outDir.appendingPathComponent("\(name).png"))
+        let a = XCTAttachment(screenshot: s)
+        a.name = name
+        a.lifetime = .keepAlways
+        add(a)
+    }
+
+    private func iapRecord(_ step: Int, _ name: String, _ pass: Bool, _ detail: String) {
+        iapResults.append(["step": step, "name": name, "pass": pass, "detail": detail])
+        if let data = try? JSONSerialization.data(withJSONObject: ["steps": iapResults], options: [.prettyPrinted]) {
+            try? data.write(to: outDir.appendingPathComponent("results.json"))
+        }
+        NSLog("[lulla-qa] step \(step) \(pass ? "PASS" : "FAIL") \(name): \(detail)")
+    }
+
+    private func labelContains(_ root: XCUIApplication, _ text: String) -> XCUIElement {
+        root.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+    }
+
+    private func tapElement(_ el: XCUIElement) {
+        if el.isHittable { el.tap() } else { el.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap() }
+    }
+
+    /// The App Store sandbox sign-in prompt means the local StoreKit configuration did not attach.
+    private func sandboxSignInShown() -> Bool {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for root in [springboard, XCUIApplication()] {
+            if labelContains(root, "Sign in to Apple Account").exists { return true }
+            if labelContains(root, "Sign In to Apple Account").exists { return true }
+            if labelContains(root, "Sign in to the App Store").exists { return true }
+        }
+        return false
+    }
+
+    private func cancelSignIn() {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for root in [springboard, XCUIApplication()] {
+            let b = root.buttons["Cancel"].firstMatch
+            if b.exists { tapElement(b); Thread.sleep(forTimeInterval: 1); return }
+        }
+    }
+
+    /// With disableDialogs the local StoreKit sheet should not show. If it does, confirm it.
+    @discardableResult
+    private func confirmLocalStoreSheet() -> Bool {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for root in [XCUIApplication(), springboard] {
+            for label in ["Subscribe", "Purchase", "Buy", "Confirm", "Start Free Trial", "Try It Free"] {
+                let b = root.buttons[label].firstMatch
+                if b.exists && b.isHittable {
+                    iapShot("22a-local-storekit-sheet")
+                    NSLog("[lulla-qa] local StoreKit sheet: tapping \(label)")
+                    b.tap()
+                    Thread.sleep(forTimeInterval: 2)
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    private func openQA(_ path: String, app: XCUIApplication) {
+        guard let url = URL(string: "lulla://qa/\(path)") else { return }
+        XCUIDevice.shared.system.open(url)
+        Thread.sleep(forTimeInterval: 0.4)
+        confirmOpenInAppIfAsked(timeout: 4)
+        _ = app.wait(for: .runningForeground, timeout: 8)
+        Thread.sleep(forTimeInterval: 2)
+    }
+
+    private func startSession(_ tag: String) {
+        let path = ProcessInfo.processInfo.environment["STOREKIT_CONFIG"]
+            ?? Bundle(for: SimQATests.self).path(forResource: "Lulla", ofType: "storekit") ?? ""
+        do {
+            let s = try SKTestSession(contentsOf: URL(fileURLWithPath: path))
+            s.resetToDefaultState()
+            s.disableDialogs = true
+            s.clearTransactions()
+            session = s
+            NSLog("[lulla-qa] SKTestSession (\(tag)) from \(path)")
+        } catch {
+            NSLog("[lulla-qa] SKTestSession (\(tag)) failed for \(path): \(error)")
+        }
+    }
+
+    private func monthlyTransactionInfo() -> String {
+        guard let session else { return "no SKTestSession" }
+        let deadline = Date().addingTimeInterval(10)
+        var txs: [SKTestTransaction] = []
+        while Date() < deadline {
+            txs = session.allTransactions()
+            if txs.contains(where: { $0.productIdentifier == "lulla_premium_monthly" }) { break }
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        guard let tx = txs.filter({ $0.productIdentifier == "lulla_premium_monthly" })
+            .sorted(by: { $0.purchaseDate > $1.purchaseDate }).first else {
+            return "no local monthly transaction (txs=\(txs.count))"
+        }
+        guard let exp = tx.expirationDate else { return "local tx lulla_premium_monthly, no expirationDate" }
+        let days = exp.timeIntervalSince(tx.purchaseDate) / 86_400
+        return "local tx lulla_premium_monthly expires in \(String(format: "%.1f", days))d"
+    }
+
+    /// Purchase (monthly, local StoreKit) and Restore with real taps. Shots 21 to 23.
+    func testPurchaseAndRestore() throws {
+        try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        var attempt = 1
+        var purchased = false
+        var purchaseDetail = ""
+        while attempt <= 2 && !purchased {
+            if attempt == 2 {
+                NSLog("[lulla-qa] retry: new SKTestSession and relaunch")
+                cancelSignIn()
+                app.terminate()
+                Thread.sleep(forTimeInterval: 3)
+                startSession("retry")
+                Thread.sleep(forTimeInterval: 3)
+            }
+            app.launch()
+            Thread.sleep(forTimeInterval: 6)
+            openQA("overlay/off", app: app)
+            openQA("paywall", app: app)
+            let monthly = labelContains(app, "$2.99/month")
+            let yearly = labelContains(app, "$19.99/year")
+            let pricesOK = monthly.waitForExistence(timeout: 40) && yearly.exists
+            let trialOK = labelContains(app, "7 days free").exists
+            iapShot(attempt == 1 ? "21-paywall" : "21-paywall-retry")
+            iapRecord(21, "Paywall shows local StoreKit prices (attempt \(attempt))", pricesOK && trialOK,
+                      "monthly $2.99=\(monthly.exists) yearly $19.99=\(yearly.exists) 7-day trial=\(trialOK) session=\(session != nil)")
+            guard pricesOK else { purchaseDetail = "paywall prices missing"; attempt += 1; continue }
+
+            tapElement(monthly)
+            var sheet = false
+            var signIn = false
+            let closeBtn = app.buttons["Close"].firstMatch
+            let deadline = Date().addingTimeInterval(40)
+            while Date() < deadline {
+                if sandboxSignInShown() { signIn = true; break }
+                if confirmLocalStoreSheet() { sheet = true }
+                if app.alerts.firstMatch.exists { break }
+                if !labelContains(app, "$2.99/month").exists && !closeBtn.exists { break }
+                Thread.sleep(forTimeInterval: 0.5)
+            }
+            if signIn {
+                iapShot(attempt == 1 ? "22-purchase-FAIL-sandbox-signin" : "22-purchase-FAIL-sandbox-signin-retry")
+                cancelSignIn()
+                purchaseDetail = "attempt \(attempt): sandbox sign-in prompt, local StoreKit not attached"
+                NSLog("[lulla-qa] \(purchaseDetail)")
+                attempt += 1
+                continue
+            }
+            if app.alerts.firstMatch.exists {
+                let label = app.alerts.firstMatch.label
+                iapShot("22-purchase-alert")
+                purchaseDetail = "attempt \(attempt): app alert \(label)"
+                app.alerts.firstMatch.buttons.firstMatch.tap()
+                attempt += 1
+                continue
+            }
+            let tx = monthlyTransactionInfo()
+            Thread.sleep(forTimeInterval: 2)
+            // Settings sheet says "Premium is active. Thank you." once the entitlement is on.
+            let gear = app.buttons["Settings"].firstMatch
+            if gear.waitForExistence(timeout: 8) { tapElement(gear) }
+            let active = labelContains(app, "Premium is active").waitForExistence(timeout: 12)
+            iapShot("22-purchase-success")
+            purchased = active && tx.hasPrefix("local tx")
+            purchaseDetail = "attempt \(attempt): localSheetShown=\(sheet) premiumActive=\(active); \(tx)"
+            if !purchased { attempt += 1 }
+        }
+        iapRecord(22, "Monthly purchase through local StoreKit (no sandbox sign-in)", purchased, purchaseDetail)
+
+        // Restore: real tap on Settings > Restore purchases.
+        var restoreOK = false
+        var restoreDetail = "skipped, purchase did not complete"
+        if purchased {
+            if !labelContains(app, "Restore purchases").exists {
+                let gear = app.buttons["Settings"].firstMatch
+                if gear.waitForExistence(timeout: 8) { tapElement(gear) }
+            }
+            let row = labelContains(app, "Restore purchases")
+            if row.waitForExistence(timeout: 10) {
+                tapElement(row)
+                var signIn = false
+                var alertLabel = ""
+                let deadline = Date().addingTimeInterval(30)
+                while Date() < deadline {
+                    if sandboxSignInShown() { signIn = true; break }
+                    if app.alerts.firstMatch.exists { alertLabel = app.alerts.firstMatch.label; break }
+                    if !labelContains(app, "Restore purchases").exists { break }
+                    Thread.sleep(forTimeInterval: 0.5)
+                }
+                if signIn {
+                    iapShot("23-restore-FAIL-sandbox-signin")
+                    cancelSignIn()
+                    restoreDetail = "sandbox sign-in prompt on restore"
+                } else if !alertLabel.isEmpty {
+                    iapShot("23-restore-alert")
+                    restoreDetail = "alert: \(alertLabel)"
+                    app.alerts.firstMatch.buttons.firstMatch.tap()
+                } else {
+                    // Sheet closes on success; reopen Settings to show the restored state.
+                    Thread.sleep(forTimeInterval: 2)
+                    openQA("restore", app: app)
+                    Thread.sleep(forTimeInterval: 6)
+                    let gear = app.buttons["Settings"].firstMatch
+                    if gear.waitForExistence(timeout: 8) { tapElement(gear) }
+                    let active = labelContains(app, "Premium is active").waitForExistence(timeout: 12)
+                    iapShot("23-restore-success")
+                    restoreOK = active && !sandboxSignInShown()
+                    restoreDetail = "settings closed after tap (no alert, no sign-in); premiumActive=\(active); \(monthlyTransactionInfo())"
+                }
+            } else {
+                restoreDetail = "Restore purchases row not found"
+                iapShot("23-restore-missing")
+            }
+        }
+        iapRecord(23, "Restore purchases (Settings row)", restoreOK, restoreDetail)
+    }
 }
