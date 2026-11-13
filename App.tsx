@@ -13,6 +13,7 @@ import { CATEGORIES, SOUNDS, SOUND_BY_ID, TIMER_OPTIONS, Category } from './src/
 import { planTimer, timerDone, timerGain, type TimerMinutes, type TimerPlan } from './src/timer';
 import { FREE_SECONDS, PRIVACY_URL, QA_MODE, SUPPORT_URL, TERMS_URL } from './src/config';
 import { parseQaUrl } from './src/qa';
+import { CREDITS, CREDITS_PAGE_URL } from './src/credits';
 import { planButtonText } from './src/introOffer';
 import { FrequenciesHero } from './src/FrequenciesHero';
 import { HERO_CATEGORY } from './src/hero';
@@ -73,6 +74,7 @@ export default function App() {
   const [showTimer, setShowTimer] = useState(false);
   const [showMix, setShowMix] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
   const [timerPlan, setTimerPlan] = useState<TimerPlan | null>(null);
   const [allNight, setAllNight] = useState(false);
   const [timerLeft, setTimerLeft] = useState(0);
@@ -214,7 +216,8 @@ export default function App() {
         tapTile(cmd.id, premiumRef.current, () => setShowPaywall(true), () => { lastTick.current = nowMs(); });
         return;
       }
-      if (cmd.kind === 'close') { setShowPaywall(false); setShowSettings(false); setShowTimer(false); return; }
+      if (cmd.kind === 'close') { setShowPaywall(false); setShowSettings(false); setShowTimer(false); setShowCredits(false); return; }
+      if (cmd.kind === 'credits') { setShowPaywall(false); setShowSettings(false); setShowCredits(true); return; }
       if (cmd.kind === 'settings') { setShowPaywall(false); setShowSettings(true); return; }
       if (cmd.kind === 'preview') { setRemaining(setUsedForQa(cmd.state === 'used' ? FREE_SECONDS : 0)); return; }
       if (cmd.kind === 'timer') { setShowTimer(false); applyTimer(cmd.minutes); return; }
@@ -449,8 +452,41 @@ export default function App() {
           ) : null}
           <Pressable style={styles.timerRow} onPress={() => Linking.openURL(TERMS_URL)}><Text style={styles.timerText}>Terms of Use</Text></Pressable>
           <Pressable style={styles.timerRow} onPress={() => Linking.openURL(PRIVACY_URL)}><Text style={styles.timerText}>Privacy Policy</Text></Pressable>
+          <Pressable style={styles.timerRow} onPress={() => { setShowSettings(false); setShowCredits(true); }} accessibilityRole="button">
+            <Text style={styles.timerText}>Sound credits</Text>
+          </Pressable>
           <Pressable style={styles.timerRow} onPress={() => Linking.openURL(SUPPORT_URL)}><Text style={styles.timerText}>Support</Text></Pressable>
         </View>
+      </Modal>
+
+      {/* Sound credits (attributions from ASSET_LICENSES.md) */}
+      <Modal visible={showCredits} animationType={sheetAnim} onRequestClose={() => setShowCredits(false)}>
+        <LinearGradient colors={[C.bg1, C.bg2, C.bg3]} style={styles.fill}>
+          <SafeAreaView style={styles.fill}>
+            <View style={[styles.header, { paddingBottom: 4 }]}>
+              <Text style={styles.sheetTitle}>Sound credits</Text>
+              <Pressable onPress={() => setShowCredits(false)} style={styles.close} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close" testID="credits-close">
+                <Text style={styles.closeText}>✕</Text>
+              </Pressable>
+            </View>
+            <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
+              {CREDITS.map((c) => (
+                <View key={c.title} style={styles.credit}>
+                  <Text style={styles.creditTitle}>{c.title}</Text>
+                  <Text style={styles.creditBody}>{c.body}</Text>
+                  {(c.links ?? []).map((l) => (
+                    <Pressable key={l.url} onPress={() => Linking.openURL(l.url)} accessibilityRole="link">
+                      <Text style={styles.link}>{l.label}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ))}
+              <Pressable onPress={() => Linking.openURL(CREDITS_PAGE_URL)} accessibilityRole="link">
+                <Text style={[styles.link, { marginTop: 8 }]}>Full list of sources</Text>
+              </Pressable>
+            </ScrollView>
+          </SafeAreaView>
+        </LinearGradient>
       </Modal>
     </LinearGradient>
   );
@@ -568,6 +604,9 @@ const styles = StyleSheet.create({
   badge: { marginTop: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(167,139,250,0.3)' },
   badgeText: { color: C.text, fontSize: 9, fontWeight: '700' },
   badgeInline: { color: C.sub, fontSize: 11, marginTop: 2 },
+  credit: { marginTop: 18 },
+  creditTitle: { color: C.text, fontSize: 16, fontWeight: '700', marginBottom: 4 },
+  creditBody: { color: C.sub, fontSize: 14, lineHeight: 20, marginBottom: 6 },
   lock: { position: 'absolute', top: 6, right: 6, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.45)' },
   lockText: { color: '#fde68a', fontSize: 9, fontWeight: '800' },
   gear: { marginLeft: 10, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.08)' },

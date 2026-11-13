@@ -115,6 +115,8 @@ jobs:
           shot f3-home-after-x-b
           xcrun simctl openurl "$UDID" "lulla://qa/settings"; sleep 4
           shot f4-settings-restore           # Restore purchases outside the paywall
+          xcrun simctl openurl "$UDID" "lulla://qa/credits"; sleep 3
+          shot f5-sound-credits              # Settings > Sound credits (Farm CC BY 4.0, CC0, Frequencies by Samay Vashsht)
           xcrun simctl openurl "$UDID" "lulla://qa/close"; sleep 2
 
           # Frequencies hero card on home (All selected), then a tap on it selects Frequencies
@@ -140,7 +142,7 @@ jobs:
           xcrun simctl openurl "$UDID" "lulla://qa/wrap/freq_432"; sleep 4
           for i in 1 2 3 4 5 6 7 8; do shot "w-wrap-$i"; sleep 1; done
           xcrun simctl openurl "$UDID" "lulla://qa/stop"
-          xcrun simctl spawn "$UDID" log show --last 30m --predicate 'process == "Lulla"' > "$OUT/app.log" 2>&1 || true
+          xcrun simctl spawn "$UDID" log show --last 30m --predicate 'process CONTAINS "Lulla"' > "$OUT/app.log" 2>&1 || true
           grep -F '[QA]' "$OUT/app.log" > "$OUT/qa-events.log" || echo "no [QA] lines in the device log" > "$OUT/qa-events.log"
 
       - name: Store shots at 6.5 inch (iPhone 11 Pro Max class)
