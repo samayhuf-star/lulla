@@ -9,6 +9,7 @@ Expo (React Native) sleep-sounds app by Samay Vashsht. Listen for three minutes 
 - Sleep timer (10 minutes to 3 hours) with a gentle fade-out
 - Background / screen-off playback
 - Lulla Premium: yearly (`lulla_premium_yearly`) or monthly (`lulla_premium_monthly`) auto-renewing subscription via StoreKit 2 / Google Play Billing (`expo-iap`). Prices come from the store and are not hard-coded.
+- Lifetime: optional one-time non-consumable `lulla_premium_lifetime` (same premium, no trial), behind `LIFETIME_ENABLED` in `src/config.ts` (on). Planned USA prices: $2.99/month and $19.99/year (each with a 7-day free trial), $39.99 lifetime. The app shows only the store's localized price.
 
 Field-recording replacements from Freesound are not in this build (account sign-up is still pending). The 25 original loops ship instead. No third-party audio with unclear licensing is included.
 

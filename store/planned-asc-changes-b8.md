@@ -87,7 +87,7 @@ Data Not Collected. Samay does this on the web (the API cannot edit it). The pri
 ## 8. Subscriptions (group "Lulla Premium", id 22565177)
 
 - Both products: add the **review note** (currently none): "Unlocks unlimited playback of every Lulla sound. Open the paywall from the Free pill at the top right of the home screen, or play past the 3 free minutes."
-- Keep display names "Lulla Premium Monthly" / "Lulla Premium Yearly", USA $4.99 / $41.99, existing review screenshots (replace with a build 8 paywall shot if the old one shows 25 sounds).
+- Keep display names "Lulla Premium Monthly" / "Lulla Premium Yearly", USA $2.99 / $19.99 (13 Nov 2026 decision, each with a 7-day free trial; ASC still has $4.99 / $41.99 until the pricing write is cleared), plus new non-consumable `lulla_premium_lifetime` at $39.99 with no trial, existing review screenshots (replace with a build 8 paywall shot if the old one shows 25 sounds).
 - Group localization en-US: display name "Lulla Premium". Attach both subscriptions to the version's first submission.
 - Prices only load once the Paid Apps agreement and bank are Active (Samay; Processing as of 12 Nov, 8:06 PM BDT). Retest prices on the phone after that (audit C6).
 

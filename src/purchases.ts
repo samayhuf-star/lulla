@@ -19,10 +19,10 @@ import {
   type ProductOrSubscription,
   type Purchase,
 } from 'expo-iap';
-import { ALL_PRODUCT_IDS, isKnownProduct, PRODUCT_CATALOG } from './config';
+import { ALL_PRODUCT_IDS, INAPP_PRODUCT_IDS, isKnownProduct, PRODUCT_CATALOG, SUB_PRODUCT_IDS, type ProductDef } from './config';
 import { freeTrialDays, type ProductLike } from './introOffer';
 
-export type Plan = (typeof PRODUCT_CATALOG)[number] & {
+export type Plan = ProductDef & {
   price: string;
   product: ProductOrSubscription;
   /** Free-trial days, set only when the store reports a trial AND this user is eligible. */
@@ -154,19 +154,29 @@ export async function loadPlans(): Promise<PlansLoad> {
   }
   let subs: ProductOrSubscription[] = [];
   try {
-    subs = (await fetchProducts({ skus: ALL_PRODUCT_IDS, type: 'subs' })) ?? [];
+    subs = (await fetchProducts({ skus: SUB_PRODUCT_IDS, type: 'subs' })) ?? [];
   } catch (e) {
     logErr('fetchProducts subs', e);
   }
+  // Lifetime unlock (non-consumable). Empty when LIFETIME_ENABLED is false.
+  let oneTime: ProductOrSubscription[] = [];
+  if (INAPP_PRODUCT_IDS.length) {
+    try {
+      oneTime = ((await fetchProducts({ skus: INAPP_PRODUCT_IDS, type: 'in-app' })) ?? []) as ProductOrSubscription[];
+    } catch (e) {
+      logErr('fetchProducts in-app', e);
+    }
+  }
   const byId = new Map<string, ProductOrSubscription>();
-  for (const product of subs) {
+  for (const product of [...subs, ...oneTime]) {
     if (product?.id && product.displayPrice) byId.set(product.id, product);
   }
   const plans: Plan[] = [];
   for (const def of PRODUCT_CATALOG) {
     const product = byId.get(def.id);
     if (!product) continue;
-    const days = freeTrialDays(product as unknown as ProductLike);
+    // Only subscriptions can have a trial; the lifetime unlock never shows trial copy.
+    const days = def.type === 'subs' ? freeTrialDays(product as unknown as ProductLike) : null;
     const trialDays = days && (await introEligible(product)) ? days : null;
     plans.push({ ...def, price: product.displayPrice, product, trialDays });
   }
@@ -191,12 +201,12 @@ export async function refreshEntitlements(): Promise<boolean> {
       }
     }
     try {
-      if (await hasActiveSubscriptions(ALL_PRODUCT_IDS)) return true;
+      if (await hasActiveSubscriptions(SUB_PRODUCT_IDS)) return true;
     } catch (e) {
       logErr('hasActiveSubscriptions', e);
     }
     try {
-      const active = await getActiveSubscriptions(ALL_PRODUCT_IDS);
+      const active = await getActiveSubscriptions(SUB_PRODUCT_IDS);
       if (active.some((s) => s.isActive)) return true;
     } catch (e) {
       logErr('getActiveSubscriptions', e);
@@ -254,6 +264,7 @@ export async function restore(): Promise<boolean> {
   } catch (e) {
     logErr('restorePurchases', e);
   }
+  let ownsLifetime = false;
   try {
     const purchases = await getAvailablePurchases({ onlyIncludeActiveItemsIOS: false });
     for (const purchase of purchases) {
@@ -261,6 +272,7 @@ export async function restore(): Promise<boolean> {
       if (!isKnownProduct(purchase.productId)) continue;
       try {
         if (await verifyOnDevice(purchase)) {
+          if (INAPP_PRODUCT_IDS.includes(purchase.productId)) ownsLifetime = true;
           await finishTransaction({ purchase, isConsumable: false });
         }
       } catch (e) {
@@ -270,7 +282,9 @@ export async function restore(): Promise<boolean> {
   } catch (e) {
     logErr('restore getAvailablePurchases', e);
   }
-  const entitled = await refreshEntitlements();
+  // iOS: currentEntitlementIOS in refreshEntitlements covers the lifetime unlock too.
+  // Android: a restored lifetime purchase counts here.
+  const entitled = (await refreshEntitlements()) || ownsLifetime;
   emitPremium(entitled);
   return entitled;
 }
