@@ -34,12 +34,6 @@ describe('7-day free trial copy', () => {
     assert.equal(planButtonText({ label: 'Yearly', price: '$19.99', kind: 'yearly' }), 'Yearly · $19.99 / year');
   });
 
-  it('lifetime is a one-time price and never shows trial copy', () => {
-    assert.equal(planButtonText({ label: 'Lifetime', price: '$39.99', kind: 'lifetime', trialDays: 7 }), 'Lifetime · $39.99 one-time');
-    assert.equal(planButtonText({ label: 'Lifetime', price: '39,99 €', kind: 'lifetime' }), 'Lifetime · 39,99 € one-time');
-    assert.match(read('src/purchases.ts'), /def\.type === 'subs' \? freeTrialDays/);
-  });
-
   it('trial days are only set when StoreKit says the user is eligible', () => {
     const src = read('src/purchases.ts');
     assert.match(src, /const trialDays = days && \(await introEligible\(product\)\) \? days : null;/);
@@ -50,21 +44,20 @@ describe('7-day free trial copy', () => {
     assert.match(read('src/introOffer.ts'), /plan\.price/);
   });
 
-  it('StoreKit test prices: monthly 2.99, yearly 19.99, lifetime 39.99 with no intro offer', () => {
+  it('StoreKit test prices: monthly 2.99, yearly 19.99, and no lifetime product', () => {
     const sk = JSON.parse(read('storekit/Lulla.storekit'));
     const subs = sk.subscriptionGroups[0].subscriptions;
     const price = (id: string) => subs.find((x: { productID: string }) => x.productID === id).displayPrice;
     assert.equal(price('lulla_premium_monthly'), '2.99');
     assert.equal(price('lulla_premium_yearly'), '19.99');
-    const life = sk.products.find((x: { productID: string }) => x.productID === 'lulla_premium_lifetime');
-    assert.equal(life.type, 'NonConsumable');
-    assert.equal(life.displayPrice, '39.99');
-    assert.equal(life.introductoryOffer, undefined);
+    assert.deepEqual(sk.products, []);
+    assert.deepEqual(sk.nonRenewingSubscriptions, []);
   });
 
   it('no hard-coded prices in app code: the paywall shows the store price only', () => {
-    for (const f of ['App.tsx', 'src/purchases.ts', 'src/introOffer.ts', 'src/access.ts']) {
+    for (const f of ['App.tsx', 'src/purchases.ts', 'src/introOffer.ts', 'src/access.ts', 'src/config.ts']) {
       assert.doesNotMatch(read(f), /\$\s?\d+\.\d\d|\d+[.,]99/, f);
+      assert.doesNotMatch(read(f), /lifetime/i, f);
     }
   });
 

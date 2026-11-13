@@ -36,9 +36,7 @@ export function freeTrialDays(p: ProductLike | null | undefined): number | null 
 }
 
 /** Text on a plan button. The trial line shows only for an eligible user with a real trial offer. */
-export function planButtonText(plan: { label: string; price: string; kind: 'monthly' | 'yearly' | 'lifetime'; trialDays?: number | null }): string {
-  // Lifetime is a one-time purchase and never shows trial copy.
-  if (plan.kind === 'lifetime') return `${plan.label} · ${plan.price} one-time`;
+export function planButtonText(plan: { label: string; price: string; kind: 'monthly' | 'yearly'; trialDays?: number | null }): string {
   const period = plan.kind === 'yearly' ? 'year' : 'month';
   if (plan.trialDays && plan.trialDays > 0) return `${plan.trialDays} days free, then ${plan.price}/${period}`;
   return `${plan.label} · ${plan.price} / ${period}`;

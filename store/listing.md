@@ -15,12 +15,12 @@ Fall asleep faster with Lulla. Pick a sound, layer your own mix, set a timer, an
 • Sleep timer from 10 minutes to 3 hours with a gentle fade-out
 • Keeps playing with the screen off
 
-Seven sounds are free forever. Lulla Premium is an auto-renewing yearly or monthly subscription, or a one-time lifetime unlock. The price is shown in the app before you buy, and you can cancel anytime in your Apple ID or Google Play settings.
+Seven sounds are free forever. Lulla Premium is an auto-renewing yearly or monthly subscription. The price is shown in the app before you buy, and you can cancel anytime in your Apple ID or Google Play settings.
 
 **Category:** Health & Fitness · **Age rating:** 4+ / Everyone
 **Subscription display name:** Lulla Premium
-**Product IDs:** `lulla_premium_yearly` (1 year), `lulla_premium_monthly` (1 month), `lulla_premium_lifetime` (one-time, non-consumable, behind `LIFETIME_ENABLED` in src/config.ts)
-**Prices:** shown in the app from the store (planned USA prices from the 13 Nov 2026 pricing decision: $19.99 / year and $2.99 / month, each with a 7-day free trial; lifetime $39.99 one-time, no trial. Not yet set in App Store Connect, which still has $41.99 / $4.99 until the pricing write is cleared)
+**Product IDs:** `lulla_premium_yearly` (1 year), `lulla_premium_monthly` (1 month)
+**Prices:** shown in the app from the store (USA prices from the 13 Nov 2026 pricing decision: $19.99 / year and $2.99 / month, each with a 7-day free trial; set in App Store Connect by a separate worker)
 
 **Privacy:** https://samayhuf-star.github.io/app-legal/lulla/privacy.html
 **Terms:** https://samayhuf-star.github.io/app-legal/lulla/terms.html

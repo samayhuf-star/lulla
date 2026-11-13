@@ -1,23 +1,7 @@
 {
   "identifier" : "6E2B1C4A",
   "nonRenewingSubscriptions" : [],
-  "products" : [
-    {
-      "displayPrice" : "39.99",
-      "familyShareable" : false,
-      "internalID" : "5A1D2E04",
-      "localizations" : [
-        {
-          "description" : "All sounds, unlimited listening, one-time purchase",
-          "displayName" : "Lulla Premium Lifetime",
-          "locale" : "en_US"
-        }
-      ],
-      "productID" : "lulla_premium_lifetime",
-      "referenceName" : "Lulla Premium Lifetime",
-      "type" : "NonConsumable"
-    }
-  ],
+  "products" : [],
   "settings" : {
     "_applicationInternalID" : "6833056218",
     "_developerTeamID" : "PGLT2QZX88",
