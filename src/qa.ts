@@ -14,6 +14,8 @@
 //   lulla://qa/credits            open Settings > Sound credits
 //   lulla://qa/hero               tap the Frequencies hero card (same handler as a finger tap)
 //   lulla://qa/wrap/freq_432      play one sound and jump to 4 s before its loop point
+//   lulla://qa/buy/monthly        open the paywall and press the Monthly (or yearly) plan button
+//   lulla://qa/restore            run Restore purchases (same handler as the Settings row)
 export type QaCommand =
   | { kind: 'play'; ids: string[] }
   | { kind: 'tap'; id: string }
@@ -27,11 +29,13 @@ export type QaCommand =
   | { kind: 'hero' }
   | { kind: 'credits' }
   | { kind: 'cat'; slug: string }
-  | { kind: 'wrap'; id: string };
+  | { kind: 'wrap'; id: string }
+  | { kind: 'buy'; plan: 'monthly' | 'yearly' }
+  | { kind: 'restore' };
 
 export function parseQaUrl(url: string | null | undefined): QaCommand | null {
   if (!url) return null;
-  const m = /^lulla:\/\/qa\/(play|stop|paywall|tap|close|settings|preview|timer|timersheet|cat|wrap|hero|credits)(?:\/([a-z0-9_,]+))?\/?$/.exec(url.trim());
+  const m = /^lulla:\/\/qa\/(play|stop|paywall|tap|close|settings|preview|timer|timersheet|cat|wrap|hero|credits|buy|restore)(?:\/([a-z0-9_,]+))?\/?$/.exec(url.trim());
   if (!m) return null;
   const arg = m[2];
   switch (m[1]) {
@@ -42,7 +46,10 @@ export function parseQaUrl(url: string | null | undefined): QaCommand | null {
     case 'timersheet':
     case 'hero':
     case 'credits':
+    case 'restore':
       return arg ? null : { kind: m[1] };
+    case 'buy':
+      return arg === 'monthly' || arg === 'yearly' ? { kind: 'buy', plan: arg } : null;
     case 'timer':
       if (arg === 'allnight') return { kind: 'timer', minutes: null };
       return arg && /^\d{1,3}$/.test(arg) && +arg > 0 ? { kind: 'timer', minutes: +arg } : null;

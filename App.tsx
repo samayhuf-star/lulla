@@ -45,6 +45,12 @@ const qaLog = (msg: string) => {
 
 const nowMs = (): number => Date.now();
 
+// QA builds only: the plan lulla://qa/buy/<plan> should press once the paywall's plans load.
+let qaPendingBuy: 'monthly' | 'yearly' | null = null;
+// Same buy() as the plan button. Premium then arrives through the entitlement listener.
+const qaBuyPlan = (plan: Plan) =>
+  buy(plan).then((r) => qaLog(`buy ${plan.id}: ${r}`)).catch((e) => qaLog(`buy ${plan.id}: error ${String(e)}`));
+
 /**
  * A tap on a sound tile (finger or QA deep link, same path). A sound already in the mix can
  * always be removed. A locked premium sound opens the paywall. Free sounds always play.
@@ -187,8 +193,13 @@ export default function App() {
         const tl = (timerPlan.endMs - now) / 1000;
         setTimerLeft(Math.max(0, tl));
         mixer.setTimerLeft(tl > 0 ? tl : null);
-        if (now > timerPlan.fadeStartMs) mixer.setMaster(timerGain(now, timerPlan)); // last 60 s fade-out
+        if (now > timerPlan.fadeStartMs) {
+          const g = timerGain(now, timerPlan);
+          mixer.setMaster(g); // last 60 s fade-out
+          if (QA_MODE) qaLog(`timer fade ${new Date(now).toISOString()} gain ${g.toFixed(3)} playing ${mixer.playing}`);
+        }
         if (timerDone(now, timerPlan)) {
+          if (QA_MODE) qaLog(`timer done ${new Date(now).toISOString()}: pausing (was playing ${mixer.playing})`);
           mixer.pause();
           mixer.setMaster(1);
           setTimerPlan(null);
@@ -221,6 +232,12 @@ export default function App() {
       if (cmd.kind === 'settings') { setShowPaywall(false); setShowSettings(true); return; }
       if (cmd.kind === 'preview') { setRemaining(setUsedForQa(cmd.state === 'used' ? FREE_SECONDS : 0)); return; }
       if (cmd.kind === 'timer') { setShowTimer(false); applyTimer(cmd.minutes); return; }
+      if (cmd.kind === 'buy') { qaPendingBuy = cmd.plan; setShowSettings(false); setShowPaywall(false); setTimeout(() => setShowPaywall(true), 300); return; }
+      if (cmd.kind === 'restore') {
+        qaLog('restore: start');
+        restore().then((ok) => { qaLog(`restore: entitled ${ok}`); if (ok) setPremium(true); }).catch((e) => qaLog(`restore: error ${String(e)}`));
+        return;
+      }
       if (cmd.kind === 'hero') { setShowPaywall(false); heroTap(false, setCat); return; }
       if (cmd.kind === 'timersheet') { setShowPaywall(false); setShowTimer(true); return; }
       if (cmd.kind === 'cat') {
@@ -530,6 +547,15 @@ function Paywall({ visible, onClose, onUnlocked, reduceMotion }: {
       if (cancelled) return;
       setPlans(result.plans);
       setPlansError(result.error);
+      if (QA_MODE) {
+        qaLog(`plans: ${result.plans.map((p) => `${p.id} [${planButtonText(p)}] trialDays=${p.trialDays}`).join(' | ') || `none (${result.error})`}`);
+        // QA builds only: press a plan button the same way a finger tap does, once the plans load.
+        const want = qaPendingBuy;
+        qaPendingBuy = null;
+        const plan = want ? result.plans.find((p) => p.kind === want) : undefined;
+        if (want && !plan) qaLog(`buy ${want}: no such plan loaded`);
+        if (plan) { qaLog(`buy ${plan.id}: pressing [${planButtonText(plan)}]`); setTimeout(() => { qaBuyPlan(plan); }, 2500); }
+      }
     });
     return () => { cancelled = true; };
   }, [visible]);
@@ -538,6 +564,7 @@ function Paywall({ visible, onClose, onUnlocked, reduceMotion }: {
     setBusy(true);
     try {
       const result = await buy(plan);
+      if (QA_MODE) qaLog(`buy ${plan.id}: ${result}`);
       if (result === 'purchased') onUnlocked();
       else if (result === 'pending') Alert.alert('Purchase pending', 'This purchase is waiting for approval.');
       else if (result === 'error') Alert.alert('Purchase failed', 'Please try again.');
@@ -547,6 +574,7 @@ function Paywall({ visible, onClose, onUnlocked, reduceMotion }: {
   };
 
   const doRestore = () => runRestore(onUnlocked, setBusy);
+
 
 
   return (
