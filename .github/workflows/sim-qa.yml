@@ -119,6 +119,7 @@ jobs:
 
           # Frequencies hero card on home (All selected), then a tap on it selects Frequencies
           # (432 Hz Deep Sleep free, the other four Premium).
+          xcrun simctl openurl "$UDID" "lulla://qa/stop"; sleep 3   # nothing playing: no QA overlay in store shots
           xcrun simctl openurl "$UDID" "lulla://qa/cat/all"; sleep 3
           shot h0-home-frequencies-hero
           xcrun simctl openurl "$UDID" "lulla://qa/hero"; sleep 3
