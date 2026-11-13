@@ -11,6 +11,7 @@
 //   lulla://qa/timer/120          pick a sleep timer option (minutes, or allnight), logs end and fade start
 //   lulla://qa/timersheet         open the sleep timer sheet
 //   lulla://qa/cat/frequencies    pick a category chip by its first word (all = All)
+//   lulla://qa/hero               tap the Frequencies hero card (same handler as a finger tap)
 //   lulla://qa/wrap/freq_432      play one sound and jump to 4 s before its loop point
 export type QaCommand =
   | { kind: 'play'; ids: string[] }
@@ -22,12 +23,13 @@ export type QaCommand =
   | { kind: 'preview'; state: 'used' | 'reset' }
   | { kind: 'timer'; minutes: number | null }
   | { kind: 'timersheet' }
+  | { kind: 'hero' }
   | { kind: 'cat'; slug: string }
   | { kind: 'wrap'; id: string };
 
 export function parseQaUrl(url: string | null | undefined): QaCommand | null {
   if (!url) return null;
-  const m = /^lulla:\/\/qa\/(play|stop|paywall|tap|close|settings|preview|timer|timersheet|cat|wrap)(?:\/([a-z0-9_,]+))?\/?$/.exec(url.trim());
+  const m = /^lulla:\/\/qa\/(play|stop|paywall|tap|close|settings|preview|timer|timersheet|cat|wrap|hero)(?:\/([a-z0-9_,]+))?\/?$/.exec(url.trim());
   if (!m) return null;
   const arg = m[2];
   switch (m[1]) {
@@ -36,6 +38,7 @@ export function parseQaUrl(url: string | null | undefined): QaCommand | null {
     case 'close':
     case 'settings':
     case 'timersheet':
+    case 'hero':
       return arg ? null : { kind: m[1] };
     case 'timer':
       if (arg === 'allnight') return { kind: 'timer', minutes: null };

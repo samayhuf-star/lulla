@@ -117,9 +117,12 @@ jobs:
           shot f4-settings-restore           # Restore purchases outside the paywall
           xcrun simctl openurl "$UDID" "lulla://qa/close"; sleep 2
 
-          # Frequencies category (432 Hz Deep Sleep free, the other four Premium).
-          xcrun simctl openurl "$UDID" "lulla://qa/cat/frequencies"; sleep 3
-          shot h0-frequencies-category
+          # Frequencies hero card on home (All selected), then a tap on it selects Frequencies
+          # (432 Hz Deep Sleep free, the other four Premium).
+          xcrun simctl openurl "$UDID" "lulla://qa/cat/all"; sleep 3
+          shot h0-home-frequencies-hero
+          xcrun simctl openurl "$UDID" "lulla://qa/hero"; sleep 3
+          shot h1-after-hero-tap-frequencies
 
           # Sleep timer: the options (4 hours and All night), a 2 h timer with its computed
           # end and fade start (overlay + log), then All night (no stop scheduled).

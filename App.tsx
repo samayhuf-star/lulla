@@ -13,6 +13,8 @@ import { CATEGORIES, SOUNDS, SOUND_BY_ID, TIMER_OPTIONS, Category } from './src/
 import { planTimer, timerDone, timerGain, type TimerMinutes, type TimerPlan } from './src/timer';
 import { FREE_SECONDS, PRIVACY_URL, QA_MODE, SUPPORT_URL, TERMS_URL } from './src/config';
 import { parseQaUrl } from './src/qa';
+import { FrequenciesHero } from './src/FrequenciesHero';
+import { HERO_CATEGORY } from './src/hero';
 import { mixer } from './src/mixer';
 import { addUsed, loadUsed, persistUsed, remainingSeconds, setUsedForQa } from './src/trial';
 import {
@@ -53,6 +55,12 @@ function tapTile(id: string, premium: boolean, openPaywall: () => void, onStart:
   const wasEmpty = mixer.active().length === 0;
   mixer.toggle(id);
   if (wasEmpty && mixer.active().length > 0) { onStart(); mixer.play(); }
+}
+
+/** Tap on the Frequencies hero card (finger or QA deep link): light haptic, select Frequencies. */
+function heroTap(reduceMotion: boolean, select: (c: Category) => void) {
+  if (!reduceMotion) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  select(HERO_CATEGORY);
 }
 
 export default function App() {
@@ -209,6 +217,7 @@ export default function App() {
       if (cmd.kind === 'settings') { setShowPaywall(false); setShowSettings(true); return; }
       if (cmd.kind === 'preview') { setRemaining(setUsedForQa(cmd.state === 'used' ? FREE_SECONDS : 0)); return; }
       if (cmd.kind === 'timer') { setShowTimer(false); applyTimer(cmd.minutes); return; }
+      if (cmd.kind === 'hero') { setShowPaywall(false); heroTap(false, setCat); return; }
       if (cmd.kind === 'timersheet') { setShowPaywall(false); setShowTimer(true); return; }
       if (cmd.kind === 'cat') {
         const c = CATEGORIES.find((x) => x.toLowerCase().split(/[^a-z]/)[0] === cmd.slug);
@@ -255,6 +264,8 @@ export default function App() {
     tapTile(id, premiumRef.current, () => setShowPaywall(true), () => { lastTick.current = nowMs(); });
   };
 
+  const onHero = () => heroTap(reduceMotion, setCat);
+
   const onPlayPause = () => {
     if (mixer.active().length === 0) return;
     if (mixer.playing) mixer.pause();
@@ -298,6 +309,8 @@ export default function App() {
           </Pressable>
           </View>
         </View>
+
+        <FrequenciesHero selected={cat === HERO_CATEGORY} reduceMotion={reduceMotion} onPress={onHero} />
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catRow} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
           {(['All', ...CATEGORIES] as const).map((c) => (
