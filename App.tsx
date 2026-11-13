@@ -308,17 +308,17 @@ export default function App() {
       <SafeAreaView style={styles.fill}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Lulla</Text>
-            <Text style={styles.subtitle}>Sleep sounds, softly.</Text>
+            <Text style={styles.title} maxFontSizeMultiplier={1.4}>Lulla</Text>
+            <Text style={styles.subtitle} maxFontSizeMultiplier={1.6}>Sleep sounds, softly.</Text>
           </View>
           <View style={styles.headerRight}>
           {premium ? (
             <View style={[styles.pill, { backgroundColor: 'rgba(52,211,153,0.2)' }]}>
-              <Text style={[styles.pillText, { color: '#6ee7b7' }]}>Premium</Text>
+              <Text style={[styles.pillText, { color: '#6ee7b7' }]} maxFontSizeMultiplier={1.6}>Premium</Text>
             </View>
           ) : (
             <Pressable style={styles.pill} onPress={() => setShowPaywall(true)} accessibilityRole="button">
-              <Text style={styles.pillText}>
+              <Text style={styles.pillText} maxFontSizeMultiplier={1.6}>
                 {remaining > 0 && countsTowardPreview(active, false) ? `Preview ${fmt(remaining)}` : 'Unlock all'}
               </Text>
             </Pressable>
@@ -340,7 +340,7 @@ export default function App() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catRow} contentContainerStyle={styles.catRowContent}>
           {(['All', ...CATEGORIES] as const).map((c) => (
             <Pressable key={c} onPress={() => setCat(c)} style={[styles.chip, cat === c && styles.chipOn]}>
-              <Text style={[styles.chipText, cat === c && { color: '#fff' }]}>{c}</Text>
+              <Text style={[styles.chipText, cat === c && { color: '#fff' }]} maxFontSizeMultiplier={2}>{c}</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -365,14 +365,14 @@ export default function App() {
               >
                 {locked ? (
                   <View style={styles.lock} testID={`premium-${item.id}`}>
-                    <Text style={styles.lockText}>🔒 Premium</Text>
+                    <Text style={styles.lockText} maxFontSizeMultiplier={1.6}>🔒 Premium</Text>
                   </View>
                 ) : null}
-                <Text style={styles.emoji}>{item.emoji}</Text>
-                <Text style={styles.tileName}>{item.name}</Text>
+                <Text style={styles.emoji} maxFontSizeMultiplier={1.3}>{item.emoji}</Text>
+                <Text style={styles.tileName} maxFontSizeMultiplier={2}>{item.name}</Text>
                 {item.headphones ? (
                   <View style={styles.badge} accessibilityLabel="Use headphones">
-                    <Text style={styles.badgeText}>Use headphones</Text>
+                    <Text style={styles.badgeText} maxFontSizeMultiplier={1.8}>Use headphones</Text>
                   </View>
                 ) : null}
               </Pressable>
@@ -387,15 +387,15 @@ export default function App() {
         {/* Bottom player */}
         <View style={styles.player}>
           <Pressable style={styles.sideBtn} onPress={() => setShowMix(true)}>
-            <Text style={styles.sideIcon}>🎚️</Text>
-            <Text style={styles.sideLabel}>Mix{active.length ? ` · ${active.length}` : ''}</Text>
+            <Text style={styles.sideIcon} maxFontSizeMultiplier={1.3}>🎚️</Text>
+            <Text style={styles.sideLabel} maxFontSizeMultiplier={1.6}>Mix{active.length ? ` · ${active.length}` : ''}</Text>
           </Pressable>
           <Pressable style={[styles.playBtn, active.length === 0 && { opacity: 0.4 }]} onPress={onPlayPause}>
             <Text style={styles.playIcon} maxFontSizeMultiplier={1.6}>{mixer.playing ? '❚❚' : '▶'}</Text>
           </Pressable>
           <Pressable style={styles.sideBtn} onPress={() => setShowTimer(true)}>
-            <Text style={styles.sideIcon}>⏱️</Text>
-            <Text style={styles.sideLabel}>{timerPlan ? fmt(timerLeft) : allNight ? 'All night' : 'Timer'}</Text>
+            <Text style={styles.sideIcon} maxFontSizeMultiplier={1.3}>⏱️</Text>
+            <Text style={styles.sideLabel} maxFontSizeMultiplier={1.6}>{timerPlan ? fmt(timerLeft) : allNight ? 'All night' : 'Timer'}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   closeText: { color: C.text, fontSize: 20, fontWeight: '700' },
   qa: { position: 'absolute', top: 54, left: 12, right: 12, color: '#fde68a', fontSize: 11, textAlign: 'center' },
   headerRight: { flexDirection: 'row', alignItems: 'center' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
+  header: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 6, justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
   title: { color: C.text, fontSize: 30, fontWeight: '800', letterSpacing: 0.5 },
   subtitle: { color: C.sub, fontSize: 13, marginTop: 2 },
   pill: { backgroundColor: 'rgba(167,139,250,0.25)', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999 },

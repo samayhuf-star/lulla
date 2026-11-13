@@ -13,7 +13,10 @@ export function FrequenciesHero({ selected, reduceMotion, onPress }: {
 }) {
   const m = heroMotion(reduceMotion);
   // 400:132 at default text size; grows (never clips) at large Dynamic Type sizes.
-  const minHeight = Math.round(((useWindowDimensions().width - 32) * 132) / 400);
+  const { width, fontScale } = useWindowDimensions();
+  const minHeight = Math.round(((width - 32) * 132) / 400);
+  // Large accessibility text: the copy takes most of the card width so words never break mid-word.
+  const textWidth = fontScale > 1.4 ? '78%' : '52%';
   const glow = useSharedValue(m.rest);
 
   useEffect(() => {
@@ -54,11 +57,11 @@ export function FrequenciesHero({ selected, reduceMotion, onPress }: {
           end={{ x: 1, y: 0.5 }}
           style={StyleSheet.absoluteFill}
         />
-        <View style={styles.text}>
-          <Text style={styles.title}>{HERO_TITLE}</Text>
-          <Text style={styles.sub}>{HERO_SUB}</Text>
+        <View style={[styles.text, { width: textWidth }]}>
+          <Text style={styles.title} maxFontSizeMultiplier={1.6}>{HERO_TITLE}</Text>
+          <Text style={styles.sub} maxFontSizeMultiplier={1.8}>{HERO_SUB}</Text>
         </View>
-        <Text style={styles.chev}>›</Text>
+        <Text style={styles.chev} maxFontSizeMultiplier={1.3}>›</Text>
       </ImageBackground>
     </Pressable>
   );

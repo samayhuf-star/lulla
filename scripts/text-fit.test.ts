@@ -42,4 +42,12 @@ describe('home screen text is never clipped (Dynamic Type)', () => {
     assert.doesNotMatch(app, /styles\.tileName\} numberOfLines/);
     assert.doesNotMatch(app, /allowFontScaling=\{false\}/);
   });
+
+  it('largest accessibility sizes: header wraps, display text is capped so the chip row stays on screen', () => {
+    assert.match(style(app, 'header'), /flexWrap: 'wrap'/);
+    assert.match(app, /styles\.title\} maxFontSizeMultiplier=/);
+    assert.match(hero, /fontScale > 1\.4/);
+    assert.match(hero, /styles\.title\} maxFontSizeMultiplier=/);
+    assert.doesNotMatch(app, /styles\.chipText[^>]*maxFontSizeMultiplier=\{1(\.\d)?\}/); // chips still scale to 2x
+  });
 });
