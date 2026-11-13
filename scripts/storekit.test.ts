@@ -35,6 +35,8 @@ describe('StoreKit test session in the sim run (CI only)', () => {
     assert.match(swift, /xcui-done/);
     assert.match(swift, /com\.apple\.springboard/);
     assert.match(swift, /buttons\["Open"\]/);
+    assert.match(swift, /XCUIDevice\.shared\.system\.open/);
+    assert.match(swift, /xcui-url-done/);
     assert.match(rb, /File\.join\(REPO, 'storekit', 'Lulla\.storekit'\)/);
     assert.match(rb, /StoreKitConfigurationFileReference/);
   });

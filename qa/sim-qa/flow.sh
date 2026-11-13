@@ -3,17 +3,41 @@
 # Env from the runner: UDID, BUNDLE_ID, WORKSPACE, SCHEME, OUT, DERIVED_DATA.
 # The app is launched by the LullaQATests UI test inside an SKTestSession (storekit/Lulla.storekit:
 # monthly 2.99, yearly 19.99, 1-week free trials) and held open while this script drives it with
-# lulla://qa/... deep links (QA build only) and takes screenshots with simctl.
+# lulla://qa/... deep links (QA build only) via the host handshake (xcui-url / xcui-url-done) and
+# takes screenshots with simctl.
 set -uo pipefail
 OUT="${OUT:-/tmp/sim-qa}"; mkdir -p "$OUT/launch" "$OUT/store69" "$OUT/store65"
 SCHEME="${SCHEME:-Lulla}"
 shot() { xcrun simctl io "$UDID" screenshot "$OUT/$1.png" >/dev/null 2>&1 && echo "shot $1" || echo "SHOT FAILED $1"; }
 go() {
-  # iOS 18+ shows "Open in Lulla - Sleep Sounds?" for simctl openurl. The StoreKit
-  # UI-test host taps Open; wait at least 2 s so the tap and the link both land.
+  # iOS 18+ shows "Open in Lulla - Sleep Sounds?" for simctl openurl. Prefer the
+  # StoreKit UI-test host: it opens the link with XCUIDevice.system.open and taps
+  # SpringBoard's Open button, then writes xcui-url-done. simctl openurl is only
+  # the fallback when the host is not running. Wait at least 2 s after the link
+  # lands so the destination screen can settle.
   local wait="${2:-3}"
   [ "$wait" -lt 2 ] && wait=2
-  xcrun simctl openurl "$UDID" "lulla://qa/$1"
+  if [ -f "$OUT/xcui-ready" ] && [ ! -f "$OUT/xcui-done" ]; then
+    rm -f "$OUT/xcui-url-done"
+    printf 'lulla://qa/%s\n' "$1" > "$OUT/xcui-url.tmp"
+    mv -f "$OUT/xcui-url.tmp" "$OUT/xcui-url"
+    local i=0
+    while [ "$i" -lt 40 ]; do
+      [ -f "$OUT/xcui-url-done" ] && break
+      i=$((i + 1))
+      sleep 0.25
+    done
+    if [ -f "$OUT/xcui-url-done" ]; then
+      echo "host opened lulla://qa/$1 ($(tr -d '\n' < "$OUT/xcui-url-done"))" >> "$OUT/flow-notes.txt"
+      rm -f "$OUT/xcui-url-done"
+    else
+      echo "host did not consume lulla://qa/$1; falling back to simctl openurl" | tee -a "$OUT/flow-notes.txt"
+      rm -f "$OUT/xcui-url"
+      xcrun simctl openurl "$UDID" "lulla://qa/$1" >/dev/null 2>&1 || true
+    fi
+  else
+    xcrun simctl openurl "$UDID" "lulla://qa/$1" >/dev/null 2>&1 || true
+  fi
   sleep "$wait"
 }
 note() { echo "$(date -u +%H:%M:%S) $*" | tee -a "$OUT/flow-notes.txt"; }

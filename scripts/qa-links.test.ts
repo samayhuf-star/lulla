@@ -37,6 +37,8 @@ describe('QA links for the public-runner sim flow (QA builds only)', () => {
     }
     assert.ok(flow.includes('Open in Lulla'), 'go() documents the Open-in-app confirmation');
     assert.ok(flow.includes('[ "$wait" -lt 2 ] && wait=2'), 'go() waits at least 2s for the host to tap Open');
+    assert.ok(flow.includes('xcui-url-done'), 'go() waits for the host handshake after each QA link');
+    assert.ok(flow.includes('XCUIDevice.system.open'), 'go() documents host-side URL open');
     assert.ok(!read('eas.json').includes('sim-qa'));
   });
 });
