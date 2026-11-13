@@ -18,8 +18,15 @@ describe('Frequencies hero card', () => {
     assert.ok(at < app.indexOf('style={styles.catRow}'), 'hero comes before the category row');
     assert.match(hero, /testID="frequencies-hero"/);
     assert.match(hero, /marginHorizontal: 16/); // same side margins as the rest of home
-    assert.match(hero, /LinearGradient/);
-    assert.match(hero, /'#7c3aed', '#5b21b6', '#3730a3'/); // purple to indigo, from the app palette
+    assert.match(hero, /require\('\.\.\/assets\/hero\/frequencies-hero\.png'\)/);
+    for (const sc of ['@2x', '@3x']) {
+      const png = readFileSync(join(root, `assets/hero/frequencies-hero${sc}.png`));
+      assert.equal(png.readUInt32BE(16) * 132, png.readUInt32BE(20) * 400, `${sc} is 400:132`); // PNG IHDR width, height
+    }
+    assert.match(hero, /\{HERO_TITLE\}/);
+    assert.match(hero, /\{HERO_SUB\}/);
+    assert.match(hero, /LinearGradient/); // readability scrim over the art
+    assert.ok(readFileSync(join(root, 'tools/art/frequencies_hero.py'), 'utf8').includes('No reference image is read'));
   });
 
   it('tapping it selects the Frequencies category, with a light haptic', () => {
