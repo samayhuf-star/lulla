@@ -16,6 +16,8 @@ describe('QA links for the public-runner sim flow (QA builds only)', () => {
     assert.deepEqual(parseQaUrl('lulla://qa/restore'), { kind: 'restore' });
     assert.equal(parseQaUrl('lulla://qa/restore/x'), null);
     assert.deepEqual(parseQaUrl('lulla://qa/timer/2'), { kind: 'timer', minutes: 2 });
+    assert.deepEqual(parseQaUrl('lulla://qa/overlay/off'), { kind: 'overlay', on: false });
+    assert.equal(parseQaUrl('lulla://qa/overlay'), null);
   });
   it('the QA hooks are gated on QA_MODE and use the real buy/restore', () => {
     const app = read('App.tsx');
@@ -30,7 +32,7 @@ describe('QA links for the public-runner sim flow (QA builds only)', () => {
     assert.match(prep, /prepare-xcode-qa\.rb/);
     const flow = read('qa/sim-qa/flow.sh');
     for (const s of ['launch/l', '02-home-hero', '03-frequencies-category', '04-paywall-storekit-prices', '06-free-rain-playing', '07-locked-snow-paywall',
-      '11-timer-options', '10-sound-credits', '21-purchase-result', '23-restore-after-purchase', '19-background', 'store69', 'store65', 'timer/2', 'wrap/freq_432']) {
+      '11-timer-options', '10-sound-credits', '21-purchase-result', '23-restore-after-purchase', '19-background', 'store69', 'store65', 'overlay/off', '-5-paywall', 'store_pass store65 s65', 'timer/2', 'wrap/freq_432']) {
       assert.ok(flow.includes(s), s);
     }
     assert.ok(!read('eas.json').includes('sim-qa'));

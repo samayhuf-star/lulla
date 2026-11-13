@@ -87,6 +87,7 @@ export default function App() {
   const [qaTimer, setQaTimer] = useState('');
   const [reduceMotion, setReduceMotion] = useState(false);
   const [qaLine, setQaLine] = useState('');
+  const [qaOverlay, setQaOverlay] = useState(true);
 
   const premiumRef = useRef(false);
   const lastTick = useRef(0);
@@ -233,6 +234,7 @@ export default function App() {
       if (cmd.kind === 'preview') { setRemaining(setUsedForQa(cmd.state === 'used' ? FREE_SECONDS : 0)); return; }
       if (cmd.kind === 'timer') { setShowTimer(false); applyTimer(cmd.minutes); return; }
       if (cmd.kind === 'buy') { qaPendingBuy = cmd.plan; setShowSettings(false); setShowPaywall(false); setTimeout(() => setShowPaywall(true), 300); return; }
+      if (cmd.kind === 'overlay') { setQaOverlay(cmd.on); return; }
       if (cmd.kind === 'restore') {
         qaLog('restore: start');
         restore().then((ok) => { qaLog(`restore: entitled ${ok}`); if (ok) setPremium(true); }).catch((e) => qaLog(`restore: error ${String(e)}`));
@@ -376,7 +378,7 @@ export default function App() {
           }}
         />
 
-        {QA_MODE && (qaLine || qaTimer) ? (
+        {QA_MODE && qaOverlay && (qaLine || qaTimer) ? (
           <Text style={styles.qa} testID="qa-positions">{[qaLine, qaTimer].filter(Boolean).join('\n')}</Text>
         ) : null}
 

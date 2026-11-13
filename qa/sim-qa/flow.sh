@@ -11,22 +11,47 @@ shot() { xcrun simctl io "$UDID" screenshot "$OUT/$1.png" >/dev/null 2>&1 && ech
 go() { xcrun simctl openurl "$UDID" "lulla://qa/$1"; sleep "${2:-3}"; }
 note() { echo "$(date -u +%H:%M:%S) $*" | tee -a "$OUT/flow-notes.txt"; }
 
+RT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["isAvailable"] and x["platform"]=="iOS"]; print(r[-1]["identifier"])')
+TYPES=$(xcrun simctl list devicetypes -j | python3 -c 'import json,sys; print(" ".join(t["identifier"] for t in json.load(sys.stdin)["devicetypes"]))')
+mkdev() { # label types... -> prints UDID of a new booted device
+  local label=$1; shift
+  for T in "$@"; do
+    echo "$TYPES" | grep -q "SimDeviceType.$T\b" || continue
+    local U; U=$(xcrun simctl create "QA $label $T" "com.apple.CoreSimulator.SimDeviceType.$T" "$RT" 2>/dev/null) || continue
+    xcrun simctl boot "$U" >/dev/null 2>&1; xcrun simctl bootstatus "$U" -b >/dev/null 2>&1
+    xcrun simctl status_bar "$U" override --time "9:41" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 >/dev/null 2>&1 || true
+    echo "$label device: $T on $RT" >> "$OUT/devices.txt"; echo "$U"; return 0
+  done
+  return 1
+}
+RUNNER_UDID="$UDID"
+if U69=$(mkdev 6.9 iPhone-16-Pro-Max iPhone-17-Pro-Max); then
+  xcrun simctl shutdown "$RUNNER_UDID" >/dev/null 2>&1 || true
+  UDID="$U69"
+else
+  echo "no 6.9 inch device type; main flow stays on the runner device" >> "$OUT/devices.txt"
+fi
+
 APP=$(find "$DERIVED_DATA" -name '*.app' -path '*Release-iphonesimulator*' ! -name '*-Runner.app' ! -path '*.app/*' | head -n1)
 note "app: $APP"
 xcrun simctl install "$UDID" "$APP"
 xcrun simctl privacy "$UDID" grant all "$BUNDLE_ID" >/dev/null 2>&1 || true
 
 # 1. Launch through the StoreKit host; screenshot every second from launch (splash + first frames).
-rm -f "$OUT/xcui-ready" "$OUT/xcui-done"
-cp storekit/Lulla.storekit /tmp/Lulla.storekit
-TEST_RUNNER_SIM_QA_OUT="$OUT" TEST_RUNNER_STOREKIT_CONFIG="/tmp/Lulla.storekit" \
-xcodebuild test-without-building -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
-  -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED_DATA" \
-  -resultBundlePath "$OUT/host.xcresult" -only-testing:LullaQATests/SimQATests/testHoldAppForShellFlow \
-  > "$OUT/xcodebuild-test.log" 2>&1 &
-XCUI_PID=$!
-finish_host() { touch "$OUT/xcui-done"; wait "$XCUI_PID" 2>/dev/null || true; }
+XCUI_PID=""
+start_host() { # tag
+  rm -f "$OUT/xcui-ready" "$OUT/xcui-done"
+  cp storekit/Lulla.storekit /tmp/Lulla.storekit
+  TEST_RUNNER_SIM_QA_OUT="$OUT" TEST_RUNNER_STOREKIT_CONFIG="/tmp/Lulla.storekit" \
+  xcodebuild test-without-building -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
+    -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED_DATA" \
+    -resultBundlePath "$OUT/host-$1.xcresult" -only-testing:LullaQATests/SimQATests/testHoldAppForShellFlow \
+    > "$OUT/xcodebuild-test-$1.log" 2>&1 &
+  XCUI_PID=$!
+}
+finish_host() { touch "$OUT/xcui-done"; [ -n "$XCUI_PID" ] && wait "$XCUI_PID" 2>/dev/null || true; XCUI_PID=""; }
 trap finish_host EXIT
+start_host main
 STOREKIT=1
 n=0
 for i in $(seq 1 600); do
@@ -40,13 +65,27 @@ if [ -f "$OUT/xcui-ready" ]; then
 else
   STOREKIT=0
   note "StoreKit host did not start in 10 min; simctl launch fallback, paywall WITHOUT StoreKit prices"
-  tail -n 80 "$OUT/xcodebuild-test.log"
+  tail -n 80 "$OUT/xcodebuild-test-main.log"
   xcrun simctl launch "$UDID" "$BUNDLE_ID"; sleep 2
   for k in 1 2 3 4 5 6; do shot "launch/l-fallback-$k"; sleep 1; done
 fi
 echo "storekit_host=$STOREKIT" > "$OUT/storekit-note.txt"
 sleep 3
 shot 01-launch-settled
+
+# Store pass (honest in-app UI, QA overlay hidden): hero, Frequencies, player, timer options, paywall.
+store_pass() { # dir prefix
+  local d=$1 p=$2
+  go overlay/off 1; go stop 2; go cat/all 3
+  shot "$d/${p}-1-home-frequencies-hero"
+  go hero 3; shot "$d/${p}-2-frequencies"
+  go cat/all 2; go tap/rain 2; go tap/ocean 5; shot "$d/${p}-3-player-mix"
+  go timersheet 3; shot "$d/${p}-4-timer-options"
+  go close 2; go stop 2
+  go paywall 12; shot "$d/${p}-5-paywall"
+  go close 3; go overlay/on 1
+}
+store_pass store69 s69
 
 # 2. Home with the Frequencies hero card (nothing playing: no QA overlay). Two frames 2 s apart for the glow.
 go stop 2; go cat/all 3
@@ -108,31 +147,22 @@ go close 2
 xcrun simctl spawn "$UDID" log show --last 45m --style compact --predicate 'process CONTAINS "Lulla"' > "$OUT/app-full.log" 2>&1 || true
 grep -F '[QA]' "$OUT/app-full.log" > "$OUT/qa-events.log" || echo "no [QA] lines" > "$OUT/qa-events.log"
 grep -E '\[lulla-iap\]|\[lulla-qa\]' "$OUT/app-full.log" > "$OUT/iap.log" || true
-finish_host; trap - EXIT
+finish_host
 
-# 13. Store shots: fresh installs, plain simctl launch, nothing playing (honest in-app UI, no captions).
-RT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["isAvailable"] and x["platform"]=="iOS"]; print(r[-1]["identifier"])')
-TYPES=$(xcrun simctl list devicetypes -j | python3 -c 'import json,sys; print(" ".join(t["identifier"] for t in json.load(sys.stdin)["devicetypes"]))')
-store() { # dir label types...
-  local dir=$1 label=$2; shift 2; local U=""
-  for T in "$@"; do
-    echo "$TYPES" | grep -q "SimDeviceType.$T\b" || continue
-    U=$(xcrun simctl create "QA $label $T" "com.apple.CoreSimulator.SimDeviceType.$T" "$RT" 2>/dev/null) && { echo "$label device: $T on $RT" | tee "$OUT/$dir/device.txt"; break; }
-  done
-  [ -z "$U" ] && { echo "no $label device type" | tee "$OUT/$dir/device.txt"; return 1; }
-  xcrun simctl boot "$U"; xcrun simctl bootstatus "$U" -b
-  xcrun simctl status_bar "$U" override --time "9:41" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 || true
-  xcrun simctl install "$U" "$APP"; xcrun simctl launch "$U" "$BUNDLE_ID"; sleep 12
-  xcrun simctl openurl "$U" "lulla://qa/cat/all"; sleep 4
-  xcrun simctl io "$U" screenshot "$OUT/$dir/${dir}-home-frequencies-hero.png"
-  xcrun simctl openurl "$U" "lulla://qa/hero"; sleep 4
-  xcrun simctl io "$U" screenshot "$OUT/$dir/${dir}-frequencies-category.png"
-  xcrun simctl openurl "$U" "lulla://qa/timersheet"; sleep 4
-  xcrun simctl io "$U" screenshot "$OUT/$dir/${dir}-timer-options.png"
-  xcrun simctl shutdown "$U" || true
-}
-store store69 6.9 iPhone-16-Pro-Max iPhone-17-Pro-Max
-store store65 6.5 iPhone-11-Pro-Max iPhone-XS-Max iPhone-14-Plus || {
-  for f in "$OUT"/store69/*.png; do [ -f "$f" ] && sips -z 2688 1242 "$f" --out "$OUT/store65/RESIZED-$(basename "$f")" >/dev/null; done; }
+# 13. 6.5 inch store shots: a second StoreKit host session on an iPhone 11 Pro Max class device.
+MAIN_UDID="$UDID"
+if U65=$(mkdev 6.5 iPhone-11-Pro-Max iPhone-XS-Max iPhone-14-Plus); then
+  xcrun simctl shutdown "$MAIN_UDID" >/dev/null 2>&1 || true
+  UDID="$U65"
+  xcrun simctl install "$UDID" "$APP"
+  start_host s65
+  for i in $(seq 1 300); do [ -f "$OUT/xcui-ready" ] && break; sleep 2; done
+  if [ -f "$OUT/xcui-ready" ]; then note "6.5 host ready"; sleep 5; store_pass store65 s65
+  else note "6.5 host did not start; plain launch, paywall without StoreKit prices"; xcrun simctl launch "$UDID" "$BUNDLE_ID"; sleep 12; store_pass store65 s65-noStoreKit; fi
+  finish_host
+else
+  note "no 6.5 inch device type; resizing the 6.9 inch store shots"
+  for f in "$OUT"/store69/*.png; do [ -f "$f" ] && sips -z 2688 1242 "$f" --out "$OUT/store65/RESIZED-$(basename "$f")" >/dev/null; done
+fi
 ls -R "$OUT" | head -100 > "$OUT/files.txt"
 echo "flow done"
