@@ -116,8 +116,28 @@ jobs:
           xcrun simctl openurl "$UDID" "lulla://qa/settings"; sleep 4
           shot f4-settings-restore           # Restore purchases outside the paywall
           xcrun simctl openurl "$UDID" "lulla://qa/close"; sleep 2
+
+          # Healing / Frequencies category (432 Hz Deep Sleep free, the other four Premium).
+          xcrun simctl openurl "$UDID" "lulla://qa/cat/healing"; sleep 3
+          shot h0-healing-category
+
+          # Sleep timer: the options (4 hours and All night), a 2 h timer with its computed
+          # end and fade start (overlay + log), then All night (no stop scheduled).
+          xcrun simctl openurl "$UDID" "lulla://qa/timersheet"; sleep 3
+          shot t0-timer-options
+          xcrun simctl openurl "$UDID" "lulla://qa/close"; sleep 2
+          xcrun simctl openurl "$UDID" "lulla://qa/tap/freq_432"; sleep 3
+          xcrun simctl openurl "$UDID" "lulla://qa/timer/120"; sleep 4
+          shot t1-timer-2h
+          xcrun simctl openurl "$UDID" "lulla://qa/timer/allnight"; sleep 4
+          shot t2-timer-allnight
+
+          # Loop wrap: play 432 Hz Deep Sleep from 4 s before its loop point, one shot a second.
+          xcrun simctl openurl "$UDID" "lulla://qa/wrap/freq_432"; sleep 4
+          for i in 1 2 3 4 5 6 7 8; do shot "w-wrap-$i"; sleep 1; done
           xcrun simctl openurl "$UDID" "lulla://qa/stop"
-          xcrun simctl spawn "$UDID" log show --last 5m --predicate 'process == "Lulla"' > "$OUT/app.log" 2>&1 || true
+          xcrun simctl spawn "$UDID" log show --last 30m --predicate 'process == "Lulla"' > "$OUT/app.log" 2>&1 || true
+          grep -F '[QA]' "$OUT/app.log" > "$OUT/qa-events.log" || echo "no [QA] lines in the device log" > "$OUT/qa-events.log"
 
       - name: Upload screenshots and logs
         if: always()
