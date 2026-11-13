@@ -65,22 +65,71 @@ jobs:
         working-directory: ios
         run: pod install
 
+      - name: QA UI test host + StoreKit config (CI only)
+        # Adds the LullaQATests UI test target (qa/LullaQATests) and wires storekit/Lulla.storekit into
+        # the shared scheme, the same way the Klenzer sim run does. Only touches the generated ios/ folder
+        # on the runner; EAS never runs this. simctl launch cannot load a .storekit file, so the app is
+        # launched by this UI test, which holds a StoreKit test session (prices + 1-week trial) while the
+        # shell flow below drives the app with deep links.
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUT"
+          gem list -i xcodeproj >/dev/null 2>&1 || gem install xcodeproj --no-document --user-install
+          export PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
+          ruby qa/scripts/prepare-xcode-qa.rb | tee "$OUT/prepare.log" || echo "prepare failed" | tee -a "$OUT/prepare.log"
+          grep -n "StoreKitConfigurationFileReference" -A1 ios/*.xcodeproj/xcshareddata/xcschemes/*.xcscheme | tee -a "$OUT/prepare.log" || true
+
       - name: Build Release simulator app
         run: |
           set -euo pipefail
           mkdir -p "$OUT"
           WS=$(ls -d ios/*.xcworkspace | head -n1)
           SCHEME=$(basename "$WS" .xcworkspace)
-          xcodebuild build -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator \
-            -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED_DATA" CODE_SIGNING_ALLOWED=NO \
-            | tee "$OUT/xcodebuild.log" | tail -n 40
+          echo "WORKSPACE=$WS" >> "$GITHUB_ENV"; echo "SCHEME=$SCHEME" >> "$GITHUB_ENV"
+          SCH=$(ls ios/*.xcodeproj/xcshareddata/xcschemes/"$SCHEME".xcscheme 2>/dev/null || true)
+          if [ -n "$SCH" ] && grep -q TestableReference "$SCH" && xcodebuild build-for-testing -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator \
+               -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED_DATA" \
+               CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+               > "$OUT/xcodebuild.log" 2>&1; then
+            echo "XCUI_HOST=1" >> "$GITHUB_ENV"; echo "build-for-testing OK (StoreKit test session available)"
+          else
+            echo "build-for-testing unavailable or failed; plain build, paywall without StoreKit prices" | tee "$OUT/storekit-note.txt"
+            tail -n 60 "$OUT/xcodebuild.log" 2>/dev/null || true
+            xcodebuild build -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator \
+              -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED_DATA" CODE_SIGNING_ALLOWED=NO \
+              > "$OUT/xcodebuild-plain.log" 2>&1 || { tail -n 120 "$OUT/xcodebuild-plain.log"; exit 1; }
+            echo "XCUI_HOST=0" >> "$GITHUB_ENV"
+          fi
+          tail -n 20 "$OUT/xcodebuild.log" || true
 
       - name: Install, launch and play each sound
         run: |
           set -euo pipefail
-          APP=$(find "$DERIVED_DATA" -name '*.app' -path '*Release-iphonesimulator*' | head -n1)
+          APP=$(find "$DERIVED_DATA" -name '*.app' -path '*Release-iphonesimulator*' ! -name '*-Runner.app' ! -path '*.app/*' | head -n1)
           xcrun simctl install "$UDID" "$APP"
-          xcrun simctl launch "$UDID" "$BUNDLE_ID"
+          rm -f "$OUT/xcui-ready" "$OUT/xcui-done"
+          if [ "${XCUI_HOST:-0}" = "1" ]; then
+            # The UI test launches the app inside a StoreKit test session and holds it until xcui-done.
+            cp storekit/Lulla.storekit /tmp/Lulla.storekit
+            TEST_RUNNER_SIM_QA_OUT="$OUT" TEST_RUNNER_STOREKIT_CONFIG="/tmp/Lulla.storekit" \
+            xcodebuild test-without-building -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
+              -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED_DATA" \
+              -resultBundlePath "$OUT/host.xcresult" -only-testing:LullaQATests/SimQATests/testHoldAppForShellFlow \
+              > "$OUT/xcodebuild-test.log" 2>&1 &
+            XCUI_PID=$!
+            for i in $(seq 1 300); do [ -f "$OUT/xcui-ready" ] && break; sleep 2; done
+            if [ -f "$OUT/xcui-ready" ]; then
+              echo "StoreKit host ready: $(cat "$OUT/xcui-ready")" | tee "$OUT/storekit-note.txt"
+            else
+              echo "StoreKit host did not start in 10 min; simctl launch, paywall without StoreKit prices" | tee "$OUT/storekit-note.txt"
+              tail -n 60 "$OUT/xcodebuild-test.log" || true
+              xcrun simctl launch "$UDID" "$BUNDLE_ID"
+            fi
+          else
+            xcrun simctl launch "$UDID" "$BUNDLE_ID"
+          fi
+          finish_host() { touch "$OUT/xcui-done"; [ -n "${XCUI_PID:-}" ] && wait "$XCUI_PID" || true; }
+          trap finish_host EXIT
           sleep 8
           xcrun simctl io "$UDID" screenshot "$OUT/00-home.png"
           IFS=',' read -ra IDS <<< "${{ github.event.inputs.sounds }}"
@@ -154,7 +203,7 @@ jobs:
           # (1284 x 2778, also accepted in the 6.5 inch slot). If neither device type exists on the
           # runner, the 6.9 inch shot is resized to 1242 x 2688 and the file name says so.
           mkdir -p "$OUT/store65"
-          APP=$(find "$DERIVED_DATA" -name '*.app' -path '*Release-iphonesimulator*' | head -n1)
+          APP=$(find "$DERIVED_DATA" -name '*.app' -path '*Release-iphonesimulator*' ! -name '*-Runner.app' ! -path '*.app/*' | head -n1)
           RT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["isAvailable"] and x["platform"]=="iOS"]; print(r[-1]["identifier"])')
           U65=""
           for T in iPhone-11-Pro-Max iPhone-XS-Max iPhone-14-Plus; do
