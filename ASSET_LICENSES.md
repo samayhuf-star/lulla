@@ -66,6 +66,18 @@ Lullaby melodies: Brahms Wiegenlied Op. 49 No. 4 (1868) and trad. "Ah! vous dira
 
 Womb (`womb.m4a`): own mix from Heartbeat #369017 by patobottos (CC0 1.0), slowed 8 percent and low-passed, looped on whole beats, over low-passed generated brown noise.
 
+## Original synth pads (Healing / Frequencies)
+
+Original work by Samay Vashsht (samayhuf@gmail.com). Synthesised from scratch in `tools/sound-pipeline/b8/synth_pads.py` (numpy additive synthesis: detuned partials, slow amplitude LFOs and an LFO-swept low-pass per partial). No samples, recordings or third-party audio were used, sampled or resynthesised, so no third-party licence applies. Each file is a 300 s loop that is periodic by construction (every frequency and LFO is a whole number of cycles per loop), mastered to -20 LUFS, true peak at or below -1 dBTP, no limiting, AAC-LC 96 kbps 48 kHz stereo. Lossless sources: `/home/box/shared/app-monitor/reports/lulla-b8/originals/<id>_original.wav`. Measurements: `reports/lulla-b8/masters/synth-pads.json`.
+
+| App sound | File | Content | Licence |
+|---|---|---|---|
+| 432 Hz Deep Sleep | `freq_432.m4a` | Soft 432 Hz sine under a warm D/G/Eb/Bb pad, low-passed under 1 kHz | Original work by Samay Vashsht, no third-party licence |
+| 528 Hz Calm | `freq_528.m4a` | Soft 528 Hz sine over the same warm pad | Original work by Samay Vashsht, no third-party licence |
+| 963 Hz Night | `freq_963.m4a` | 481.5 Hz (963 Hz octave down) under the pad, 963 Hz itself at about 0.1 percent of the energy | Original work by Samay Vashsht, no third-party licence |
+| 432+528 Blend | `freq_blend.m4a` | 432 Hz and 528 Hz sines together over the pad | Original work by Samay Vashsht, no third-party licence |
+| Deep Drone | `deep_drone.m4a` | Darker low-weighted pad from 49 Hz up, no sine tone | Original work by Samay Vashsht, no third-party licence |
+
 ## Soundfont
 
 | Asset | Author | Licence | Notes |

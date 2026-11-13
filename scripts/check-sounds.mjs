@@ -2,7 +2,7 @@
 // Fails if any catalog sound is still pending, too small, or missing from ASSET_LICENSES.md.
 import { readFileSync, statSync, existsSync } from 'node:fs';
 const catalog = readFileSync('src/catalog.ts', 'utf8');
-const files = [...catalog.matchAll(/require\('\.\.\/assets\/sounds\/([a-z_]+\.m4a)'\)/g)].map((m) => m[1]);
+const files = [...catalog.matchAll(/require\('\.\.\/assets\/sounds\/([a-z0-9_]+\.m4a)'\)/g)].map((m) => m[1]);
 const pending = JSON.parse(readFileSync('assets/sounds/PENDING.json', 'utf8')).pending;
 const lic = readFileSync('ASSET_LICENSES.md', 'utf8');
 const problems = [];
