@@ -96,6 +96,27 @@ jobs:
           xcrun simctl openurl "$UDID" "lulla://qa/paywall"
           sleep 10
           xcrun simctl io "$UDID" screenshot "$OUT/zz-paywall.png"   # prices exactly as StoreKit returns them
+
+          # Free tier after the premium preview is used up (QA build only, memory only).
+          shot() { xcrun simctl io "$UDID" screenshot "$OUT/$1.png"; }
+          xcrun simctl openurl "$UDID" "lulla://qa/close"; sleep 2
+          xcrun simctl openurl "$UDID" "lulla://qa/stop"; sleep 3
+          xcrun simctl openurl "$UDID" "lulla://qa/preview/used"; sleep 2
+          shot f0-home-preview-used          # Premium badges on every non-free tile, pill says Unlock all
+          xcrun simctl openurl "$UDID" "lulla://qa/tap/rain"; sleep 6
+          shot f1-free-rain-playing-a        # free sound plays with the preview used up
+          sleep 4
+          shot f1-free-rain-playing-b        # overlay position about 4 s later than -a
+          xcrun simctl openurl "$UDID" "lulla://qa/tap/snow"; sleep 8
+          shot f2-locked-snow-paywall        # locked tile opens the paywall: X, Unlock all sounds, Restore
+          xcrun simctl openurl "$UDID" "lulla://qa/close"; sleep 4
+          shot f3-home-after-x-a             # back on home, rain still playing
+          sleep 4
+          shot f3-home-after-x-b
+          xcrun simctl openurl "$UDID" "lulla://qa/settings"; sleep 4
+          shot f4-settings-restore           # Restore purchases outside the paywall
+          xcrun simctl openurl "$UDID" "lulla://qa/close"; sleep 2
+          xcrun simctl openurl "$UDID" "lulla://qa/stop"
           xcrun simctl spawn "$UDID" log show --last 5m --predicate 'process == "Lulla"' > "$OUT/app.log" 2>&1 || true
 
       - name: Upload screenshots and logs
