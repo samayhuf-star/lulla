@@ -13,6 +13,7 @@ import { CATEGORIES, SOUNDS, SOUND_BY_ID, TIMER_OPTIONS, Category } from './src/
 import { planTimer, timerDone, timerGain, type TimerMinutes, type TimerPlan } from './src/timer';
 import { FREE_SECONDS, PRIVACY_URL, QA_MODE, SUPPORT_URL, TERMS_URL } from './src/config';
 import { parseQaUrl } from './src/qa';
+import { planButtonText } from './src/introOffer';
 import { FrequenciesHero } from './src/FrequenciesHero';
 import { HERO_CATEGORY } from './src/hero';
 import { mixer } from './src/mixer';
@@ -511,7 +512,6 @@ function Paywall({ visible, onClose, onUnlocked, reduceMotion }: {
 
   const doRestore = () => runRestore(onUnlocked, setBusy);
 
-  const periodLabel = (plan: Plan) => (plan.kind === 'yearly' ? 'year' : 'month');
 
   return (
     <Modal visible={visible} animationType={reduceMotion ? 'none' : 'slide'} onRequestClose={onClose}>
@@ -542,13 +542,13 @@ function Paywall({ visible, onClose, onUnlocked, reduceMotion }: {
               onPress={() => onBuy(plan)}
             >
               {busy ? <ActivityIndicator color="#fff" /> : (
-                <Text style={styles.ctaText}>{plan.label} · {plan.price} / {periodLabel(plan)}</Text>
+                <Text style={styles.ctaText}>{planButtonText(plan)}</Text>
               )}
             </Pressable>
           ))}
           <Text style={styles.fine}>
             {plans.length
-              ? `Subscriptions auto-renew until cancelled. Cancel anytime in your ${Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.`
+              ? `${plans.some((p) => p.trialDays) ? 'After the free trial, the subscription starts automatically unless you cancel at least 24 hours before it ends. ' : ''}Subscriptions auto-renew until cancelled. Cancel anytime in your ${Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.`
               : 'Subscription prices come from the App Store or Google Play and will show here once they load.'}
           </Text>
           <View style={styles.links}>

@@ -8,6 +8,7 @@ import {
   getAvailablePurchases,
   hasActiveSubscriptions,
   initConnection,
+  isEligibleForIntroOfferIOS,
   isTransactionVerifiedIOS,
   isUserCancelledError,
   purchaseErrorListener,
@@ -19,11 +20,27 @@ import {
   type Purchase,
 } from 'expo-iap';
 import { ALL_PRODUCT_IDS, isKnownProduct, PRODUCT_CATALOG } from './config';
+import { freeTrialDays, type ProductLike } from './introOffer';
 
 export type Plan = (typeof PRODUCT_CATALOG)[number] & {
   price: string;
   product: ProductOrSubscription;
+  /** Free-trial days, set only when the store reports a trial AND this user is eligible. */
+  trialDays: number | null;
 };
+
+/** iOS: StoreKit says whether this Apple ID may still use the group's intro offer. Android: Play only returns offers the user can use. Errors count as not eligible. */
+async function introEligible(product: ProductOrSubscription): Promise<boolean> {
+  if (Platform.OS !== 'ios') return true;
+  const group = (product as { subscriptionGroupIdIOS?: string | null }).subscriptionGroupIdIOS;
+  if (!group) return false;
+  try {
+    return !!(await isEligibleForIntroOfferIOS(group));
+  } catch (e) {
+    logErr('isEligibleForIntroOfferIOS', e);
+    return false;
+  }
+}
 
 export type BuyResult = 'purchased' | 'cancelled' | 'pending' | 'error';
 
@@ -149,7 +166,9 @@ export async function loadPlans(): Promise<PlansLoad> {
   for (const def of PRODUCT_CATALOG) {
     const product = byId.get(def.id);
     if (!product) continue;
-    plans.push({ ...def, price: product.displayPrice, product });
+    const days = freeTrialDays(product as unknown as ProductLike);
+    const trialDays = days && (await introEligible(product)) ? days : null;
+    plans.push({ ...def, price: product.displayPrice, product, trialDays });
   }
   if (!plans.length) {
     return { plans: [], error: 'Plans unavailable right now. Please try again shortly.' };

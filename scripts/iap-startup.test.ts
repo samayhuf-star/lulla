@@ -114,6 +114,6 @@ describe('IAP startup must not prompt for Apple ID', () => {
     assert.match(config, /lulla_premium_monthly/);
     assert.doesNotMatch(config, /RevenueCat|RC_API_KEY|PRICE_LABEL|\$1\.99|\$4\.99|\$41\.99/);
     assert.doesNotMatch(app, /react-native-purchases|PurchasesPackage|PRICE_LABEL|\$1\.99/);
-    assert.match(app, /plan\.price/);
+    assert.match(app, /planButtonText\(plan\)/);
   });
 });

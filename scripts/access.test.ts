@@ -102,7 +102,7 @@ describe('paywall', () => {
       assert.doesNotMatch(text, /\bAI\b|artificial intelligence/);
     }
     assert.match(app, /\{PAYWALL_TITLE\}/);
-    assert.match(app, /plan\.price/); // localized store price, never hard-coded
+    assert.match(app, /planButtonText\(plan\)/); // localized store price from expo-iap, never hard-coded
   });
 });
 
