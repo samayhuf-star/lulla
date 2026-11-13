@@ -1,16 +1,40 @@
 // Parses QA deep links used by the CI simulator run (only honoured when QA_MODE is on).
-//   lulla://qa/play/snow          play one sound
+//   lulla://qa/play/snow          play one sound (direct, skips the gate, for audio checks)
 //   lulla://qa/play/rain,snow     play a mix
 //   lulla://qa/stop               stop everything
 //   lulla://qa/paywall            stop and open the paywall (prices as StoreKit returns them)
-export type QaCommand = { kind: 'play'; ids: string[] } | { kind: 'stop' } | { kind: 'paywall' };
+//   lulla://qa/tap/snow           tap a sound tile, through the same gate as a finger tap
+//   lulla://qa/close              press the paywall X (same handler as the button)
+//   lulla://qa/settings           open the settings sheet (Restore purchases)
+//   lulla://qa/preview/used       mark the premium preview as used up (memory only)
+//   lulla://qa/preview/reset      give the premium preview back (memory only)
+export type QaCommand =
+  | { kind: 'play'; ids: string[] }
+  | { kind: 'tap'; id: string }
+  | { kind: 'stop' }
+  | { kind: 'paywall' }
+  | { kind: 'close' }
+  | { kind: 'settings' }
+  | { kind: 'preview'; state: 'used' | 'reset' };
 
 export function parseQaUrl(url: string | null | undefined): QaCommand | null {
   if (!url) return null;
-  const m = /^lulla:\/\/qa\/(play|stop|paywall)(?:\/([a-z0-9_,]+))?\/?$/.exec(url.trim());
+  const m = /^lulla:\/\/qa\/(play|stop|paywall|tap|close|settings|preview)(?:\/([a-z0-9_,]+))?\/?$/.exec(url.trim());
   if (!m) return null;
-  if (m[1] === 'stop') return { kind: 'stop' };
-  if (m[1] === 'paywall') return m[2] ? null : { kind: 'paywall' };
-  const ids = (m[2] ?? '').split(',').filter(Boolean);
-  return ids.length ? { kind: 'play', ids } : null;
+  const arg = m[2];
+  switch (m[1]) {
+    case 'stop':
+    case 'paywall':
+    case 'close':
+    case 'settings':
+      return arg ? null : { kind: m[1] };
+    case 'tap':
+      return arg && !arg.includes(',') ? { kind: 'tap', id: arg } : null;
+    case 'preview':
+      return arg === 'used' || arg === 'reset' ? { kind: 'preview', state: arg } : null;
+    default: {
+      const ids = (arg ?? '').split(',').filter(Boolean);
+      return ids.length ? { kind: 'play', ids } : null;
+    }
+  }
 }

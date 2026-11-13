@@ -1,5 +1,6 @@
 // Central product and legal config. Change here only.
-export const FREE_SECONDS = 180; // 3 minutes of free listening, then paywall
+// Preview of the premium sounds only. The free sounds in src/access.ts have no time limit.
+export const FREE_SECONDS = 180;
 
 export const PRODUCT_IDS = {
   yearly: 'lulla_premium_yearly',

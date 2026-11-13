@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo, ActivityIndicator, Alert, FlatList, Linking, Modal, Platform, Pressable, SafeAreaView,
   ScrollView, StyleSheet, Text, View,
@@ -13,7 +13,10 @@ import { CATEGORIES, SOUNDS, SOUND_BY_ID, TIMER_OPTIONS, Category } from './src/
 import { FREE_SECONDS, PRIVACY_URL, QA_MODE, SUPPORT_URL, TERMS_URL } from './src/config';
 import { parseQaUrl } from './src/qa';
 import { mixer } from './src/mixer';
-import { addUsed, loadUsed, persistUsed, remainingSeconds } from './src/trial';
+import { addUsed, loadUsed, persistUsed, remainingSeconds, setUsedForQa } from './src/trial';
+import {
+  PAYWALL_SUB, PAYWALL_TITLE, blockedInMix, countsTowardPreview, isLocked, onPreviewEnded, tileAction,
+} from './src/access';
 import { buy, initIAP, loadPlans, onEntitlementChange, refreshEntitlements, restore, type Plan } from './src/purchases';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -31,6 +34,20 @@ const fmt = (s: number) => {
 
 const nowMs = (): number => Date.now();
 
+/**
+ * A tap on a sound tile (finger or QA deep link, same path). A sound already in the mix can
+ * always be removed. A locked premium sound opens the paywall. Free sounds always play.
+ */
+function tapTile(id: string, premium: boolean, openPaywall: () => void, onStart: () => void) {
+  if (!mixer.has(id) && tileAction(id, { premium, previewLeft: remainingSeconds() }) === 'paywall') {
+    openPaywall();
+    return;
+  }
+  const wasEmpty = mixer.active().length === 0;
+  mixer.toggle(id);
+  if (wasEmpty && mixer.active().length > 0) { onStart(); mixer.play(); }
+}
+
 export default function App() {
   const [premium, setPremium] = useState(false);
   const [remaining, setRemaining] = useState(FREE_SECONDS);
@@ -39,6 +56,7 @@ export default function App() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [showMix, setShowMix] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [timerEnd, setTimerEnd] = useState<number | null>(null);
   const [timerLeft, setTimerLeft] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -51,6 +69,19 @@ export default function App() {
   useEffect(() => {
     premiumRef.current = premium;
   }, [premium]);
+
+  /**
+   * Before the mix (re)starts: drop any premium sounds the listener cannot play right now.
+   * Returns false (and keeps the mix) only when every sound in it is locked.
+   */
+  const stripBlocked = (): boolean => {
+    const ids = mixer.active();
+    if (ids.length === 0) return true;
+    const blocked = blockedInMix(ids, { premium: premiumRef.current, previewLeft: remainingSeconds() });
+    if (blocked.length === ids.length) return false;
+    blocked.forEach((id) => mixer.toggle(id));
+    return true;
+  };
 
   // boot — hide the splash as soon as the UI is mounted. Never wait on StoreKit.
   useEffect(() => {
@@ -70,10 +101,10 @@ export default function App() {
       setPremium(await refreshEntitlements());
     })();
 
-    // Lock screen / Control Center play goes through the same trial gate as the play button.
+    // Lock screen / Control Center play goes through the same gate as the play button:
+    // free sounds always play; premium sounds only with premium or preview time left.
     mixer.setRemotePlayGuard(() => {
-      if (premiumRef.current || QA_MODE) return true;
-      if (remainingSeconds() <= 0) { setShowPaywall(true); return false; }
+      if (!stripBlocked()) { setShowPaywall(true); return false; }
       lastTick.current = nowMs();
       return true;
     });
@@ -98,14 +129,20 @@ export default function App() {
       const delta = Math.min(5, Math.max(0, (now - lastTick.current) / 1000));
       lastTick.current = now;
 
-      if (mixer.playing && !premiumRef.current && !QA_MODE) {
+      // Only premium sounds use the preview clock. Free sounds never stop for it.
+      if (mixer.playing && countsTowardPreview(mixer.active(), premiumRef.current)) {
         const left = addUsed(delta);
         sinceSave.current += delta;
         setRemaining(left);
         if (sinceSave.current >= 5 || left <= 0) { sinceSave.current = 0; persistUsed(); }
         if (left <= 0) {
-          mixer.pause();
-          setShowPaywall(true);
+          const end = onPreviewEnded(mixer.active());
+          if (end.pauseAndPaywall) {
+            mixer.pause();
+            setShowPaywall(true);
+          } else {
+            end.remove.forEach((id) => mixer.toggle(id));
+          }
         }
       }
 
@@ -133,6 +170,14 @@ export default function App() {
     const handle = (url: string | null | undefined) => {
       const cmd = parseQaUrl(url);
       if (!cmd) return;
+      // These go through the real UI handlers, exactly like a finger tap.
+      if (cmd.kind === 'tap') {
+        tapTile(cmd.id, premiumRef.current, () => setShowPaywall(true), () => { lastTick.current = nowMs(); });
+        return;
+      }
+      if (cmd.kind === 'close') { setShowPaywall(false); setShowSettings(false); return; }
+      if (cmd.kind === 'settings') { setShowPaywall(false); setShowSettings(true); return; }
+      if (cmd.kind === 'preview') { setRemaining(setUsedForQa(cmd.state === 'used' ? FREE_SECONDS : 0)); return; }
       mixer.clear();
       if (cmd.kind === 'paywall') { setShowPaywall(true); return; }
       setShowPaywall(false);
@@ -149,11 +194,6 @@ export default function App() {
     return () => sub.remove();
   }, []);
 
-  const gate = useCallback((): boolean => {
-    if (premiumRef.current || QA_MODE) return true;
-    if (remainingSeconds() <= 0) { setShowPaywall(true); return false; }
-    return true;
-  }, []);
 
   const tap = () => {
     if (!reduceMotion) Haptics.selectionAsync().catch(() => {});
@@ -161,16 +201,14 @@ export default function App() {
 
   const onTile = (id: string) => {
     tap();
-    if (!gate()) return;
-    const wasEmpty = mixer.active().length === 0;
-    mixer.toggle(id);
-    if (wasEmpty && mixer.active().length > 0) { lastTick.current = nowMs(); mixer.play(); }
+    tapTile(id, premiumRef.current, () => setShowPaywall(true), () => { lastTick.current = nowMs(); });
   };
 
   const onPlayPause = () => {
     if (mixer.active().length === 0) return;
     if (mixer.playing) mixer.pause();
-    else if (gate()) { lastTick.current = nowMs(); mixer.play(); }
+    else if (stripBlocked()) { lastTick.current = nowMs(); mixer.play(); }
+    else setShowPaywall(true);
   };
 
   const list = useMemo(() => (cat === 'All' ? SOUNDS : SOUNDS.filter((s) => s.category === cat)), [cat]);
@@ -186,17 +224,28 @@ export default function App() {
             <Text style={styles.title}>Lulla</Text>
             <Text style={styles.subtitle}>Sleep sounds, softly.</Text>
           </View>
+          <View style={styles.headerRight}>
           {premium ? (
             <View style={[styles.pill, { backgroundColor: 'rgba(52,211,153,0.2)' }]}>
               <Text style={[styles.pillText, { color: '#6ee7b7' }]}>Premium</Text>
             </View>
           ) : (
-            <Pressable style={styles.pill} onPress={() => setShowPaywall(true)}>
+            <Pressable style={styles.pill} onPress={() => setShowPaywall(true)} accessibilityRole="button">
               <Text style={styles.pillText}>
-                {remaining > 0 ? `Free: ${fmt(remaining)} left` : 'Unlock'}
+                {remaining > 0 && countsTowardPreview(active, false) ? `Preview ${fmt(remaining)}` : 'Unlock all'}
               </Text>
             </Pressable>
           )}
+          <Pressable
+            style={styles.gear}
+            onPress={() => setShowSettings(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Settings"
+            hitSlop={8}
+          >
+            <Text style={styles.gearIcon}>⚙️</Text>
+          </Pressable>
+          </View>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catRow} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
@@ -216,8 +265,19 @@ export default function App() {
           ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
           renderItem={({ item }) => {
             const on = mixer.has(item.id);
+            const locked = isLocked(item.id, premium);
             return (
-              <Pressable onPress={() => onTile(item.id)} style={[styles.tile, on && styles.tileOn]}>
+              <Pressable
+                onPress={() => onTile(item.id)}
+                style={[styles.tile, on && styles.tileOn]}
+                accessibilityRole="button"
+                accessibilityLabel={locked ? `${item.name}, Premium` : item.name}
+              >
+                {locked ? (
+                  <View style={styles.lock} testID={`premium-${item.id}`}>
+                    <Text style={styles.lockText}>🔒 Premium</Text>
+                  </View>
+                ) : null}
                 <Text style={styles.emoji}>{item.emoji}</Text>
                 <Text style={styles.tileName} numberOfLines={2}>{item.name}</Text>
                 {item.headphones ? (
@@ -302,9 +362,28 @@ export default function App() {
         visible={showPaywall}
         onClose={() => setShowPaywall(false)}
         onUnlocked={() => { setPremium(true); setShowPaywall(false); }}
-        expired={remaining <= 0}
         reduceMotion={reduceMotion}
       />
+
+      {/* Settings sheet: Restore purchases lives here too, outside the paywall */}
+      <Modal visible={showSettings} transparent animationType={sheetAnim} onRequestClose={() => setShowSettings(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setShowSettings(false)} />
+        <View style={styles.sheet}>
+          <Text style={styles.sheetTitle}>Settings</Text>
+          <Text style={[styles.sub, { marginBottom: 8 }]}>{premium ? 'Premium is active. Thank you.' : 'Rain, ocean, forest, fan, white and brown noise are free to play anytime.'}</Text>
+          <Pressable style={styles.timerRow} onPress={() => runRestore(() => { setPremium(true); setShowSettings(false); })} accessibilityRole="button">
+            <Text style={styles.timerText}>Restore purchases</Text>
+          </Pressable>
+          {!premium ? (
+            <Pressable style={styles.timerRow} onPress={() => { setShowSettings(false); setShowPaywall(true); }} accessibilityRole="button">
+              <Text style={styles.timerText}>Unlock all sounds</Text>
+            </Pressable>
+          ) : null}
+          <Pressable style={styles.timerRow} onPress={() => Linking.openURL(TERMS_URL)}><Text style={styles.timerText}>Terms of Use</Text></Pressable>
+          <Pressable style={styles.timerRow} onPress={() => Linking.openURL(PRIVACY_URL)}><Text style={styles.timerText}>Privacy Policy</Text></Pressable>
+          <Pressable style={styles.timerRow} onPress={() => Linking.openURL(SUPPORT_URL)}><Text style={styles.timerText}>Support</Text></Pressable>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -322,8 +401,19 @@ function VolumeBar({ value, onChange }: { value: number; onChange: (v: number) =
   );
 }
 
-function Paywall({ visible, onClose, onUnlocked, expired, reduceMotion }: {
-  visible: boolean; onClose: () => void; onUnlocked: () => void; expired: boolean; reduceMotion: boolean;
+/** Restore purchases, shared by the paywall and the settings sheet. Runs only on a user tap. */
+async function runRestore(onUnlocked: () => void, setBusy?: (b: boolean) => void) {
+  setBusy?.(true);
+  try {
+    if (await restore()) onUnlocked();
+    else Alert.alert('Nothing to restore', 'No active subscription was found for this account.');
+  } catch (e: unknown) {
+    Alert.alert('Restore failed', e instanceof Error ? e.message : 'Please try again.');
+  } finally { setBusy?.(false); }
+}
+
+function Paywall({ visible, onClose, onUnlocked, reduceMotion }: {
+  visible: boolean; onClose: () => void; onUnlocked: () => void; reduceMotion: boolean;
 }) {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansError, setPlansError] = useState<string | null>(null);
@@ -352,15 +442,7 @@ function Paywall({ visible, onClose, onUnlocked, expired, reduceMotion }: {
     } finally { setBusy(false); }
   };
 
-  const doRestore = async () => {
-    setBusy(true);
-    try {
-      if (await restore()) onUnlocked();
-      else Alert.alert('Nothing to restore', 'No active subscription was found for this account.');
-    } catch (e: unknown) {
-      Alert.alert('Restore failed', e instanceof Error ? e.message : 'Please try again.');
-    } finally { setBusy(false); }
-  };
+  const doRestore = () => runRestore(onUnlocked, setBusy);
 
   const periodLabel = (plan: Plan) => (plan.kind === 'yearly' ? 'year' : 'month');
 
@@ -368,12 +450,14 @@ function Paywall({ visible, onClose, onUnlocked, expired, reduceMotion }: {
     <Modal visible={visible} animationType={reduceMotion ? 'none' : 'slide'} onRequestClose={onClose}>
       <LinearGradient colors={[C.bg1, C.bg2, C.bg3]} style={styles.fill}>
         <SafeAreaView style={[styles.fill, { padding: 24 }]}>
-          <Pressable onPress={onClose} style={{ alignSelf: 'flex-end' }}><Text style={styles.remove}>✕</Text></Pressable>
+          <Pressable onPress={onClose} style={styles.close} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close" testID="paywall-close">
+            <Text style={styles.closeText}>✕</Text>
+          </Pressable>
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <Text style={{ fontSize: 64, textAlign: 'center' }}>🌙</Text>
-            <Text style={styles.payTitle}>{expired ? 'Your free 3 minutes are up' : 'Sleep deeper with Lulla'}</Text>
-            <Text style={styles.paySub}>Keep the calm going all night.</Text>
-            {[`${SOUNDS.length} high-quality sleep sounds`, 'Layer sounds into your own mix', 'Sleep timer with gentle fade-out', 'Plays in the background, screen off'].map((t) => (
+            <Text style={styles.payTitle}>{PAYWALL_TITLE}</Text>
+            <Text style={styles.paySub}>{PAYWALL_SUB}</Text>
+            {[`All ${SOUNDS.length} sleep sounds`, 'Lullabies, binaural tones and every nature scene', 'Layer any of them into your own mix'].map((t) => (
               <Text key={t} style={styles.perk}>✓  {t}</Text>
             ))}
           </View>
@@ -417,7 +501,14 @@ const styles = StyleSheet.create({
   badge: { marginTop: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(167,139,250,0.3)' },
   badgeText: { color: C.text, fontSize: 9, fontWeight: '700' },
   badgeInline: { color: C.sub, fontSize: 11, marginTop: 2 },
+  lock: { position: 'absolute', top: 6, right: 6, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.45)' },
+  lockText: { color: '#fde68a', fontSize: 9, fontWeight: '800' },
+  gear: { marginLeft: 10, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.08)' },
+  gearIcon: { fontSize: 18 },
+  close: { alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.12)' },
+  closeText: { color: C.text, fontSize: 20, fontWeight: '700' },
   qa: { position: 'absolute', top: 54, left: 12, right: 12, color: '#fde68a', fontSize: 11, textAlign: 'center' },
+  headerRight: { flexDirection: 'row', alignItems: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
   title: { color: C.text, fontSize: 30, fontWeight: '800', letterSpacing: 0.5 },
   subtitle: { color: C.sub, fontSize: 13, marginTop: 2 },
