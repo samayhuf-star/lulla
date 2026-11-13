@@ -8,7 +8,14 @@ set -uo pipefail
 OUT="${OUT:-/tmp/sim-qa}"; mkdir -p "$OUT/launch" "$OUT/store69" "$OUT/store65"
 SCHEME="${SCHEME:-Lulla}"
 shot() { xcrun simctl io "$UDID" screenshot "$OUT/$1.png" >/dev/null 2>&1 && echo "shot $1" || echo "SHOT FAILED $1"; }
-go() { xcrun simctl openurl "$UDID" "lulla://qa/$1"; sleep "${2:-3}"; }
+go() {
+  # iOS 18+ shows "Open in Lulla - Sleep Sounds?" for simctl openurl. The StoreKit
+  # UI-test host taps Open; wait at least 2 s so the tap and the link both land.
+  local wait="${2:-3}"
+  [ "$wait" -lt 2 ] && wait=2
+  xcrun simctl openurl "$UDID" "lulla://qa/$1"
+  sleep "$wait"
+}
 note() { echo "$(date -u +%H:%M:%S) $*" | tee -a "$OUT/flow-notes.txt"; }
 
 RT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["isAvailable"] and x["platform"]=="iOS"]; print(r[-1]["identifier"])')

@@ -35,6 +35,8 @@ describe('QA links for the public-runner sim flow (QA builds only)', () => {
       '11-timer-options', '10-sound-credits', '21-purchase-result', '23-restore-after-purchase', '19-background', 'store69', 'store65', 'overlay/off', '-5-paywall', 'store_pass store65 s65', 'timer/2', 'wrap/freq_432']) {
       assert.ok(flow.includes(s), s);
     }
+    assert.ok(flow.includes('Open in Lulla'), 'go() documents the Open-in-app confirmation');
+    assert.ok(flow.includes('[ "$wait" -lt 2 ] && wait=2'), 'go() waits at least 2s for the host to tap Open');
     assert.ok(!read('eas.json').includes('sim-qa'));
   });
 });

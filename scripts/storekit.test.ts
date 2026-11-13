@@ -33,6 +33,8 @@ describe('StoreKit test session in the sim run (CI only)', () => {
     assert.match(swift, /SKTestSession\(contentsOf:/);
     assert.match(swift, /disableDialogs = true/);
     assert.match(swift, /xcui-done/);
+    assert.match(swift, /com\.apple\.springboard/);
+    assert.match(swift, /buttons\["Open"\]/);
     assert.match(rb, /File\.join\(REPO, 'storekit', 'Lulla\.storekit'\)/);
     assert.match(rb, /StoreKitConfigurationFileReference/);
   });
