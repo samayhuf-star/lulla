@@ -142,6 +142,38 @@ jobs:
           xcrun simctl spawn "$UDID" log show --last 30m --predicate 'process == "Lulla"' > "$OUT/app.log" 2>&1 || true
           grep -F '[QA]' "$OUT/app.log" > "$OUT/qa-events.log" || echo "no [QA] lines in the device log" > "$OUT/qa-events.log"
 
+      - name: Store shots at 6.5 inch (iPhone 11 Pro Max class)
+        if: always()
+        run: |
+          set -uo pipefail
+          # 6.9 inch store shots come from the main run above (iPhone 16 Pro Max, 1320 x 2868).
+          # Here: the same app on a 6.5 inch device (1242 x 2688), falling back to iPhone 14 Plus
+          # (1284 x 2778, also accepted in the 6.5 inch slot). If neither device type exists on the
+          # runner, the 6.9 inch shot is resized to 1242 x 2688 and the file name says so.
+          mkdir -p "$OUT/store65"
+          APP=$(find "$DERIVED_DATA" -name '*.app' -path '*Release-iphonesimulator*' | head -n1)
+          RT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["isAvailable"] and x["platform"]=="iOS"]; print(r[-1]["identifier"])')
+          U65=""
+          for T in iPhone-11-Pro-Max iPhone-XS-Max iPhone-14-Plus; do
+            U65=$(xcrun simctl create "QA 6.5 $T" "com.apple.CoreSimulator.SimDeviceType.$T" "$RT" 2>/dev/null) && { echo "6.5 device: $T on $RT" | tee "$OUT/store65/device.txt"; break; }
+          done
+          if [ -n "$U65" ]; then
+            xcrun simctl boot "$U65"; xcrun simctl bootstatus "$U65" -b
+            xcrun simctl status_bar "$U65" override --time "9:41" --batteryState charged --batteryLevel 100 || true
+            xcrun simctl install "$U65" "$APP"
+            xcrun simctl launch "$U65" "$BUNDLE_ID"; sleep 10
+            xcrun simctl openurl "$U65" "lulla://qa/cat/all"; sleep 3
+            xcrun simctl io "$U65" screenshot "$OUT/store65/s65-home-frequencies-hero.png"
+            xcrun simctl openurl "$U65" "lulla://qa/hero"; sleep 3
+            xcrun simctl io "$U65" screenshot "$OUT/store65/s65-after-hero-tap.png"
+            xcrun simctl shutdown "$U65" || true
+          else
+            echo "no 6.5 inch device type on this runner; resized from 6.9 inch" | tee "$OUT/store65/device.txt"
+            for f in h0-home-frequencies-hero h1-after-hero-tap-frequencies; do
+              [ -f "$OUT/$f.png" ] && sips -z 2688 1242 "$OUT/$f.png" --out "$OUT/store65/s65-RESIZED-$f.png" >/dev/null
+            done
+          fi
+
       - name: Upload screenshots and logs
         if: always()
         uses: actions/upload-artifact@v4
