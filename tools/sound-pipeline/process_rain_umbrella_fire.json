@@ -1,0 +1,22 @@
+{
+ "rain_umbrella": {
+  "name": "rain_umbrella",
+  "src": "593191",
+  "window_start_s": 70.0,
+  "loop_s": 66.0,
+  "gain_db": 16.1,
+  "limit_db": 4.7,
+  "pre_I": -36.1,
+  "pre_TP": -12.6
+ },
+ "fire": {
+  "name": "fire",
+  "src": "382616",
+  "window_start_s": 0.0,
+  "loop_s": 66.0,
+  "gain_db": 10.8,
+  "limit_db": 5.4,
+  "pre_I": -30.8,
+  "pre_TP": -6.6
+ }
+}

@@ -1,14 +1,11 @@
 # Lulla Privacy Policy
-Last updated: 2 November 2026
 
-Lulla ("the app") plays ambient sleep sounds. We collect as little data as possible.
+The public privacy policy is published at:
 
-**What we collect.** Lulla has no accounts and does not collect your name, email, location, contacts or audio. The app stores how many free minutes you have used on your device. Subscriptions are processed by Apple or Google; our subscription provider RevenueCat receives an anonymous app user ID and purchase status to confirm whether your subscription is active.
+https://samayhuf-star.github.io/app-legal/lulla/privacy.html
 
-**What we don't do.** We do not sell your data, show third-party ads, or track you across other apps.
+Effective date placeholder: [EFFECTIVE DATE – LAUNCH DAY]
 
-**Children.** Lulla is not directed to children under 13 and does not knowingly collect their data.
-
-**Subscriptions.** Lulla Premium is $1.99 per month and renews automatically until cancelled. Manage or cancel in your Apple ID or Google Play subscription settings at least 24 hours before renewal.
-
-**Contact.** samayhuf@gmail.com
+Publisher: Samay Vashsht
+Contact: samayhuf@gmail.com only
+Postal address: 2/61 Bhim Street, Vishwas Nagar, Delhi 110032, India

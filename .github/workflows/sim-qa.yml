@@ -65,22 +65,71 @@ jobs:
         working-directory: ios
         run: pod install
 
+      - name: QA UI test host + StoreKit config (CI only)
+        # Adds the LullaQATests UI test target (qa/LullaQATests) and wires storekit/Lulla.storekit into
+        # the shared scheme, the same way the Klenzer sim run does. Only touches the generated ios/ folder
+        # on the runner; EAS never runs this. simctl launch cannot load a .storekit file, so the app is
+        # launched by this UI test, which holds a StoreKit test session (prices + 1-week trial) while the
+        # shell flow below drives the app with deep links.
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUT"
+          gem list -i xcodeproj >/dev/null 2>&1 || gem install xcodeproj --no-document --user-install
+          export PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
+          ruby qa/scripts/prepare-xcode-qa.rb | tee "$OUT/prepare.log" || echo "prepare failed" | tee -a "$OUT/prepare.log"
+          grep -n "StoreKitConfigurationFileReference" -A1 ios/*.xcodeproj/xcshareddata/xcschemes/*.xcscheme | tee -a "$OUT/prepare.log" || true
+
       - name: Build Release simulator app
         run: |
           set -euo pipefail
           mkdir -p "$OUT"
           WS=$(ls -d ios/*.xcworkspace | head -n1)
           SCHEME=$(basename "$WS" .xcworkspace)
-          xcodebuild build -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator \
-            -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED_DATA" CODE_SIGNING_ALLOWED=NO \
-            | tee "$OUT/xcodebuild.log" | tail -n 40
+          echo "WORKSPACE=$WS" >> "$GITHUB_ENV"; echo "SCHEME=$SCHEME" >> "$GITHUB_ENV"
+          SCH=$(ls ios/*.xcodeproj/xcshareddata/xcschemes/"$SCHEME".xcscheme 2>/dev/null || true)
+          if [ -n "$SCH" ] && grep -q TestableReference "$SCH" && xcodebuild build-for-testing -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator \
+               -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED_DATA" \
+               CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+               > "$OUT/xcodebuild.log" 2>&1; then
+            echo "XCUI_HOST=1" >> "$GITHUB_ENV"; echo "build-for-testing OK (StoreKit test session available)"
+          else
+            echo "build-for-testing unavailable or failed; plain build, paywall without StoreKit prices" | tee "$OUT/storekit-note.txt"
+            tail -n 60 "$OUT/xcodebuild.log" 2>/dev/null || true
+            xcodebuild build -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator \
+              -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED_DATA" CODE_SIGNING_ALLOWED=NO \
+              > "$OUT/xcodebuild-plain.log" 2>&1 || { tail -n 120 "$OUT/xcodebuild-plain.log"; exit 1; }
+            echo "XCUI_HOST=0" >> "$GITHUB_ENV"
+          fi
+          tail -n 20 "$OUT/xcodebuild.log" || true
 
       - name: Install, launch and play each sound
         run: |
           set -euo pipefail
-          APP=$(find "$DERIVED_DATA" -name '*.app' -path '*Release-iphonesimulator*' | head -n1)
+          APP=$(find "$DERIVED_DATA" -name '*.app' -path '*Release-iphonesimulator*' ! -name '*-Runner.app' ! -path '*.app/*' | head -n1)
           xcrun simctl install "$UDID" "$APP"
-          xcrun simctl launch "$UDID" "$BUNDLE_ID"
+          rm -f "$OUT/xcui-ready" "$OUT/xcui-done"
+          if [ "${XCUI_HOST:-0}" = "1" ]; then
+            # The UI test launches the app inside a StoreKit test session and holds it until xcui-done.
+            cp storekit/Lulla.storekit /tmp/Lulla.storekit
+            TEST_RUNNER_SIM_QA_OUT="$OUT" TEST_RUNNER_STOREKIT_CONFIG="/tmp/Lulla.storekit" \
+            xcodebuild test-without-building -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
+              -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$DERIVED_DATA" \
+              -resultBundlePath "$OUT/host.xcresult" -only-testing:LullaQATests/SimQATests/testHoldAppForShellFlow \
+              > "$OUT/xcodebuild-test.log" 2>&1 &
+            XCUI_PID=$!
+            for i in $(seq 1 300); do [ -f "$OUT/xcui-ready" ] && break; sleep 2; done
+            if [ -f "$OUT/xcui-ready" ]; then
+              echo "StoreKit host ready: $(cat "$OUT/xcui-ready")" | tee "$OUT/storekit-note.txt"
+            else
+              echo "StoreKit host did not start in 10 min; simctl launch, paywall without StoreKit prices" | tee "$OUT/storekit-note.txt"
+              tail -n 60 "$OUT/xcodebuild-test.log" || true
+              xcrun simctl launch "$UDID" "$BUNDLE_ID"
+            fi
+          else
+            xcrun simctl launch "$UDID" "$BUNDLE_ID"
+          fi
+          finish_host() { touch "$OUT/xcui-done"; [ -n "${XCUI_PID:-}" ] && wait "$XCUI_PID" || true; }
+          trap finish_host EXIT
           sleep 8
           xcrun simctl io "$UDID" screenshot "$OUT/00-home.png"
           IFS=',' read -ra IDS <<< "${{ github.event.inputs.sounds }}"
@@ -92,7 +141,90 @@ jobs:
             xcrun simctl io "$UDID" screenshot "$OUT/$id-b.png"   # overlay position must have advanced vs -a
           done
           xcrun simctl openurl "$UDID" "lulla://qa/stop"
-          xcrun simctl spawn "$UDID" log show --last 5m --predicate 'process == "Lulla"' > "$OUT/app.log" 2>&1 || true
+          sleep 2
+          xcrun simctl openurl "$UDID" "lulla://qa/paywall"
+          sleep 10
+          xcrun simctl io "$UDID" screenshot "$OUT/zz-paywall.png"   # prices exactly as StoreKit returns them
+
+          # Free tier after the premium preview is used up (QA build only, memory only).
+          shot() { xcrun simctl io "$UDID" screenshot "$OUT/$1.png"; }
+          xcrun simctl openurl "$UDID" "lulla://qa/close"; sleep 2
+          xcrun simctl openurl "$UDID" "lulla://qa/stop"; sleep 3
+          xcrun simctl openurl "$UDID" "lulla://qa/preview/used"; sleep 2
+          shot f0-home-preview-used          # Premium badges on every non-free tile, pill says Unlock all
+          xcrun simctl openurl "$UDID" "lulla://qa/tap/rain"; sleep 6
+          shot f1-free-rain-playing-a        # free sound plays with the preview used up
+          sleep 4
+          shot f1-free-rain-playing-b        # overlay position about 4 s later than -a
+          xcrun simctl openurl "$UDID" "lulla://qa/tap/snow"; sleep 8
+          shot f2-locked-snow-paywall        # locked tile opens the paywall: X, Unlock all sounds, Restore
+          xcrun simctl openurl "$UDID" "lulla://qa/close"; sleep 4
+          shot f3-home-after-x-a             # back on home, rain still playing
+          sleep 4
+          shot f3-home-after-x-b
+          xcrun simctl openurl "$UDID" "lulla://qa/settings"; sleep 4
+          shot f4-settings-restore           # Restore purchases outside the paywall
+          xcrun simctl openurl "$UDID" "lulla://qa/credits"; sleep 3
+          shot f5-sound-credits              # Settings > Sound credits (Farm CC BY 4.0, CC0, Frequencies by Samay Vashsht)
+          xcrun simctl openurl "$UDID" "lulla://qa/close"; sleep 2
+
+          # Frequencies hero card on home (All selected), then a tap on it selects Frequencies
+          # (432 Hz Deep Sleep free, the other four Premium).
+          xcrun simctl openurl "$UDID" "lulla://qa/stop"; sleep 3   # nothing playing: no QA overlay in store shots
+          xcrun simctl openurl "$UDID" "lulla://qa/cat/all"; sleep 3
+          shot h0-home-frequencies-hero
+          xcrun simctl openurl "$UDID" "lulla://qa/hero"; sleep 3
+          shot h1-after-hero-tap-frequencies
+
+          # Sleep timer: the options (4 hours and All night), a 2 h timer with its computed
+          # end and fade start (overlay + log), then All night (no stop scheduled).
+          xcrun simctl openurl "$UDID" "lulla://qa/timersheet"; sleep 3
+          shot t0-timer-options
+          xcrun simctl openurl "$UDID" "lulla://qa/close"; sleep 2
+          xcrun simctl openurl "$UDID" "lulla://qa/tap/freq_432"; sleep 3
+          xcrun simctl openurl "$UDID" "lulla://qa/timer/120"; sleep 4
+          shot t1-timer-2h
+          xcrun simctl openurl "$UDID" "lulla://qa/timer/allnight"; sleep 4
+          shot t2-timer-allnight
+
+          # Loop wrap: play 432 Hz Deep Sleep from 4 s before its loop point, one shot a second.
+          xcrun simctl openurl "$UDID" "lulla://qa/wrap/freq_432"; sleep 4
+          for i in 1 2 3 4 5 6 7 8; do shot "w-wrap-$i"; sleep 1; done
+          xcrun simctl openurl "$UDID" "lulla://qa/stop"
+          xcrun simctl spawn "$UDID" log show --last 30m --predicate 'process CONTAINS "Lulla"' > "$OUT/app.log" 2>&1 || true
+          grep -F '[QA]' "$OUT/app.log" > "$OUT/qa-events.log" || echo "no [QA] lines in the device log" > "$OUT/qa-events.log"
+
+      - name: Store shots at 6.5 inch (iPhone 11 Pro Max class)
+        if: always()
+        run: |
+          set -uo pipefail
+          # 6.9 inch store shots come from the main run above (iPhone 16 Pro Max, 1320 x 2868).
+          # Here: the same app on a 6.5 inch device (1242 x 2688), falling back to iPhone 14 Plus
+          # (1284 x 2778, also accepted in the 6.5 inch slot). If neither device type exists on the
+          # runner, the 6.9 inch shot is resized to 1242 x 2688 and the file name says so.
+          mkdir -p "$OUT/store65"
+          APP=$(find "$DERIVED_DATA" -name '*.app' -path '*Release-iphonesimulator*' ! -name '*-Runner.app' ! -path '*.app/*' | head -n1)
+          RT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["isAvailable"] and x["platform"]=="iOS"]; print(r[-1]["identifier"])')
+          U65=""
+          for T in iPhone-11-Pro-Max iPhone-XS-Max iPhone-14-Plus; do
+            U65=$(xcrun simctl create "QA 6.5 $T" "com.apple.CoreSimulator.SimDeviceType.$T" "$RT" 2>/dev/null) && { echo "6.5 device: $T on $RT" | tee "$OUT/store65/device.txt"; break; }
+          done
+          if [ -n "$U65" ]; then
+            xcrun simctl boot "$U65"; xcrun simctl bootstatus "$U65" -b
+            xcrun simctl status_bar "$U65" override --time "9:41" --batteryState charged --batteryLevel 100 || true
+            xcrun simctl install "$U65" "$APP"
+            xcrun simctl launch "$U65" "$BUNDLE_ID"; sleep 10
+            xcrun simctl openurl "$U65" "lulla://qa/cat/all"; sleep 3
+            xcrun simctl io "$U65" screenshot "$OUT/store65/s65-home-frequencies-hero.png"
+            xcrun simctl openurl "$U65" "lulla://qa/hero"; sleep 3
+            xcrun simctl io "$U65" screenshot "$OUT/store65/s65-after-hero-tap.png"
+            xcrun simctl shutdown "$U65" || true
+          else
+            echo "no 6.5 inch device type on this runner; resized from 6.9 inch" | tee "$OUT/store65/device.txt"
+            for f in h0-home-frequencies-hero h1-after-hero-tap-frequencies; do
+              [ -f "$OUT/$f.png" ] && sips -z 2688 1242 "$OUT/$f.png" --out "$OUT/store65/s65-RESIZED-$f.png" >/dev/null
+            done
+          fi
 
       - name: Upload screenshots and logs
         if: always()

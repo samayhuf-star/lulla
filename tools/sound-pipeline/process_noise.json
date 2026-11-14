@@ -1,0 +1,32 @@
+{
+ "white_noise": {
+  "name": "white_noise",
+  "src": "generated:white",
+  "window_start_s": 1.0,
+  "loop_s": 66.0,
+  "gain_db": -7.5,
+  "limit_db": 0.0,
+  "pre_I": -12.5,
+  "pre_TP": -7.6
+ },
+ "pink_noise": {
+  "name": "pink_noise",
+  "src": "generated:pink",
+  "window_start_s": 0.0,
+  "loop_s": 66.0,
+  "gain_db": 3.7,
+  "limit_db": 0.0,
+  "pre_I": -23.7,
+  "pre_TP": -14.3
+ },
+ "brown_noise": {
+  "name": "brown_noise",
+  "src": "generated:brown",
+  "window_start_s": 0.0,
+  "loop_s": 66.0,
+  "gain_db": 4.7,
+  "limit_db": 0.0,
+  "pre_I": -24.7,
+  "pre_TP": -12.1
+ }
+}

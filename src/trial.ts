@@ -1,9 +1,9 @@
 import * as SecureStore from 'expo-secure-store';
 import { FREE_SECONDS } from './config';
 
-// Free listening time is stored in the OS keychain/keystore (SecureStore) rather than plain
-// storage, so it survives app restarts and (on iOS) reinstalls. Only time spent actually
-// playing counts toward the 3 free minutes.
+// Premium-sound preview time, stored in the OS keychain/keystore (SecureStore) rather than
+// plain storage, so it survives app restarts and (on iOS) reinstalls. Only time spent playing
+// a premium sound counts. The free sounds (src/access.ts) never use or need this clock.
 const KEY = 'lulla_used_seconds_v1';
 
 let used = 0;
@@ -41,4 +41,11 @@ export async function persistUsed() {
   } catch {
     /* best-effort */
   }
+}
+
+/** QA builds only: set the preview clock without touching SecureStore. */
+export function setUsedForQa(sec: number) {
+  used = Math.max(0, Math.min(FREE_SECONDS, sec));
+  loaded = true;
+  return remainingSeconds();
 }
