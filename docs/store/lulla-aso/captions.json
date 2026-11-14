@@ -1,0 +1,36 @@
+{
+  "app": "Lulla",
+  "note": "Benefit captions for 4-5 main screens only. Do not upload shots-now review sets. No permission, Settings or Restore screens.",
+  "screens": [
+    {
+      "slot": 1,
+      "screen": "home",
+      "file_hint": "h0-home-frequencies-hero.png",
+      "caption": "Frequencies and tonight's sounds"
+    },
+    {
+      "slot": 2,
+      "screen": "core feature",
+      "file_hint": "h1-after-hero-tap-frequencies.png",
+      "caption": "Warm tones for relaxing and sleep"
+    },
+    {
+      "slot": 3,
+      "screen": "timer",
+      "file_hint": "t0-timer-options.png",
+      "caption": "Timer: 2, 3, 4 hours or All night"
+    },
+    {
+      "slot": 4,
+      "screen": "player / mix",
+      "file_hint": "player or sound grid from sim",
+      "caption": "Layer rain, white noise and more"
+    },
+    {
+      "slot": 5,
+      "screen": "paywall",
+      "file_hint": "f2-locked-snow-paywall.png",
+      "caption": "7 days free, then $2.99 or $19.99"
+    }
+  ]
+}
