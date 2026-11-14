@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AccessibilityInfo, ActivityIndicator, Alert, FlatList, Linking, Modal, Platform, Pressable, SafeAreaView,
+  AccessibilityInfo, ActivityIndicator, Alert, Linking, Modal, Platform, Pressable, SafeAreaView,
   ScrollView, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -23,6 +23,7 @@ import {
   PAYWALL_SUB, PAYWALL_TITLE, blockedInMix, countsTowardPreview, isLocked, onPreviewEnded, tileAction,
 } from './src/access';
 import { buy, initIAP, loadPlans, onEntitlementChange, refreshEntitlements, restore, type Plan } from './src/purchases';
+import { MIN_TAP, gridColumns } from './src/axLayout';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -77,7 +78,12 @@ export default function App() {
   const [, force] = useState(0);
   const [cat, setCat] = useState<Category | 'All'>('All');
   // Square at default text size; taller (never clipped) when Dynamic Type makes the name wrap.
-  const tileMin = Math.floor((useWindowDimensions().width - 24 - 20) / 3);
+  // Fewer columns at AX1–AX5 so a one-word name is not squeezed out of the tile.
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const cols = gridColumns(fontScale);
+  const tileMin = Math.max(MIN_TAP, Math.floor((windowWidth - 24 - 10 * (cols - 1)) / cols));
+  // The player is pinned. Home content scrolls behind it, including the chip row.
+  const [playerPad, setPlayerPad] = useState(140);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [showMix, setShowMix] = useState(false);
@@ -306,19 +312,27 @@ export default function App() {
     <LinearGradient colors={[C.bg1, C.bg2, C.bg3]} style={styles.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={styles.fill}>
+        {/* Header, hero, chips and tiles scroll together. At AX1–AX5 the chip row
+            stays reachable instead of being pushed under the player. */}
+        <ScrollView
+          testID="home-scroll"
+          style={styles.fill}
+          contentContainerStyle={{ paddingBottom: playerPad }}
+          keyboardShouldPersistTaps="handled"
+        >
         <View style={styles.header}>
-          <View>
-            <Text style={styles.title} maxFontSizeMultiplier={1.4}>Lulla</Text>
-            <Text style={styles.subtitle} maxFontSizeMultiplier={1.6}>Sleep sounds, softly.</Text>
+          <View style={styles.headerTitle}>
+            <Text style={styles.title} maxFontSizeMultiplier={2.2}>Lulla</Text>
+            <Text style={styles.subtitle}>Sleep sounds, softly.</Text>
           </View>
           <View style={styles.headerRight}>
           {premium ? (
             <View style={[styles.pill, { backgroundColor: 'rgba(52,211,153,0.2)' }]}>
-              <Text style={[styles.pillText, { color: '#6ee7b7' }]} maxFontSizeMultiplier={1.6}>Premium</Text>
+              <Text style={[styles.pillText, { color: '#6ee7b7' }]}>Premium</Text>
             </View>
           ) : (
             <Pressable style={styles.pill} onPress={() => setShowPaywall(true)} accessibilityRole="button">
-              <Text style={styles.pillText} maxFontSizeMultiplier={1.6}>
+              <Text style={styles.pillText}>
                 {remaining > 0 && countsTowardPreview(active, false) ? `Preview ${fmt(remaining)}` : 'Unlock all'}
               </Text>
             </Pressable>
@@ -328,7 +342,7 @@ export default function App() {
             onPress={() => setShowSettings(true)}
             accessibilityRole="button"
             accessibilityLabel="Settings"
-            hitSlop={8}
+            hitSlop={4}
           >
             <Text style={styles.gearIcon} maxFontSizeMultiplier={1.3}>⚙️</Text>
           </Pressable>
@@ -337,25 +351,32 @@ export default function App() {
 
         <FrequenciesHero selected={cat === HERO_CATEGORY} reduceMotion={reduceMotion} onPress={onHero} />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catRow} contentContainerStyle={styles.catRowContent}>
+        <ScrollView
+          horizontal
+          nestedScrollEnabled
+          showsHorizontalScrollIndicator={fontScale >= 1.5}
+          style={styles.catRow}
+          contentContainerStyle={styles.catRowContent}
+        >
           {(['All', ...CATEGORIES] as const).map((c) => (
-            <Pressable key={c} onPress={() => setCat(c)} style={[styles.chip, cat === c && styles.chipOn]}>
-              <Text style={[styles.chipText, cat === c && { color: '#fff' }]} maxFontSizeMultiplier={2}>{c}</Text>
+            <Pressable
+              key={c}
+              onPress={() => setCat(c)}
+              style={[styles.chip, cat === c && styles.chipOn]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: cat === c }}
+            >
+              <Text style={[styles.chipText, cat === c && { color: '#fff' }]}>{c}</Text>
             </Pressable>
           ))}
         </ScrollView>
 
-        <FlatList
-          data={list}
-          keyExtractor={(s) => s.id}
-          numColumns={3}
-          contentContainerStyle={{ padding: 12, paddingBottom: 160 }}
-          columnWrapperStyle={{ gap: 10 }}
-          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-          renderItem={({ item }) => {
+        <View style={styles.grid}>
+          {list.map((item) => {
             const on = mixer.has(item.id);
             const locked = isLocked(item.id, premium);
             return (
+              <View key={item.id} style={[styles.gridCell, { width: `${100 / cols}%` }]}>
               <Pressable
                 onPress={() => onTile(item.id)}
                 style={[styles.tile, { minHeight: tileMin }, on && styles.tileOn]}
@@ -365,37 +386,46 @@ export default function App() {
               >
                 {locked ? (
                   <View style={styles.lock} testID={`premium-${item.id}`}>
-                    <Text style={styles.lockText} maxFontSizeMultiplier={1.6}>🔒 Premium</Text>
+                    <Text style={styles.lockText}>🔒 Premium</Text>
                   </View>
                 ) : null}
                 <Text style={styles.emoji} maxFontSizeMultiplier={1.3}>{item.emoji}</Text>
-                <Text style={styles.tileName} maxFontSizeMultiplier={2}>{item.name}</Text>
+                <Text style={styles.tileName}>{item.name}</Text>
                 {item.headphones ? (
                   <View style={styles.badge} accessibilityLabel="Use headphones">
-                    <Text style={styles.badgeText} maxFontSizeMultiplier={1.8}>Use headphones</Text>
+                    <Text style={styles.badgeText}>Use headphones</Text>
                   </View>
                 ) : null}
               </Pressable>
+              </View>
             );
-          }}
-        />
+          })}
+        </View>
+        </ScrollView>
 
         {QA_MODE && qaOverlay && (qaLine || qaTimer) ? (
           <Text style={styles.qa} testID="qa-positions">{[qaLine, qaTimer].filter(Boolean).join('\n')}</Text>
         ) : null}
 
-        {/* Bottom player */}
-        <View style={styles.player}>
-          <Pressable style={styles.sideBtn} onPress={() => setShowMix(true)}>
+        {/* Bottom player. Labels wrap inside each side so they don't cover the play button. */}
+        <View
+          style={styles.player}
+          testID="player"
+          onLayout={(e) => {
+            const next = Math.ceil(e.nativeEvent.layout.height) + 40;
+            setPlayerPad((prev) => (prev === next ? prev : next));
+          }}
+        >
+          <Pressable style={styles.sideBtn} onPress={() => setShowMix(true)} accessibilityRole="button">
             <Text style={styles.sideIcon} maxFontSizeMultiplier={1.3}>🎚️</Text>
-            <Text style={styles.sideLabel} maxFontSizeMultiplier={1.6}>Mix{active.length ? ` · ${active.length}` : ''}</Text>
+            <Text style={styles.sideLabel}>Mix{active.length ? ` · ${active.length}` : ''}</Text>
           </Pressable>
-          <Pressable style={[styles.playBtn, active.length === 0 && { opacity: 0.4 }]} onPress={onPlayPause}>
-            <Text style={styles.playIcon} maxFontSizeMultiplier={1.6}>{mixer.playing ? '❚❚' : '▶'}</Text>
+          <Pressable style={[styles.playBtn, active.length === 0 && { opacity: 0.4 }]} onPress={onPlayPause} accessibilityRole="button" accessibilityLabel={mixer.playing ? 'Pause' : 'Play'}>
+            <Text style={styles.playIcon} maxFontSizeMultiplier={1.4}>{mixer.playing ? '❚❚' : '▶'}</Text>
           </Pressable>
-          <Pressable style={styles.sideBtn} onPress={() => setShowTimer(true)}>
+          <Pressable style={styles.sideBtn} onPress={() => setShowTimer(true)} accessibilityRole="button">
             <Text style={styles.sideIcon} maxFontSizeMultiplier={1.3}>⏱️</Text>
-            <Text style={styles.sideLabel} maxFontSizeMultiplier={1.6}>{timerPlan ? fmt(timerLeft) : allNight ? 'All night' : 'Timer'}</Text>
+            <Text style={styles.sideLabel}>{timerPlan ? fmt(timerLeft) : allNight ? 'All night' : 'Timer'}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -403,50 +433,54 @@ export default function App() {
       {/* Mix sheet */}
       <Modal visible={showMix} transparent animationType={sheetAnim} onRequestClose={() => setShowMix(false)}>
         <Pressable style={styles.backdrop} onPress={() => setShowMix(false)} />
-        <View style={styles.sheet}>
-          <Text style={styles.sheetTitle}>Your mix</Text>
+        <Sheet title="Your mix">
           {active.length === 0 ? (
             <Text style={styles.sub}>Tap sounds to layer them together.</Text>
           ) : (
-            <ScrollView style={{ maxHeight: 360 }}>
-              {active.map((id) => (
-                <View key={id} style={styles.mixRow}>
-                  <View style={{ width: 130 }}>
-                    <Text style={styles.mixName}>{SOUND_BY_ID[id].emoji} {SOUND_BY_ID[id].name}</Text>
-                    {SOUND_BY_ID[id].headphones ? <Text style={styles.badgeInline}>Use headphones</Text> : null}
-                  </View>
-                  <VolumeBar value={mixer.volume(id)} onChange={(v) => mixer.setVolume(id, v)} />
-                  <Pressable onPress={() => mixer.toggle(id)}><Text style={styles.remove}>✕</Text></Pressable>
+            active.map((id) => (
+              <View key={id} style={styles.mixRow}>
+                <View style={styles.mixLabel}>
+                  <Text style={styles.mixName}>{SOUND_BY_ID[id].emoji} {SOUND_BY_ID[id].name}</Text>
+                  {SOUND_BY_ID[id].headphones ? <Text style={styles.badgeInline}>Use headphones</Text> : null}
                 </View>
-              ))}
-            </ScrollView>
+                <View style={styles.mixControls}>
+                  <VolumeBar value={mixer.volume(id)} onChange={(v) => mixer.setVolume(id, v)} />
+                  <Pressable
+                    style={styles.removeBtn}
+                    onPress={() => mixer.toggle(id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${SOUND_BY_ID[id].name}`}
+                  >
+                    <Text style={styles.remove}>✕</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ))
           )}
           {active.length > 0 && (
-            <Pressable onPress={() => mixer.clear()} style={styles.clear}><Text style={styles.clearText}>Clear all</Text></Pressable>
+            <Pressable onPress={() => mixer.clear()} style={styles.clear} accessibilityRole="button"><Text style={styles.clearText}>Clear all</Text></Pressable>
           )}
-        </View>
+        </Sheet>
       </Modal>
 
       {/* Timer sheet */}
       <Modal visible={showTimer} transparent animationType={sheetAnim} onRequestClose={() => setShowTimer(false)}>
         <Pressable style={styles.backdrop} onPress={() => setShowTimer(false)} />
-        <View style={styles.sheet}>
-          <Text style={styles.sheetTitle}>Sleep timer</Text>
-          <ScrollView style={{ maxHeight: 560 }}>
-            {TIMER_OPTIONS.map((o) => (
-              <Pressable
-                key={o.label}
-                style={styles.timerRow}
-                onPress={() => {
-                  applyTimer(o.minutes);
-                  setShowTimer(false);
-                }}
-              >
-                <Text style={styles.timerText}>{o.label}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
+        <Sheet title="Sleep timer">
+          {TIMER_OPTIONS.map((o) => (
+            <Pressable
+              key={o.label}
+              style={styles.timerRow}
+              accessibilityRole="button"
+              onPress={() => {
+                applyTimer(o.minutes);
+                setShowTimer(false);
+              }}
+            >
+              <Text style={styles.timerText}>{o.label}</Text>
+            </Pressable>
+          ))}
+        </Sheet>
       </Modal>
 
       {/* Paywall */}
@@ -460,8 +494,7 @@ export default function App() {
       {/* Settings sheet: Restore purchases lives here too, outside the paywall */}
       <Modal visible={showSettings} transparent animationType={sheetAnim} onRequestClose={() => setShowSettings(false)}>
         <Pressable style={styles.backdrop} onPress={() => setShowSettings(false)} />
-        <View style={styles.sheet}>
-          <Text style={styles.sheetTitle}>Settings</Text>
+        <Sheet title="Settings">
           <Text style={[styles.sub, { marginBottom: 8 }]}>{premium ? 'Premium is active. Thank you.' : 'Rain, ocean, forest, fan, white and brown noise and 432 Hz Deep Sleep are free to play anytime.'}</Text>
           <Pressable style={styles.timerRow} onPress={() => runRestore(() => { setPremium(true); setShowSettings(false); })} accessibilityRole="button">
             <Text style={styles.timerText}>Restore purchases</Text>
@@ -471,13 +504,13 @@ export default function App() {
               <Text style={styles.timerText}>Unlock all sounds</Text>
             </Pressable>
           ) : null}
-          <Pressable style={styles.timerRow} onPress={() => Linking.openURL(TERMS_URL)}><Text style={styles.timerText}>Terms of Use</Text></Pressable>
-          <Pressable style={styles.timerRow} onPress={() => Linking.openURL(PRIVACY_URL)}><Text style={styles.timerText}>Privacy Policy</Text></Pressable>
+          <Pressable style={styles.timerRow} onPress={() => Linking.openURL(TERMS_URL)} accessibilityRole="button"><Text style={styles.timerText}>Terms of Use</Text></Pressable>
+          <Pressable style={styles.timerRow} onPress={() => Linking.openURL(PRIVACY_URL)} accessibilityRole="button"><Text style={styles.timerText}>Privacy Policy</Text></Pressable>
           <Pressable style={styles.timerRow} onPress={() => { setShowSettings(false); setShowCredits(true); }} accessibilityRole="button">
             <Text style={styles.timerText}>Sound credits</Text>
           </Pressable>
-          <Pressable style={styles.timerRow} onPress={() => Linking.openURL(SUPPORT_URL)}><Text style={styles.timerText}>Support</Text></Pressable>
-        </View>
+          <Pressable style={styles.timerRow} onPress={() => Linking.openURL(SUPPORT_URL)} accessibilityRole="button"><Text style={styles.timerText}>Support</Text></Pressable>
+        </Sheet>
       </Modal>
 
       {/* Sound credits (attributions from ASSET_LICENSES.md) */}
@@ -485,8 +518,8 @@ export default function App() {
         <LinearGradient colors={[C.bg1, C.bg2, C.bg3]} style={styles.fill}>
           <SafeAreaView style={styles.fill}>
             <View style={[styles.header, { paddingBottom: 4 }]}>
-              <Text style={styles.sheetTitle}>Sound credits</Text>
-              <Pressable onPress={() => setShowCredits(false)} style={styles.close} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close" testID="credits-close">
+              <Text style={[styles.sheetTitle, styles.headerTitleText]}>Sound credits</Text>
+              <Pressable onPress={() => setShowCredits(false)} style={styles.close} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close" testID="credits-close">
                 <Text style={styles.closeText}>✕</Text>
               </Pressable>
             </View>
@@ -496,20 +529,33 @@ export default function App() {
                   <Text style={styles.creditTitle}>{c.title}</Text>
                   <Text style={styles.creditBody}>{c.body}</Text>
                   {(c.links ?? []).map((l) => (
-                    <Pressable key={l.url} onPress={() => Linking.openURL(l.url)} accessibilityRole="link">
+                    <Pressable key={l.url} onPress={() => Linking.openURL(l.url)} accessibilityRole="link" style={styles.linkHit}>
                       <Text style={styles.link}>{l.label}</Text>
                     </Pressable>
                   ))}
                 </View>
               ))}
-              <Pressable onPress={() => Linking.openURL(CREDITS_PAGE_URL)} accessibilityRole="link">
-                <Text style={[styles.link, { marginTop: 8 }]}>Full list of sources</Text>
+              <Pressable onPress={() => Linking.openURL(CREDITS_PAGE_URL)} accessibilityRole="link" style={styles.linkHit}>
+                <Text style={styles.link}>Full list of sources</Text>
               </Pressable>
             </ScrollView>
           </SafeAreaView>
         </LinearGradient>
       </Modal>
     </LinearGradient>
+  );
+}
+
+/** Bottom sheet whose body scrolls when Dynamic Type makes the rows taller than the screen. */
+function Sheet({ title, children }: { title: string; children: React.ReactNode }) {
+  const maxBody = Math.round(useWindowDimensions().height * 0.68);
+  return (
+    <View style={styles.sheet}>
+      <Text style={styles.sheetTitle}>{title}</Text>
+      <ScrollView style={{ maxHeight: maxBody }} contentContainerStyle={styles.sheetBody}>
+        {children}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -584,12 +630,13 @@ function Paywall({ visible, onClose, onUnlocked, reduceMotion }: {
   return (
     <Modal visible={visible} animationType={reduceMotion ? 'none' : 'slide'} onRequestClose={onClose}>
       <LinearGradient colors={[C.bg1, C.bg2, C.bg3]} style={styles.fill}>
-        <SafeAreaView style={[styles.fill, { padding: 24 }]}>
-          <Pressable onPress={onClose} style={styles.close} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close" testID="paywall-close">
+        <SafeAreaView style={styles.fill}>
+          <ScrollView contentContainerStyle={styles.payScroll}>
+          <Pressable onPress={onClose} style={styles.close} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close" testID="paywall-close">
             <Text style={styles.closeText}>✕</Text>
           </Pressable>
-          <View style={{ flex: 1, justifyContent: 'center' }}>
-            <Text style={{ fontSize: 64, textAlign: 'center' }}>🌙</Text>
+          <View style={styles.payBody}>
+            <Text style={styles.moon} maxFontSizeMultiplier={1.5}>🌙</Text>
             <Text style={styles.payTitle}>{PAYWALL_TITLE}</Text>
             <Text style={styles.paySub}>{PAYWALL_SUB}</Text>
             {[`All ${SOUNDS.length} sleep sounds`, 'Lullabies, binaural tones and every nature scene', 'Layer any of them into your own mix'].map((t) => (
@@ -608,6 +655,7 @@ function Paywall({ visible, onClose, onUnlocked, reduceMotion }: {
               style={[styles.cta, { marginTop: 10 }, busy && { opacity: 0.6 }]}
               disabled={busy}
               onPress={() => onBuy(plan)}
+              accessibilityRole="button"
             >
               {busy ? <ActivityIndicator color="#fff" /> : (
                 <Text style={styles.ctaText}>{planButtonText(plan)}</Text>
@@ -625,6 +673,7 @@ function Paywall({ visible, onClose, onUnlocked, reduceMotion }: {
             <Pressable onPress={() => Linking.openURL(PRIVACY_URL)}><Text style={styles.link}>Privacy</Text></Pressable>
             <Pressable onPress={() => Linking.openURL(SUPPORT_URL)}><Text style={styles.link}>Support</Text></Pressable>
           </View>
+          </ScrollView>
         </SafeAreaView>
       </LinearGradient>
     </Modal>
@@ -633,64 +682,77 @@ function Paywall({ visible, onClose, onUnlocked, reduceMotion }: {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  badge: { marginTop: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(167,139,250,0.3)' },
-  badgeText: { color: C.text, fontSize: 9, fontWeight: '700' },
-  badgeInline: { color: C.sub, fontSize: 11, marginTop: 2 },
+  badge: { alignSelf: 'stretch', marginTop: 4, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 999, backgroundColor: 'rgba(167,139,250,0.3)' },
+  badgeText: { color: C.text, fontSize: 11, fontWeight: '700', textAlign: 'center' },
+  badgeInline: { color: C.sub, fontSize: 13, marginTop: 2 },
   credit: { marginTop: 18 },
   creditTitle: { color: C.text, fontSize: 16, fontWeight: '700', marginBottom: 4 },
   creditBody: { color: C.sub, fontSize: 14, lineHeight: 20, marginBottom: 6 },
-  lock: { position: 'absolute', top: 6, right: 6, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.45)' },
-  lockText: { color: '#fde68a', fontSize: 9, fontWeight: '800' },
-  gear: { marginLeft: 10, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.08)' },
+  // In the tile flow (not absolute) so the Premium label wraps instead of covering the name.
+  lock: { alignSelf: 'stretch', marginBottom: 6, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.45)' },
+  lockText: { color: '#fde68a', fontSize: 11, fontWeight: '800', textAlign: 'center' },
+  gear: { marginLeft: 8, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.08)' },
   gearIcon: { fontSize: 18 },
-  close: { alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.12)' },
+  close: { alignSelf: 'flex-end', width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.12)', flexShrink: 0 },
   closeText: { color: C.text, fontSize: 20, fontWeight: '700' },
   qa: { position: 'absolute', top: 54, left: 12, right: 12, color: '#fde68a', fontSize: 11, textAlign: 'center' },
-  headerRight: { flexDirection: 'row', alignItems: 'center' },
-  header: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 6, justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
+  headerTitle: { flexGrow: 1, flexShrink: 1, flexBasis: 180 },
+  headerTitleText: { flexGrow: 1, flexShrink: 1, marginBottom: 0, paddingRight: 8 },
+  headerRight: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', flexShrink: 0, maxWidth: '100%', rowGap: 8 },
+  header: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, columnGap: 8, justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
   title: { color: C.text, fontSize: 30, fontWeight: '800', letterSpacing: 0.5 },
   subtitle: { color: C.sub, fontSize: 13, marginTop: 2 },
-  pill: { backgroundColor: 'rgba(167,139,250,0.25)', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999 },
-  pillText: { color: C.text, fontWeight: '700', fontSize: 13 },
-  // flexShrink 0: the row keeps its full height next to the sound grid instead of being squeezed
-  // (a squeezed horizontal ScrollView clips the chip labels top and bottom).
-  catRow: { flexGrow: 0, flexShrink: 0, marginVertical: 8 },
+  pill: { backgroundColor: 'rgba(167,139,250,0.25)', minHeight: 44, maxWidth: '100%', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, justifyContent: 'center' },
+  pillText: { color: C.text, fontWeight: '700', fontSize: 13, textAlign: 'center' },
+  // flexShrink 0: the chip row keeps its height (a squeezed horizontal ScrollView clips labels).
+  // It lives inside the home ScrollView, so at AX sizes it scrolls into view instead of leaving the screen.
+  catRow: { flexGrow: 0, flexShrink: 0, marginVertical: 8, minHeight: 44 },
   catRowContent: { paddingHorizontal: 16, gap: 8, alignItems: 'center' },
-  // No fixed height and no lineHeight: chips grow with Dynamic Type.
-  chip: { minHeight: 36, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: C.card, justifyContent: 'center' },
+  // No fixed height and no lineHeight: chips grow with Dynamic Type. minHeight is the 44pt target.
+  chip: { minHeight: 44, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, backgroundColor: C.card, justifyContent: 'center' },
   chipOn: { backgroundColor: C.accent2 },
   chipText: { color: C.sub, fontSize: 14, fontWeight: '600', textAlign: 'center' },
-  tile: { flex: 1 / 3, backgroundColor: C.card, borderRadius: 18, alignItems: 'center', justifyContent: 'center', padding: 8, borderWidth: 1, borderColor: 'transparent' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 7, paddingTop: 4 },
+  gridCell: { padding: 5 },
+  tile: { width: '100%', backgroundColor: C.card, borderRadius: 18, alignItems: 'center', justifyContent: 'center', padding: 8, borderWidth: 1, borderColor: 'transparent' },
   tileOn: { backgroundColor: C.cardOn, borderColor: C.accent },
   emoji: { fontSize: 34, marginBottom: 6 },
   tileName: { color: C.text, fontSize: 12, textAlign: 'center', fontWeight: '600' },
-  player: { position: 'absolute', left: 16, right: 16, bottom: 24, backgroundColor: 'rgba(20,10,46,0.92)', borderRadius: 28, paddingVertical: 14, paddingHorizontal: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: 'rgba(167,139,250,0.3)' },
-  sideBtn: { alignItems: 'center', minWidth: 64 },
+  player: { position: 'absolute', left: 16, right: 16, bottom: 24, backgroundColor: 'rgba(20,10,46,0.92)', borderRadius: 28, paddingVertical: 8, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: 'rgba(167,139,250,0.3)' },
+  sideBtn: { flex: 1, minWidth: 0, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2, paddingVertical: 4 },
   sideIcon: { fontSize: 22 },
-  sideLabel: { color: C.sub, fontSize: 12, marginTop: 2, fontWeight: '600' },
-  playBtn: { width: 64, height: 64, borderRadius: 32, backgroundColor: C.accent2, alignItems: 'center', justifyContent: 'center' },
+  sideLabel: { color: C.sub, fontSize: 12, marginTop: 2, fontWeight: '600', textAlign: 'center', width: '100%' },
+  playBtn: { width: 64, height: 64, borderRadius: 32, backgroundColor: C.accent2, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   playIcon: { color: '#fff', fontSize: 22, fontWeight: '800' },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-  sheet: { backgroundColor: '#1d0f3d', padding: 20, paddingBottom: 36, borderTopLeftRadius: 26, borderTopRightRadius: 26 },
+  sheet: { backgroundColor: '#1d0f3d', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 28, borderTopLeftRadius: 26, borderTopRightRadius: 26, maxHeight: '92%' },
+  sheetBody: { paddingBottom: 8 },
   sheetTitle: { color: C.text, fontSize: 20, fontWeight: '800', marginBottom: 12 },
-  sub: { color: C.sub },
-  mixRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 },
-  mixName: { color: C.text, fontWeight: '600', width: 130 },
-  remove: { color: C.sub, fontSize: 20, paddingHorizontal: 8 },
-  volRow: { flexDirection: 'row', flex: 1, marginHorizontal: 6 },
-  volCell: { flex: 1, height: 28, alignItems: 'center', justifyContent: 'center' },
+  sub: { color: C.sub, fontSize: 15, lineHeight: 22 },
+  mixRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', paddingVertical: 8 },
+  mixLabel: { flexBasis: '100%', flexGrow: 1 },
+  mixName: { color: C.text, fontWeight: '600', fontSize: 16 },
+  mixControls: { flexDirection: 'row', alignItems: 'center', flexBasis: '100%', flexGrow: 1 },
+  removeBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  remove: { color: C.sub, fontSize: 20, fontWeight: '700' },
+  volRow: { flexDirection: 'row', flex: 1, marginRight: 4 },
+  volCell: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   volDot: { width: '70%', height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.15)' },
   volDotOn: { backgroundColor: C.accent },
-  clear: { alignSelf: 'center', marginTop: 12, padding: 8 },
-  clearText: { color: '#fda4af', fontWeight: '700' },
-  timerRow: { paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255,255,255,0.15)' },
+  clear: { alignSelf: 'center', marginTop: 8, minHeight: 44, paddingHorizontal: 16, justifyContent: 'center' },
+  clearText: { color: '#fda4af', fontWeight: '700', fontSize: 16 },
+  timerRow: { minHeight: 44, paddingVertical: 12, paddingHorizontal: 8, justifyContent: 'center', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255,255,255,0.15)' },
   timerText: { color: C.text, fontSize: 16, textAlign: 'center', fontWeight: '600' },
+  payScroll: { flexGrow: 1, padding: 24, paddingBottom: 32 },
+  payBody: { flexGrow: 1, justifyContent: 'center', paddingVertical: 12 },
+  moon: { fontSize: 64, textAlign: 'center' },
   payTitle: { color: C.text, fontSize: 26, fontWeight: '800', textAlign: 'center', marginTop: 12 },
-  paySub: { color: C.sub, textAlign: 'center', marginTop: 6, marginBottom: 24 },
-  perk: { color: C.text, fontSize: 16, marginVertical: 6, paddingHorizontal: 24 },
-  cta: { backgroundColor: C.accent2, paddingVertical: 18, borderRadius: 999, alignItems: 'center' },
-  ctaText: { color: '#fff', fontSize: 17, fontWeight: '800', textAlign: 'center', paddingHorizontal: 12 },
-  fine: { color: C.sub, fontSize: 11, textAlign: 'center', marginTop: 12, lineHeight: 16 },
-  links: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 14, flexWrap: 'wrap' },
-  link: { color: C.sub, fontSize: 12, textDecorationLine: 'underline' },
+  paySub: { color: C.sub, fontSize: 16, lineHeight: 22, textAlign: 'center', marginTop: 6, marginBottom: 16 },
+  perk: { color: C.text, fontSize: 16, lineHeight: 22, marginVertical: 6, paddingHorizontal: 8 },
+  cta: { backgroundColor: C.accent2, minHeight: 44, paddingVertical: 16, paddingHorizontal: 16, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  ctaText: { color: '#fff', fontSize: 17, fontWeight: '800', textAlign: 'center' },
+  fine: { color: C.sub, fontSize: 12, textAlign: 'center', marginTop: 12, lineHeight: 18 },
+  links: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' },
+  linkHit: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
+  link: { color: C.sub, fontSize: 13, lineHeight: 18, textDecorationLine: 'underline', minHeight: 44, paddingVertical: 12, paddingHorizontal: 6, textAlign: 'center' },
 });

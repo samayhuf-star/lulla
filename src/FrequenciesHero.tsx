@@ -15,8 +15,10 @@ export function FrequenciesHero({ selected, reduceMotion, onPress }: {
   // 400:132 at default text size; grows (never clips) at large Dynamic Type sizes.
   const { width, fontScale } = useWindowDimensions();
   const minHeight = Math.round(((width - 32) * 132) / 400);
-  // Large accessibility text: the copy takes most of the card width so words never break mid-word.
-  const textWidth = fontScale > 1.4 ? '78%' : '52%';
+  // Above 1.4 the title uses the full card (beside the chevron) so "Frequencies"
+  // is not broken mid-word. The multiplier on the title keeps that one word
+  // inside a 375pt phone at AX5; the subtitle wraps on spaces and is not capped.
+  const wide = fontScale > 1.4;
   const glow = useSharedValue(m.rest);
 
   useEffect(() => {
@@ -57,11 +59,11 @@ export function FrequenciesHero({ selected, reduceMotion, onPress }: {
           end={{ x: 1, y: 0.5 }}
           style={StyleSheet.absoluteFill}
         />
-        <View style={[styles.text, { width: textWidth }]}>
-          <Text style={styles.title} maxFontSizeMultiplier={1.6}>{HERO_TITLE}</Text>
-          <Text style={styles.sub} maxFontSizeMultiplier={1.8}>{HERO_SUB}</Text>
+        <View style={wide ? styles.textWide : styles.text}>
+          <Text style={styles.title} maxFontSizeMultiplier={1.7}>{HERO_TITLE}</Text>
+          <Text style={styles.sub}>{HERO_SUB}</Text>
         </View>
-        <Text style={styles.chev} maxFontSizeMultiplier={1.3}>›</Text>
+        <Text style={styles.chev} maxFontSizeMultiplier={1.5}>›</Text>
       </ImageBackground>
     </Pressable>
   );
@@ -74,11 +76,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(167,139,250,0.35)',
     shadowColor: '#a78bfa', shadowOpacity: 0.9, shadowRadius: 18, shadowOffset: { width: 0, height: 0 },
   },
-  card: { flexDirection: 'row', alignItems: 'center', borderRadius: 22, overflow: 'hidden', paddingHorizontal: 18, paddingVertical: 12, borderWidth: 1, borderColor: 'rgba(196,181,253,0.35)', backgroundColor: '#0a0c2e' },
+  card: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 22, overflow: 'hidden', paddingHorizontal: 18, paddingVertical: 12, borderWidth: 1, borderColor: 'rgba(196,181,253,0.35)', backgroundColor: '#0a0c2e' },
   art: { borderRadius: 22 },
   text: { width: '52%' },
+  // flex (not a fixed percent) so the chevron stays in the row instead of painting over the title.
+  textWide: { flexGrow: 1, flexShrink: 1 },
   cardOn: { borderColor: '#f5f3ff', borderWidth: 1.5 },
   title: { color: '#f5f3ff', fontSize: 20, fontWeight: '800', textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 6 },
   sub: { color: '#ddd6fe', fontSize: 12, marginTop: 3, lineHeight: 16 },
-  chev: { position: 'absolute', right: 14, top: 10, color: '#f5f3ff', fontSize: 26, fontWeight: '300' },
+  chev: { marginLeft: 8, color: '#f5f3ff', fontSize: 26, fontWeight: '300', flexShrink: 0 },
 });

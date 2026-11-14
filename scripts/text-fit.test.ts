@@ -43,11 +43,19 @@ describe('home screen text is never clipped (Dynamic Type)', () => {
     assert.doesNotMatch(app, /allowFontScaling=\{false\}/);
   });
 
-  it('largest accessibility sizes: header wraps, display text is capped so the chip row stays on screen', () => {
+  it('largest accessibility sizes: header wraps, the home screen scrolls, the hero word is not broken', () => {
     assert.match(style(app, 'header'), /flexWrap: 'wrap'/);
+    assert.match(style(app, 'headerRight'), /flexWrap: 'wrap'/);
     assert.match(app, /styles\.title\} maxFontSizeMultiplier=/);
     assert.match(hero, /fontScale > 1\.4/);
     assert.match(hero, /styles\.title\} maxFontSizeMultiplier=/);
-    assert.doesNotMatch(app, /styles\.chipText[^>]*maxFontSizeMultiplier=\{1(\.\d)?\}/); // chips still scale to 2x
+    assert.match(hero, /styles\.textWide/);
+    // Chips keep scaling through AX5 (no 1.x cap). The row scrolls sideways.
+    assert.doesNotMatch(app, /styles\.chipText[^>]*maxFontSizeMultiplier=\{1(\.\d)?\}/);
+    const scroll = app.indexOf('testID="home-scroll"');
+    const chips = app.indexOf('style={styles.catRow}');
+    const player = app.indexOf('testID="player"');
+    assert.ok(scroll > 0 && scroll < chips && chips < player, 'chip row scrolls inside home, above the pinned player');
+    assert.match(app, /nestedScrollEnabled/);
   });
 });
