@@ -1,0 +1,15 @@
+added UI test target LullaQATests to /Users/runner/work/sim-qa-runner/sim-qa-runner/ios/LullaSleepSounds.xcodeproj
+LullaQATests Release: PRODUCT_NAME=LullaQATests TEST_TARGET_NAME=LullaSleepSounds
+LullaQATests Debug: PRODUCT_NAME=LullaQATests TEST_TARGET_NAME=LullaSleepSounds
+updated scheme /Users/runner/work/sim-qa-runner/sim-qa-runner/ios/LullaSleepSounds.xcodeproj/xcshareddata/xcschemes/LullaSleepSounds.xcscheme
+storekit reference: ../../storekit/Lulla.storekit in LaunchAction and TestAction, plus test-target resource
+66:      <StoreKitConfigurationFileReference
+67-         identifier = "../../storekit/Lulla.storekit">
+68:      </StoreKitConfigurationFileReference>
+69-   </TestAction>
+--
+90:      <StoreKitConfigurationFileReference
+91-         identifier = "../../storekit/Lulla.storekit">
+92:      </StoreKitConfigurationFileReference>
+93-   </LaunchAction>
+scheme has the UI test host

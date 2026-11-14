@@ -1,0 +1,4 @@
+13:42:33 device: iPhone 17 Pro (98A0BFA3-CEC3-4FD6-9916-5A2149774DBF) (Booted) 
+13:42:34 app: /Users/runner/work/sim-qa-runner/sim-qa-runner/ios/DerivedData/Build/Products/Release-iphonesimulator/LullaSleepSounds.app
+13:43:14 storekit copy: no team id
+13:45:50 xcodebuild test exit: 0

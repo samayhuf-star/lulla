@@ -1,0 +1,22 @@
+{
+  "steps" : [
+    {
+      "name" : "Paywall shows local StoreKit prices (attempt 1)",
+      "detail" : "monthly $2.99=true yearly $19.99=true 7-day trial=true session=true",
+      "step" : 21,
+      "pass" : true
+    },
+    {
+      "name" : "Monthly purchase through local StoreKit (no sandbox sign-in)",
+      "pass" : true,
+      "detail" : "attempt 1: localSheetShown=false premiumActive=true; local tx lulla_premium_monthly expires in 7.0d",
+      "step" : 22
+    },
+    {
+      "name" : "Restore purchases (Settings row)",
+      "pass" : true,
+      "detail" : "settings closed after tap (no alert, no sign-in); premiumActive=true; local tx lulla_premium_monthly expires in 7.0d",
+      "step" : 23
+    }
+  ]
+}
