@@ -1,0 +1,8 @@
+2026-11-13 20:25:13.113 Df LullaQATests-Runner[46112:1d339] (Foundation) [lulla-qa] SKTestSession from /tmp/lulla-sk/Lulla.storekit
+2026-11-13 20:25:38.487 E  LullaSleepSounds[46978:1e0cb] [com.facebook.react.log:javascript] [QA] plans: lulla_premium_yearly [7 days free, then $19.99/year] trialDays=7 | lulla_premium_monthly [7 days free, then $2.99/month] trialDays=7
+2026-11-13 20:25:46.135 Df LullaQATests-Runner[46112:1d339] (Foundation) [lulla-qa] step 21 PASS Paywall shows local StoreKit prices (attempt 1): monthly $2.99=true yearly $19.99=true 7-day trial=true session=true
+2026-11-13 20:25:47.065 E  LullaSleepSounds[46978:1e0cb] [com.facebook.react.log:javascript] [QA] buy lulla_premium_monthly: purchased
+2026-11-13 20:25:54.508 Df LullaQATests-Runner[46112:1d339] (Foundation) [lulla-qa] step 22 PASS Monthly purchase through local StoreKit (no sandbox sign-in): attempt 1: localSheetShown=false premiumActive=true; local tx lulla_premium_monthly expires in 7.0d
+2026-11-13 20:25:58.983 E  LullaSleepSounds[46978:1e0cb] [com.facebook.react.log:javascript] [QA] restore: start
+2026-11-13 20:25:59.145 E  LullaSleepSounds[46978:1e0cb] [com.facebook.react.log:javascript] [QA] restore: entitled true
+2026-11-13 20:26:16.160 Df LullaQATests-Runner[46112:1d339] (Foundation) [lulla-qa] step 23 PASS Restore purchases (Settings row): settings closed after tap (no alert, no sign-in); premiumActive=true; local tx lulla_premium_monthly expires in 7.0d

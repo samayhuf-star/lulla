@@ -1,0 +1,19 @@
+20:23:03 device: iPhone 17 Pro (98A0BFA3-CEC3-4FD6-9916-5A2149774DBF) (Booted) 
+20:23:03 app: /Users/runner/work/sim-qa-runner/sim-qa-runner/ios/DerivedData/Build/Products/Release-iphonesimulator/LullaSleepSounds.app
+20:23:17 content_size set: large
+20:23:17 content_size now: large
+20:23:32 shot 31-chips-default
+20:23:33 content_size set: extra-extra-extra-large
+20:23:33 content_size now: extra-extra-extra-large
+20:23:47 shot 33-chips-xxxl
+20:23:48 content_size set: accessibility-extra-extra-extra-large
+20:23:48 content_size now: accessibility-extra-extra-extra-large
+20:24:03 shot 32-chips-ax-xxxl
+20:24:04 content_size set: large
+20:24:04 content_size now: large
+20:24:18 shot 34-chips-default-again
+20:24:21 device: iPhone 17 Pro (98A0BFA3-CEC3-4FD6-9916-5A2149774DBF) (Booted) 
+20:24:22 app: /Users/runner/work/sim-qa-runner/sim-qa-runner/ios/DerivedData/Build/Products/Release-iphonesimulator/LullaSleepSounds.app
+20:24:36 storekit copy: no team id
+20:26:19 xcodebuild test exit: 0
+20:26:28 flow-b9 done

@@ -1,0 +1,35 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "98A0BFA3-CEC3-4FD6-9916-5A2149774DBF",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "A8B18AF0-D887-4AB3-90A8-60E17D64BDE2.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "23-restore-success_0_9A36DF5B-F3E8-4932-A66D-3574695B68FB.png",
+        "timestamp" : 1794601576.181
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "98A0BFA3-CEC3-4FD6-9916-5A2149774DBF",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "200C3E26-FAF6-47D4-B394-5485D1F831D2.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "22-purchase-success_0_D08DB5CB-F8AA-4FC1-8035-FDAC300AD590.png",
+        "timestamp" : 1794601555.054
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "98A0BFA3-CEC3-4FD6-9916-5A2149774DBF",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "76913E42-C9EE-407E-8BF8-C0A84A355101.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "21-paywall_0_5F25BA05-E2F1-4767-ADBD-ACC154335DFA.png",
+        "timestamp" : 1794601546.64
+      }
+    ],
+    "testIdentifier" : "SimQATests/testPurchaseAndRestore()",
+    "testIdentifierURL" : "test://com.apple.xcode/LullaSleepSounds/LullaQATests/SimQATests/testPurchaseAndRestore"
+  }
+]

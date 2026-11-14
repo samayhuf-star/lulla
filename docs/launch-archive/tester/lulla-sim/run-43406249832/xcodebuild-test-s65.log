@@ -1,0 +1,58 @@
+Command line invocation:
+    /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/xcodebuild test-without-building -workspace ios/LullaSleepSounds.xcworkspace -scheme LullaSleepSounds -configuration Release -destination "platform=iOS Simulator,id=2EC39308-68AF-472C-B6B1-76D1CBE5792D" -derivedDataPath /Users/runner/work/sim-qa-runner/sim-qa-runner/ios/DerivedData -resultBundlePath /tmp/sim-qa/host-s65.xcresult "-only-testing:LullaQATests/SimQATests/testHoldAppForShellFlow"
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  OpenIAP: https://github.com/hyodotdev/openiap.git @ 4.0.9
+
+Writing result bundle at path:
+	/tmp/sim-qa/host-s65.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:2EC39308-68AF-472C-B6B1-76D1CBE5792D, OS:26.5, name:QA 6.5 iPhone-11-Pro-Max }
+{ platform:iOS Simulator, arch:x86_64, id:2EC39308-68AF-472C-B6B1-76D1CBE5792D, OS:26.5, name:QA 6.5 iPhone-11-Pro-Max }
+2026-11-13 11:05:18.174642+0000 LullaQATests-Runner[22751:311534] [Default] Running tests...
+2026-11-13 11:05:18.337510+0000 LullaQATests-Runner[22751:311749] [General] Failed to send CA Event for app launch measurements for ca_event_type: 0 event_name: com.apple.app_launch_measurement.FirstFramePresentationMetric
+2026-11-13 11:05:18.382601+0000 LullaQATests-Runner[22751:311748] [General] Failed to send CA Event for app launch measurements for ca_event_type: 1 event_name: com.apple.app_launch_measurement.ExtendedLaunchMetrics
+objc[22751]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x106a88310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10696c398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-13 11:05:25.540.
+Test Suite 'LullaQATests.xctest' started at 2026-11-13 11:05:25.541.
+Test Suite 'SimQATests' started at 2026-11-13 11:05:25.541.
+Test Case '-[LullaQATests.SimQATests testHoldAppForShellFlow]' started.
+    t =     0.00s Start Test at 2026-11-13 11:05:25.543
+    t =     0.95s Set Up
+2026-11-13 11:05:27.382881+0000 LullaQATests-Runner[22751:311534] [SKTestSession] Error saving configuration file: Error Domain=SKInternalErrorDomain Code=3 "(null)"
+2026-11-13 11:05:27.386036+0000 LullaQATests-Runner[22751:311534] [SKTestSession] Error clearing overrides: Error Domain=SKInternalErrorDomain Code=3 "(null)"
+2026-11-13 11:05:27.390194+0000 LullaQATests-Runner[22751:311534] [SKTestSession] Error setting value to 1 for identifier 2 for com.samay.lulla: Error Domain=SKInternalErrorDomain Code=3 "(null)"
+2026-11-13 11:05:27.393376+0000 LullaQATests-Runner[22751:311534] [SKTestSession] Error deleting all transactions: Error Domain=SKInternalErrorDomain Code=3 "(null)"
+2026-11-13 11:05:27.396074+0000 LullaQATests-Runner[22751:311534] [lulla-qa] SKTestSession from /tmp/Lulla.storekit
+    t =     1.86s Open com.samay.lulla
+    t =     1.86s     Launch com.samay.lulla
+2026-11-13 11:05:29.662 xcodebuild[20566:305870] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-11-13 11:05:29.662 xcodebuild[20566:305870] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     9.91s         Setting up automation session
+    t =    11.84s         Wait for com.samay.lulla to idle
+2026-11-13 11:05:42.115829+0000 LullaQATests-Runner[22751:311534] [lulla-qa] ready, storekit=true
+
+2026-11-13 11:08:19.200941+0000 LullaQATests-Runner[22751:311534] [lulla-qa] shell flow finished: true
+    t =   177.45s Tear Down
+Test Case '-[LullaQATests.SimQATests testHoldAppForShellFlow]' passed (180.104 seconds).
+Test Suite 'SimQATests' passed at 2026-11-13 11:08:25.649.
+	 Executed 1 test, with 0 failures (0 unexpected) in 180.104 (180.108) seconds
+Test Suite 'LullaQATests.xctest' passed at 2026-11-13 11:08:25.650.
+	 Executed 1 test, with 0 failures (0 unexpected) in 180.104 (180.109) seconds
+Test Suite 'Selected tests' passed at 2026-11-13 11:08:25.652.
+	 Executed 1 test, with 0 failures (0 unexpected) in 180.104 (180.112) seconds
+2026-11-13 11:08:32.107 xcodebuild[20566:305870] [MT] IDETestOperationsObserverDebug: 204.263 elapsed -- Testing started completed.
+2026-11-13 11:08:32.107 xcodebuild[20566:305870] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-13 11:08:32.107 xcodebuild[20566:305870] [MT] IDETestOperationsObserverDebug: 204.263 sec, +204.263 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/sim-qa/host-s65.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

@@ -1,0 +1,270 @@
+Command line invocation:
+    /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/xcodebuild test-without-building -workspace ios/LullaSleepSounds.xcworkspace -scheme LullaSleepSounds -configuration Release -destination "platform=iOS Simulator,id=98A0BFA3-CEC3-4FD6-9916-5A2149774DBF" -derivedDataPath /Users/runner/work/sim-qa-runner/sim-qa-runner/ios/DerivedData -resultBundlePath /tmp/sim-qa/iap.xcresult "-only-testing:LullaQATests/SimQATests/testPurchaseAndRestore"
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  OpenIAP: https://github.com/hyodotdev/openiap.git @ 4.0.9
+
+Writing result bundle at path:
+	/tmp/sim-qa/iap.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:98A0BFA3-CEC3-4FD6-9916-5A2149774DBF, OS:26.2, name:iPhone 17 Pro }
+{ platform:iOS Simulator, arch:x86_64, id:98A0BFA3-CEC3-4FD6-9916-5A2149774DBF, OS:26.2, name:iPhone 17 Pro }
+2026-11-13 20:25:01.017311+0000 LullaQATests-Runner[46112:119609] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-13 20:25:11.958.
+Test Suite 'LullaQATests.xctest' started at 2026-11-13 20:25:11.959.
+Test Suite 'SimQATests' started at 2026-11-13 20:25:11.959.
+Test Case '-[LullaQATests.SimQATests testPurchaseAndRestore]' started.
+    t =     0.00s Start Test at 2026-11-13 20:25:11.961
+    t =     1.06s Set Up
+2026-11-13 20:25:13.646384+0000 LullaQATests-Runner[46112:119609] [lulla-qa] SKTestSession from /tmp/lulla-sk/Lulla.storekit
+    t =     1.69s Open com.samay.lulla
+    t =     1.69s     Launch com.samay.lulla
+2026-11-13 20:25:15.190 xcodebuild[45465:117778] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-11-13 20:25:15.190 xcodebuild[45465:117778] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     9.47s         Setting up automation session
+    t =    12.10s         Wait for com.samay.lulla to idle
+    t =    19.50s Opening default application for URL lulla://qa/overlay/off
+    t =    19.67s     Wait for com.samay.lulla to idle
+    t =    20.11s Waiting 0.4s for "Open" Button to exist
+    t =    20.52s     Checking existence of `"Open" Button`
+    t =    20.76s Collecting debug information to assist test failure triage
+    t =    20.76s     Requesting snapshot of accessibility hierarchy for app with pid 1464
+    t =    20.88s Checking existence of `"Open" Button`
+    t =    20.92s Checking existence of `Any (First Match)`
+    t =    20.98s Waiting 0.4s for "Open" Button to exist
+    t =    21.38s     Checking existence of `"Open" Button`
+    t =    21.64s Collecting debug information to assist test failure triage
+    t =    21.64s     Requesting snapshot of accessibility hierarchy for app with pid 46978
+    t =    21.72s Checking existence of `"Open" Button`
+    t =    21.84s Checking existence of `Any (First Match)`
+    t =    22.01s Waiting 0.4s for "Open" Button to exist
+    t =    22.42s     Checking existence of `"Open" Button`
+    t =    22.46s Collecting debug information to assist test failure triage
+    t =    22.46s     Requesting snapshot of accessibility hierarchy for app with pid 1464
+    t =    22.53s Checking existence of `"Open" Button`
+    t =    22.58s Checking existence of `Any (First Match)`
+    t =    22.63s Waiting 0.4s for "Open" Button to exist
+    t =    23.04s     Checking existence of `"Open" Button`
+    t =    23.21s Collecting debug information to assist test failure triage
+    t =    23.21s     Requesting snapshot of accessibility hierarchy for app with pid 46978
+    t =    23.30s Checking existence of `"Open" Button`
+    t =    23.41s Checking existence of `Any (First Match)`
+    t =    23.56s Waiting 0.4s for "Open" Button to exist
+    t =    23.97s     Checking existence of `"Open" Button`
+    t =    24.01s Collecting debug information to assist test failure triage
+    t =    24.01s     Requesting snapshot of accessibility hierarchy for app with pid 1464
+    t =    24.07s Checking existence of `"Open" Button`
+    t =    24.12s Checking existence of `Any (First Match)`
+    t =    24.17s Waiting 0.1s for "Open" Button to exist
+    t =    24.22s     Checking existence of `"Open" Button`
+    t =    24.38s Collecting debug information to assist test failure triage
+    t =    24.38s     Requesting snapshot of accessibility hierarchy for app with pid 46978
+    t =    24.46s Checking existence of `"Open" Button`
+    t =    24.57s Checking existence of `Any (First Match)`
+    t =    24.72s Wait for com.samay.lulla to become Running Foreground
+    t =    26.73s Opening default application for URL lulla://qa/paywall
+    t =    26.77s     Wait for com.samay.lulla to idle
+    t =    27.19s Waiting 0.4s for "Open" Button to exist
+    t =    27.59s     Checking existence of `"Open" Button`
+    t =    27.64s Collecting debug information to assist test failure triage
+    t =    27.64s     Requesting snapshot of accessibility hierarchy for app with pid 1464
+    t =    27.69s Checking existence of `"Open" Button`
+    t =    27.73s Checking existence of `Any (First Match)`
+    t =    27.79s Waiting 0.4s for "Open" Button to exist
+    t =    28.20s     Checking existence of `"Open" Button`
+    t =    28.24s Collecting debug information to assist test failure triage
+    t =    28.24s     Requesting snapshot of accessibility hierarchy for app with pid 46978
+    t =    28.26s Checking existence of `"Open" Button`
+    t =    28.29s Checking existence of `Any (First Match)`
+    t =    28.32s Waiting 0.4s for "Open" Button to exist
+    t =    28.73s     Checking existence of `"Open" Button`
+    t =    28.77s Collecting debug information to assist test failure triage
+    t =    28.77s     Requesting snapshot of accessibility hierarchy for app with pid 1464
+    t =    28.82s Checking existence of `"Open" Button`
+    t =    28.86s Checking existence of `Any (First Match)`
+    t =    28.91s Waiting 0.4s for "Open" Button to exist
+    t =    29.31s     Checking existence of `"Open" Button`
+    t =    29.35s Collecting debug information to assist test failure triage
+    t =    29.35s     Requesting snapshot of accessibility hierarchy for app with pid 46978
+    t =    29.37s Checking existence of `"Open" Button`
+    t =    29.40s Checking existence of `Any (First Match)`
+    t =    29.44s Waiting 0.4s for "Open" Button to exist
+    t =    29.85s     Checking existence of `"Open" Button`
+    t =    29.90s Collecting debug information to assist test failure triage
+    t =    29.90s     Requesting snapshot of accessibility hierarchy for app with pid 1464
+    t =    29.96s Checking existence of `"Open" Button`
+    t =    30.01s Checking existence of `Any (First Match)`
+    t =    30.06s Waiting 0.4s for "Open" Button to exist
+    t =    30.46s     Checking existence of `"Open" Button`
+    t =    30.50s Collecting debug information to assist test failure triage
+    t =    30.50s     Requesting snapshot of accessibility hierarchy for app with pid 46978
+    t =    30.52s Checking existence of `"Open" Button`
+    t =    30.55s Checking existence of `Any (First Match)`
+    t =    30.59s Waiting 0.4s for "Open" Button to exist
+    t =    30.99s     Checking existence of `"Open" Button`
+    t =    31.04s Collecting debug information to assist test failure triage
+    t =    31.04s     Requesting snapshot of accessibility hierarchy for app with pid 1464
+    t =    31.10s Checking existence of `"Open" Button`
+    t =    31.14s Checking existence of `Any (First Match)`
+    t =    31.18s Waiting 0.1s for "Open" Button to exist
+    t =    31.24s     Checking existence of `"Open" Button`
+    t =    31.27s Collecting debug information to assist test failure triage
+    t =    31.27s     Requesting snapshot of accessibility hierarchy for app with pid 46978
+    t =    31.29s Checking existence of `"Open" Button`
+    t =    31.31s Checking existence of `Any (First Match)`
+    t =    31.35s Wait for com.samay.lulla to become Running Foreground
+    t =    33.35s Waiting 40.0s for Any (First Match) to exist
+    t =    34.43s     Checking `Expect predicate `existsNoRetry == 1` for object Any (First Match)`
+    t =    34.43s         Checking existence of `Any (First Match)`
+    t =    34.46s Checking existence of `Any (First Match)`
+    t =    34.48s Checking existence of `Any (First Match)`
+    t =    34.68s Added attachment named '21-paywall'
+    t =    34.68s Checking existence of `Any (First Match)`
+    t =    34.71s Checking existence of `Any (First Match)`
+2026-11-13 20:25:46.685409+0000 LullaQATests-Runner[46112:119609] [lulla-qa] step 21 PASS Paywall shows local StoreKit prices (attempt 1): monthly $2.99=true yearly $19.99=true 7-day trial=true session=true
+    t =    34.73s Find the Any (First Match)
+    t =    34.79s Tap "7 days free, then $2.99/month" Other
+    t =    34.79s     Wait for com.samay.lulla to idle
+    t =    34.79s     Find the "7 days free, then $2.99/month" Other
+    t =    34.82s     Check for interrupting elements affecting "7 days free, then $2.99/month" Other
+    t =    34.86s     Synthesize event
+    t =    35.28s     Wait for com.samay.lulla to idle
+    t =    35.29s Checking existence of `Any (First Match)`
+    t =    35.34s Checking existence of `Any (First Match)`
+    t =    35.40s Checking existence of `Any (First Match)`
+    t =    35.50s Checking existence of `Any (First Match)`
+    t =    35.59s Checking existence of `Any (First Match)`
+    t =    35.69s Checking existence of `Any (First Match)`
+    t =    35.74s Checking existence of `"Subscribe" Button`
+    t =    36.09s Checking existence of `"Purchase" Button`
+    t =    36.32s Checking existence of `"Buy" Button`
+    t =    36.52s Checking existence of `"Confirm" Button`
+    t =    36.67s Checking existence of `"Start Free Trial" Button`
+    t =    36.85s Checking existence of `"Try It Free" Button`
+    t =    37.05s Checking existence of `"Subscribe" Button`
+    t =    37.10s Checking existence of `"Purchase" Button`
+    t =    37.14s Checking existence of `"Buy" Button`
+    t =    37.17s Checking existence of `"Confirm" Button`
+    t =    37.23s Checking existence of `"Start Free Trial" Button`
+    t =    37.28s Checking existence of `"Try It Free" Button`
+    t =    37.32s Checking existence of `Alert (First Match)`
+    t =    37.54s Checking existence of `Any (First Match)`
+    t =    37.67s Checking existence of `"Close" Button`
+    t =    37.82s Checking existence of `Alert (First Match)`
+    t =    39.95s Waiting 8.0s for "Settings" Button to exist
+    t =    41.01s     Checking `Expect predicate `existsNoRetry == 1` for object "Settings" Button`
+    t =    41.01s         Checking existence of `"Settings" Button`
+    t =    41.04s Find the "Settings" Button
+    t =    41.09s Tap "Settings" Button
+    t =    41.09s     Wait for com.samay.lulla to idle
+    t =    41.09s     Find the "Settings" Button
+    t =    41.11s     Check for interrupting elements affecting "Settings" Button
+    t =    41.16s     Synthesize event
+    t =    41.47s     Wait for com.samay.lulla to idle
+    t =    41.80s Waiting 12.0s for Any (First Match) to exist
+    t =    42.84s     Checking `Expect predicate `existsNoRetry == 1` for object Any (First Match)`
+    t =    42.85s         Checking existence of `Any (First Match)`
+    t =    43.09s Added attachment named '22-purchase-success'
+2026-11-13 20:25:55.062569+0000 LullaQATests-Runner[46112:119609] [lulla-qa] step 22 PASS Monthly purchase through local StoreKit (no sandbox sign-in): attempt 1: localSheetShown=false premiumActive=true; local tx lulla_premium_monthly expires in 7.0d
+    t =    43.10s Checking existence of `Any (First Match)`
+    t =    43.15s Waiting 10.0s for Any (First Match) to exist
+    t =    44.21s     Checking `Expect predicate `existsNoRetry == 1` for object Any (First Match)`
+    t =    44.21s         Checking existence of `Any (First Match)`
+    t =    44.23s Find the Any (First Match)
+    t =    44.29s Tap "Restore purchases" Button
+    t =    44.29s     Wait for com.samay.lulla to idle
+    t =    44.29s     Find the "Restore purchases" Button
+    t =    44.31s     Check for interrupting elements affecting "Restore purchases" Button
+    t =    44.38s     Synthesize event
+    t =    44.67s     Wait for com.samay.lulla to idle
+    t =    44.68s Checking existence of `Any (First Match)`
+    t =    44.74s Checking existence of `Any (First Match)`
+    t =    44.79s Checking existence of `Any (First Match)`
+    t =    44.84s Checking existence of `Any (First Match)`
+    t =    45.00s Checking existence of `Any (First Match)`
+    t =    45.15s Checking existence of `Any (First Match)`
+    t =    45.30s Checking existence of `Alert (First Match)`
+    t =    45.41s Checking existence of `Any (First Match)`
+    t =    47.53s Opening default application for URL lulla://qa/restore
+    t =    47.62s     Wait for com.samay.lulla to idle
+    t =    48.07s Waiting 0.4s for "Open" Button to exist
+    t =    48.48s     Checking existence of `"Open" Button`
+    t =    48.52s Collecting debug information to assist test failure triage
+    t =    48.52s     Requesting snapshot of accessibility hierarchy for app with pid 1464
+    t =    48.60s Checking existence of `"Open" Button`
+    t =    48.66s Checking existence of `Any (First Match)`
+    t =    48.72s Waiting 0.4s for "Open" Button to exist
+    t =    49.12s     Checking existence of `"Open" Button`
+    t =    49.54s Collecting debug information to assist test failure triage
+    t =    49.54s     Requesting snapshot of accessibility hierarchy for app with pid 46978
+    t =    49.61s Checking existence of `"Open" Button`
+    t =    49.89s Checking existence of `Any (First Match)`
+    t =    50.04s Waiting 0.4s for "Open" Button to exist
+    t =    50.44s     Checking existence of `"Open" Button`
+    t =    50.50s Collecting debug information to assist test failure triage
+    t =    50.50s     Requesting snapshot of accessibility hierarchy for app with pid 1464
+    t =    50.57s Checking existence of `"Open" Button`
+    t =    50.62s Checking existence of `Any (First Match)`
+    t =    50.68s Waiting 0.4s for "Open" Button to exist
+    t =    51.09s     Checking existence of `"Open" Button`
+    t =    51.23s Collecting debug information to assist test failure triage
+    t =    51.23s     Requesting snapshot of accessibility hierarchy for app with pid 46978
+    t =    51.29s Checking existence of `"Open" Button`
+    t =    51.40s Checking existence of `Any (First Match)`
+    t =    51.53s Waiting 0.4s for "Open" Button to exist
+    t =    51.93s     Checking existence of `"Open" Button`
+    t =    51.98s Collecting debug information to assist test failure triage
+    t =    51.98s     Requesting snapshot of accessibility hierarchy for app with pid 1464
+    t =    52.04s Checking existence of `"Open" Button`
+    t =    52.09s Checking existence of `Any (First Match)`
+    t =    52.15s Waiting 0.1s for "Open" Button to exist
+    t =    52.20s     Checking existence of `"Open" Button`
+    t =    52.61s Collecting debug information to assist test failure triage
+    t =    52.61s     Requesting snapshot of accessibility hierarchy for app with pid 46978
+    t =    52.71s Checking existence of `"Open" Button`
+    t =    52.88s Checking existence of `Any (First Match)`
+    t =    53.05s Wait for com.samay.lulla to become Running Foreground
+    t =    61.07s Waiting 8.0s for "Settings" Button to exist
+    t =    62.11s     Checking `Expect predicate `existsNoRetry == 1` for object "Settings" Button`
+    t =    62.11s         Checking existence of `"Settings" Button`
+    t =    62.13s Find the "Settings" Button
+    t =    62.17s Tap "Settings" Button
+    t =    62.17s     Wait for com.samay.lulla to idle
+    t =    62.17s     Find the "Settings" Button
+    t =    62.19s     Check for interrupting elements affecting "Settings" Button
+    t =    62.25s     Synthesize event
+    t =    62.55s     Wait for com.samay.lulla to idle
+    t =    62.91s Waiting 12.0s for Any (First Match) to exist
+    t =    63.96s     Checking `Expect predicate `existsNoRetry == 1` for object Any (First Match)`
+    t =    63.96s         Checking existence of `Any (First Match)`
+    t =    64.22s Added attachment named '23-restore-success'
+    t =    64.22s Checking existence of `Any (First Match)`
+    t =    64.29s Checking existence of `Any (First Match)`
+    t =    64.36s Checking existence of `Any (First Match)`
+    t =    64.40s Checking existence of `Any (First Match)`
+    t =    64.55s Checking existence of `Any (First Match)`
+    t =    64.65s Checking existence of `Any (First Match)`
+2026-11-13 20:26:16.725122+0000 LullaQATests-Runner[46112:119609] [lulla-qa] step 23 PASS Restore purchases (Settings row): settings closed after tap (no alert, no sign-in); premiumActive=true; local tx lulla_premium_monthly expires in 7.0d
+    t =    64.77s Tear Down
+Test Case '-[LullaQATests.SimQATests testPurchaseAndRestore]' passed (65.229 seconds).
+Test Suite 'SimQATests' passed at 2026-11-13 20:26:17.191.
+	 Executed 1 test, with 0 failures (0 unexpected) in 65.229 (65.232) seconds
+Test Suite 'LullaQATests.xctest' passed at 2026-11-13 20:26:17.192.
+	 Executed 1 test, with 0 failures (0 unexpected) in 65.229 (65.233) seconds
+Test Suite 'Selected tests' passed at 2026-11-13 20:26:17.193.
+	 Executed 1 test, with 0 failures (0 unexpected) in 65.229 (65.235) seconds
+2026-11-13 20:26:18.678 xcodebuild[45465:117778] [MT] IDETestOperationsObserverDebug: 89.917 elapsed -- Testing started completed.
+2026-11-13 20:26:18.678 xcodebuild[45465:117778] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-13 20:26:18.678 xcodebuild[45465:117778] [MT] IDETestOperationsObserverDebug: 89.917 sec, +89.917 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/sim-qa/iap.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

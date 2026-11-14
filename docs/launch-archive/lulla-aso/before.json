@@ -1,0 +1,60 @@
+{
+  "appId": "6833056218",
+  "label": "Lulla",
+  "app_status": 200,
+  "bundle": "com.samay.lulla",
+  "name": "Lulla - Sleep Sounds",
+  "primaryLocale": "en-US",
+  "versions": [
+    {
+      "id": "18c8454a-4685-4e4e-8b77-bcf619e18831",
+      "version": "1.0.0",
+      "state": "PREPARE_FOR_SUBMISSION",
+      "releaseType": "AFTER_APPROVAL",
+      "copyright": "2026 Samay Vashsht",
+      "localizations": [
+        {
+          "id": "53e890c1-43fb-4895-8481-49a11c18cc31",
+          "locale": "en-US",
+          "description": "Fall asleep to calm sound with Lulla. Pick a sound, layer your own mix, set a sleep timer and drift off.\n\nFREE FOREVER, NO TIME LIMIT\nSeven sounds are free for everyone, with no time limit and no subscription:\n- Rain\n- Slow Ocean Waves\n- Forest\n- Fan\n- White Noise\n- Brown Noise\n- 432 Hz Deep Sleep\nMix them, use the sleep timer and keep them playing with the screen off, all for free.\n\nLULLA PREMIUM\nPremium unlocks the other 36 sounds, including four more in the Frequencies collection. You can preview premium sounds for 3 minutes before you decide.\n- Rain: deep rain on roof, rain on tent, window, umbrella and puddle, distant thunder, snow\n- Water: lake, creek, waterfall, underwater, drip\n- Nature: wind, wind and leaves, night crickets, cave, grassland, farm\n- Warmth and hum: crackling fireplace, air conditioner, airplane cabin\n- Calm: heartbeat, womb, singing bowls, Om drone\n- Lullabies: Brahms, Schubert and Twinkle Twinkle, plus a soft ambient pad\n- Pink and green noise\n- Delta Waves binaural beat (use headphones)\n\nFREQUENCIES\nA collection of warm, slow synth pads with soft tones: 432 Hz Deep Sleep (free), 528 Hz Calm, 963 Hz Night, 432+528 Blend and Deep Drone. Original music made for Lulla, mastered as long seamless loops.\n\nMAKE IT YOURS\n- Layer several sounds and set each volume\n- Sleep timer from 10 minutes to 4 hours with a gentle 60 second fade-out, or All night to keep playing until you stop\n- Keeps playing with the screen off; pause from the lock screen and every sound fades out together\n\nNo account, no ads and no tracking.\n\nSUBSCRIPTION\nLulla Premium is an auto-renewing subscription, billed monthly or yearly at the price shown in the app before you buy. Payment is charged to your Apple ID at purchase. The subscription renews unless cancelled at least 24 hours before the end of the period. Manage or cancel it in your Apple ID settings. Already subscribed on another device? Tap Restore purchases in Settings or on the subscription screen.\n\nTerms of Use: https://samayhuf-star.github.io/app-legal/lulla/terms.html\nPrivacy Policy: https://samayhuf-star.github.io/app-legal/lulla/privacy.html",
+          "keywords": "sleep,white noise,rain,brown noise,lullaby,432hz,528hz,frequency,relax,calm,ocean,fan,timer,binaural",
+          "promotionalText": "Seven calm sounds free forever, plus the new Frequencies collection of warm 432, 528 and 963 Hz pads. Layer your mix and set a timer up to 4 hours or All night.",
+          "whatsNew": null,
+          "supportUrl": "https://samayhuf-star.github.io/app-legal/lulla/support.html",
+          "marketingUrl": null
+        }
+      ]
+    }
+  ],
+  "appInfos": [
+    {
+      "id": "6b4e37eb-8d2d-4fed-a068-6491e0b5c3db",
+      "state": "PREPARE_FOR_SUBMISSION",
+      "ageRating": {
+        "appStoreState": "PREPARE_FOR_SUBMISSION",
+        "state": "PREPARE_FOR_SUBMISSION",
+        "appStoreAgeRating": null,
+        "australiaAgeRating": null,
+        "brazilAgeRating": null,
+        "brazilAgeRatingV2": null,
+        "franceAgeRating": null,
+        "koreaAgeRating": null
+      },
+      "primaryCategory": "LIFESTYLE",
+      "secondaryCategory": "MUSIC",
+      "primarySubcategoryOne": null,
+      "primarySubcategoryTwo": null,
+      "secondarySubcategoryOne": null,
+      "secondarySubcategoryTwo": null,
+      "localizations": [
+        {
+          "id": "e301bdd0-7d43-478a-b02b-3a6aa5fbe905",
+          "locale": "en-US",
+          "name": "Lulla - Sleep Sounds",
+          "subtitle": "Calm sounds to fall asleep",
+          "privacyPolicyUrl": "https://samayhuf-star.github.io/app-legal/lulla/privacy.html"
+        }
+      ]
+    }
+  ]
+}

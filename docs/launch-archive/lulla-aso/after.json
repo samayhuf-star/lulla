@@ -1,0 +1,130 @@
+{
+  "intended": {
+    "name": "Lulla - Sleep Sounds",
+    "name_len": 20,
+    "subtitle": "White Noise, Rain & Lullabies",
+    "subtitle_len": 29,
+    "keywords": "brown,pink,fan,nature,relax,ocean,music,timer,baby,deep,machine,forest,thunder,binaural,beats,432hz",
+    "keywords_len": 99,
+    "promo": "Seven sounds free forever. Mix white noise, rain and Frequencies, set a 2, 3, 4 hour or All night timer. Try Premium 7 days free, then $2.99/month or $19.99/year.",
+    "promo_len": 162,
+    "description": "Fall asleep to white noise, rain, lullabies and gentle frequencies, all on your iPhone.\n\nSeven sounds are free forever. Layer a mix, set a timer for 2, 3 or 4 hours or All night, and keep playing with the screen off.\n\nTry Premium free for 7 days, then $2.99 a month or $19.99 a year. Cancel anytime.\n\nFREE FOREVER, NO TIME LIMIT\nSeven sounds are free for everyone, with no time limit and no subscription:\n- Rain\n- Slow Ocean Waves\n- Forest\n- Fan\n- White Noise\n- Brown Noise\n- 432 Hz Deep Sleep\nMix them, use the sleep timer and keep them playing with the screen off, all for free.\n\nLULLA PREMIUM\nPremium unlocks the other 36 sounds, including four more in the Frequencies collection. You can preview premium sounds for 3 minutes before you decide.\n- Rain: deep rain on roof, rain on tent, window, umbrella and puddle, distant thunder, snow\n- Water: lake, creek, waterfall, underwater, drip\n- Nature: wind, wind and leaves, night crickets, cave, grassland, farm\n- Warmth and hum: crackling fireplace, air conditioner, airplane cabin\n- Calm: heartbeat, womb, singing bowls, Om drone\n- Lullabies: Brahms, Schubert and Twinkle Twinkle, plus a soft ambient pad\n- Pink and green noise\n- Delta Waves binaural beat (use headphones)\n\nFREQUENCIES\nA collection of warm, slow synth pads with soft tones: 432 Hz Deep Sleep (free), 528 Hz Calm, 963 Hz Night, 432+528 Blend and Deep Drone. Original music made for Lulla, mastered as long seamless loops.\n\nMAKE IT YOURS\n- Layer several sounds and set each volume\n- Sleep timer from 10 minutes to 4 hours with a gentle 60 second fade-out, or All night to keep playing until you stop\n- Keeps playing with the screen off; pause from the lock screen and every sound fades out together\n\nNo account, no ads and no tracking.\n\nSUBSCRIPTION\nLulla Premium is an auto-renewing subscription, billed monthly or yearly at the price shown in the app before you buy. If you are eligible, the subscription starts with a 7-day free trial; the app shows the trial on the plan button only when it applies to you. Payment is charged to your Apple ID when the trial ends, or at purchase if there is no trial. The subscription renews unless cancelled at least 24 hours before the end of the trial or period. Manage or cancel it in your Apple ID settings. Already subscribed on another device? Tap Restore purchases in Settings or on the subscription screen.\n\nTerms of Use: https://samayhuf-star.github.io/app-legal/lulla/terms.html\nPrivacy Policy: https://samayhuf-star.github.io/app-legal/lulla/privacy.html",
+    "desc_len": 2519,
+    "primary": "HEALTH_AND_FITNESS",
+    "secondary": "LIFESTYLE"
+  },
+  "writes": [
+    {
+      "step": "version localization (desc/keywords/promo)",
+      "status": 200,
+      "error": null
+    },
+    {
+      "step": "app info localization (name/subtitle)",
+      "status": 200,
+      "error": null
+    },
+    {
+      "step": "categories HEALTH_AND_FITNESS / LIFESTYLE",
+      "status": 200,
+      "error": null
+    }
+  ],
+  "readback": {
+    "version": {
+      "locale": "en-US",
+      "keywords": "brown,pink,fan,nature,relax,ocean,music,timer,baby,deep,machine,forest,thunder,binaural,beats,432hz",
+      "keywords_len": 99,
+      "promotionalText": "Seven sounds free forever. Mix white noise, rain and Frequencies, set a 2, 3, 4 hour or All night timer. Try Premium 7 days free, then $2.99/month or $19.99/year.",
+      "promo_len": 162,
+      "description": "Fall asleep to white noise, rain, lullabies and gentle frequencies, all on your iPhone.\n\nSeven sounds are free forever. Layer a mix, set a timer for 2, 3 or 4 hours or All night, and keep playing with the screen off.\n\nTry Premium free for 7 days, then $2.99 a month or $19.99 a year. Cancel anytime.\n\nFREE FOREVER, NO TIME LIMIT\nSeven sounds are free for everyone, with no time limit and no subscription:\n- Rain\n- Slow Ocean Waves\n- Forest\n- Fan\n- White Noise\n- Brown Noise\n- 432 Hz Deep Sleep\nMix them, use the sleep timer and keep them playing with the screen off, all for free.\n\nLULLA PREMIUM\nPremium unlocks the other 36 sounds, including four more in the Frequencies collection. You can preview premium sounds for 3 minutes before you decide.\n- Rain: deep rain on roof, rain on tent, window, umbrella and puddle, distant thunder, snow\n- Water: lake, creek, waterfall, underwater, drip\n- Nature: wind, wind and leaves, night crickets, cave, grassland, farm\n- Warmth and hum: crackling fireplace, air conditioner, airplane cabin\n- Calm: heartbeat, womb, singing bowls, Om drone\n- Lullabies: Brahms, Schubert and Twinkle Twinkle, plus a soft ambient pad\n- Pink and green noise\n- Delta Waves binaural beat (use headphones)\n\nFREQUENCIES\nA collection of warm, slow synth pads with soft tones: 432 Hz Deep Sleep (free), 528 Hz Calm, 963 Hz Night, 432+528 Blend and Deep Drone. Original music made for Lulla, mastered as long seamless loops.\n\nMAKE IT YOURS\n- Layer several sounds and set each volume\n- Sleep timer from 10 minutes to 4 hours with a gentle 60 second fade-out, or All night to keep playing until you stop\n- Keeps playing with the screen off; pause from the lock screen and every sound fades out together\n\nNo account, no ads and no tracking.\n\nSUBSCRIPTION\nLulla Premium is an auto-renewing subscription, billed monthly or yearly at the price shown in the app before you buy. If you are eligible, the subscription starts with a 7-day free trial; the app shows the trial on the plan button only when it applies to you. Payment is charged to your Apple ID when the trial ends, or at purchase if there is no trial. The subscription renews unless cancelled at least 24 hours before the end of the trial or period. Manage or cancel it in your Apple ID settings. Already subscribed on another device? Tap Restore purchases in Settings or on the subscription screen.\n\nTerms of Use: https://samayhuf-star.github.io/app-legal/lulla/terms.html\nPrivacy Policy: https://samayhuf-star.github.io/app-legal/lulla/privacy.html",
+      "desc_len": 2519,
+      "desc_first3": "Fall asleep to white noise, rain, lullabies and gentle frequencies, all on your iPhone.\n\nSeven sounds are free forever. Layer a mix, set a timer for 2, 3 or 4 hours or All night, and keep playing with the screen off.\n\nTry Premium free for 7 days, then $2.99 a month or $19.99 a year. Cancel anytime.",
+      "match_kw": true,
+      "match_promo": true,
+      "match_desc": true,
+      "supportUrl": "https://samayhuf-star.github.io/app-legal/lulla/support.html",
+      "whatsNew": null
+    },
+    "infoLoc": {
+      "locale": "en-US",
+      "name": "Lulla - Sleep Sounds",
+      "name_len": 20,
+      "subtitle": "White Noise, Rain & Lullabies",
+      "subtitle_len": 29,
+      "match_name": true,
+      "match_subtitle": true,
+      "privacyPolicyUrl": "https://samayhuf-star.github.io/app-legal/lulla/privacy.html"
+    },
+    "primary": "HEALTH_AND_FITNESS",
+    "secondary": "LIFESTYLE"
+  },
+  "keyword_skips": [
+    [
+      "528hz",
+      "no-fit",
+      105
+    ],
+    [
+      "asleep",
+      "no-fit",
+      106
+    ],
+    [
+      "fall",
+      "no-fit",
+      104
+    ],
+    [
+      "ambient",
+      "no-fit",
+      107
+    ],
+    [
+      "waves",
+      "no-fit",
+      105
+    ],
+    [
+      "wind",
+      "no-fit",
+      104
+    ],
+    [
+      "soothing",
+      "no-fit",
+      108
+    ],
+    [
+      "night",
+      "no-fit",
+      105
+    ],
+    [
+      "fireplace",
+      "no-fit",
+      109
+    ],
+    [
+      "womb",
+      "no-fit",
+      104
+    ]
+  ],
+  "final": {
+    "name": "Lulla - Sleep Sounds",
+    "name_len": 20,
+    "subtitle": "White Noise, Rain & Lullabies",
+    "subtitle_len": 29,
+    "keywords": "brown,pink,fan,nature,relax,ocean,music,timer,baby,deep,machine,forest,thunder,nap,calm,night,rest",
+    "keywords_len": 98,
+    "promo": "Seven sounds free forever. Mix white noise, rain and Frequencies, set a 2, 3, 4 hour or All night timer. Try Premium 7 days free, then $2.99/month or $19.99/year.",
+    "promo_len": 162,
+    "desc_len": 2519,
+    "primary": "LIFESTYLE",
+    "secondary": "MUSIC",
+    "captions": "/home/box/shared/app-monitor/reports/lulla-aso/captions.json",
+    "promo_or_description_changed": false,
+    "followup_at": "13 Nov 2026, 5:02 PM BDT (Asia/Dhaka)"
+  }
+}

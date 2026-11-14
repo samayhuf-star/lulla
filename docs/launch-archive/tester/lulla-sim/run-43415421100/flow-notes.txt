@@ -1,0 +1,5 @@
+11:38:33 app: /Users/runner/work/sim-qa-runner/sim-qa-runner/ios/DerivedData/Build/Products/Release-iphonesimulator/LullaSleepSounds.app
+11:42:53 StoreKit host ready: storekit=true
+11:50:20 background: start
+11:50:46 background: end
+12:00:02 6.5 host ready

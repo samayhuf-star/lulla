@@ -1,0 +1,37 @@
+[
+ {
+  "step": "version string 1.0 -> 1.0.0 + copyright",
+  "status": 200,
+  "errors": null
+ },
+ {
+  "step": "categories LIFESTYLE / MUSIC",
+  "status": 200,
+  "errors": null
+ },
+ {
+  "step": "en-US version text",
+  "status": 200,
+  "errors": null
+ },
+ {
+  "step": "en-US app info: subtitle + privacy URL",
+  "status": 200,
+  "errors": null
+ },
+ {
+  "step": "review details (create)",
+  "status": 201,
+  "errors": null
+ },
+ {
+  "step": "IAP review note monthly",
+  "status": 200,
+  "errors": null
+ },
+ {
+  "step": "IAP review note yearly",
+  "status": 200,
+  "errors": null
+ }
+]

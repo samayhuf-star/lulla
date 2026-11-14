@@ -1,0 +1,110 @@
+attach b9 204 
+now 9
+subsub lulla_premium_monthly 409 {
+  "errors" : [ {
+    "id" : "b879fccc-b505-4c91-82b0-c1890d4b0fa8",
+    "status" : "409",
+    "code" : "STATE_ERROR.INVALID_REQUEST_ENTITY_STATE_INVALID",
+    "title" : "This subscription is not in a valid state.",
+    "detail" : "This subscription cannot be reviewed, please check associated errors.",
+    "meta" : {
+      "associatedErrors" : {
+        "/v1/subscriptions/6833063719" : [ {
+      
+subsub lulla_premium_yearly 409 {
+  "errors" : [ {
+    "id" : "46d86f52-35a6-4ccd-8aef-71a669ed93d6",
+    "status" : "409",
+    "code" : "STATE_ERROR.INVALID_REQUEST_ENTITY_STATE_INVALID",
+    "title" : "This subscription is not in a valid state.",
+    "detail" : "This subscription cannot be reviewed, please check associated errors.",
+    "meta" : {
+      "associatedErrors" : {
+        "/v1/subscriptions/6833064591" : [ {
+      
+rs 201 {
+  "data" : {
+    "type" : "reviewSubmissions",
+    "id" : "11799636-3870-4ff7-ae3e-d236186759d6",
+    "attributes" : {
+      "platform" : "IOS",
+      "submittedDate" : null,
+      "state" : "READY_FOR_REVIEW"
+    },
+    "relationships" : {
+      "items" : {
+        "links" : {
+          "self" : 
+item 201 {
+  "data" : {
+    "type" : "reviewSubmissionItems",
+    "id" : "MTE3OTk2MzYtMzg3MC00ZmY3LWFlM2UtZDIzNjE4Njc1OWQ2fDZ8ODk0OTgwMjEy",
+    "attributes" : {
+      "state" : "READY_FOR_REVIEW"
+    },
+    "links" : {
+      "self" : "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/MTE3OTk2MzYtMzg3MC00ZmY3LWFlM2UtZDIzNjE4Njc1OWQ2fDZ8ODk0OTgwMjEy"
+    }
+  },
+  "links" : {
+    "self" : "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems"
+  }
+}
+subsub 6833063719 409 {
+  "errors" : [ {
+    "id" : "1a52376b-d409-4e23-bcd1-c30e4bd498dd",
+    "status" : "409",
+    "code" : "STATE_ERROR.INVALID_REQUEST_ENTITY_STATE_INVALID",
+    "title" : "This subscription is not in a valid state.",
+    "detail" : "This subscription cannot be reviewed, please check associated errors.",
+    "meta" : {
+      "associatedErrors" : {
+        "/v1/subscriptions/6833063719" : [ {
+          "id" : "635881b7-5c57-404d-b4bc-783375c15f7f",
+          "status" : "409",
+          "code" : "S
+subsub 6833064591 409 {
+  "errors" : [ {
+    "id" : "9b376291-11fa-4132-abfb-674a06a342bc",
+    "status" : "409",
+    "code" : "STATE_ERROR.INVALID_REQUEST_ENTITY_STATE_INVALID",
+    "title" : "This subscription is not in a valid state.",
+    "detail" : "This subscription cannot be reviewed, please check associated errors.",
+    "meta" : {
+      "associatedErrors" : {
+        "/v1/subscriptions/6833064591" : [ {
+          "id" : "dd8c637d-17d8-42fd-b9ac-40231f3daede",
+          "status" : "409",
+          "code" : "S
+RS 11799636-3870-4ff7-ae3e-d236186759d6
+subversions ['f2ee8f76-0686-45fe-8353-537dad9f45d4', '67f94eb9-c4fd-499b-9682-69227a4a8810']
+subscriptionVersion f2ee8f76-0686-45fe-8353-537dad9f45d4 201 {   "data" : {     "type" : "reviewSubmissionItems",     "id" : "MTE3OTk2MzYtMzg3MC00ZmY3LWFlM2UtZDIzNjE4Njc1OWQ2fDE4fGYyZWU4Zjc2LTA2ODYtNDVmZS04MzUzLTUzN2RhZDlmNDVkNA",     "attributes" : {       "state" : "READY_FOR_REVIEW"     },     "links" : {       "self" : "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/MTE3OTk2MzYtMzg3MC00ZmY3LWFlM2UtZDIzNjE4Njc1OWQ2fDE4fGYyZWU4Zjc2LTA2ODYt
+subscriptionVersion 67f94eb9-c4fd-499b-9682-69227a4a8810 201 {   "data" : {     "type" : "reviewSubmissionItems",     "id" : "MTE3OTk2MzYtMzg3MC00ZmY3LWFlM2UtZDIzNjE4Njc1OWQ2fDE4fDY3Zjk0ZWI5LWM0ZmQtNDk5Yi05NjgyLTY5MjI3YTRhODgxMA",     "attributes" : {       "state" : "READY_FOR_REVIEW"     },     "links" : {       "self" : "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/MTE3OTk2MzYtMzg3MC00ZmY3LWFlM2UtZDIzNjE4Njc1OWQ2fDE4fDY3Zjk0ZWI5LWM0ZmQt
+subscriptionGroupVersion 07b7631c-992f-49b0-ae56-6a95cdc248bf 201 {   "data" : {     "type" : "reviewSubmissionItems",     "id" : "MTE3OTk2MzYtMzg3MC00ZmY3LWFlM2UtZDIzNjE4Njc1OWQ2fDE5fDA3Yjc2MzFjLTk5MmYtNDliMC1hZTU2LTZhOTVjZGMyNDhiZg",     "attributes" : {       "state" : "READY_FOR_REVIEW"     },     "links" : {       "self" : "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/MTE3OTk2MzYtMzg3MC00ZmY3LWFlM2UtZDIzNjE4Njc1OWQ2fDE5fDA3Yjc2MzFjLTk5MmYt
+build 9 release AFTER_APPROVAL READY_FOR_REVIEW
+submit 200 {
+  "data" : {
+    "type" : "reviewSubmissions",
+    "id" : "11799636-3870-4ff7-ae3e-d236186759d6",
+    "attributes" : {
+      "platform" : "IOS",
+      "submittedDate" : "2026-11-13T21:08:08.842Z",
+      "state" : "WAITING_FOR_REVIEW"
+    },
+    "relationships" : {
+      "items" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/11799636-3870-4ff7-ae3e-d236186759d6/relationships/items",
+          "related" : "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/11799636-3870-4ff7-ae3e-d236186759d6/items"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/11799636-3870-4ff7-ae3e-d236186759d6"
+    }
+  },
+  "links" : {
+    "self" : "https://api.appstoreconnect.apple.com/
+rs {'platform': 'IOS', 'submittedDate': '2026-11-13T21:08:08.842Z', 'state': 'WAITING_FOR_REVIEW'}
+items ['READY_FOR_REVIEW', 'READY_FOR_REVIEW', 'READY_FOR_REVIEW', 'READY_FOR_REVIEW']
+version WAITING_FOR_REVIEW
