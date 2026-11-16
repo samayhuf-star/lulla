@@ -16,6 +16,7 @@ import { parseQaUrl } from './src/qa';
 import { CREDITS, CREDITS_PAGE_URL } from './src/credits';
 import { planButtonText } from './src/introOffer';
 import { FrequenciesHero } from './src/FrequenciesHero';
+import { WindDown } from './src/WindDown';
 import { HERO_CATEGORY } from './src/hero';
 import { mixer } from './src/mixer';
 import { addUsed, loadUsed, persistUsed, remainingSeconds, setUsedForQa } from './src/trial';
@@ -350,6 +351,7 @@ export default function App() {
         </View>
 
         <FrequenciesHero selected={cat === HERO_CATEGORY} reduceMotion={reduceMotion} onPress={onHero} />
+        <WindDown premium={premium} reduceMotion={reduceMotion} onStartTimer={(m) => applyTimer(m)} onMixChanged={() => force((n) => n + 1)} />
 
         <ScrollView
           horizontal
