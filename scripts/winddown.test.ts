@@ -90,3 +90,36 @@ describe('sleep journal', () => {
     assert.equal(parseEntries(JSON.stringify([{ day: 'bad', rested: 3, ease: 'okay' }, { day: '2026-01-02', rested: 3, ease: 'okay' }])).length, 1);
   });
 });
+
+import { PRESET_ARCS, arcAt, addScene, MAX_SCENES, nextMinutes, totalMinutes, DIP_MS } from '../src/arc.ts';
+import { isFreeSound } from '../src/access.ts';
+
+describe('night arc', () => {
+  const sc = PRESET_ARCS[2].scenes; // 8 + 12 min
+  it('presets only use free sounds', () => {
+    for (const a of PRESET_ARCS) for (const s of a.scenes) for (const i of s.items) assert.ok(isFreeSound(i.id), `${a.id}:${i.id}`);
+  });
+  it('picks the scene by elapsed time and reports time left', () => {
+    assert.equal(arcAt(sc, 60_000).index, 0);
+    assert.equal(arcAt(sc, 8 * 60_000 + 10_000).index, 1);
+    assert.equal(arcAt(sc, 60_000).leftMs, 19 * 60_000);
+    assert.equal(totalMinutes(sc), 20);
+  });
+  it('dips between scenes and fades out at the end', () => {
+    assert.equal(arcAt(sc, 8 * 60_000 - DIP_MS / 2).gain, 0.5);
+    assert.equal(arcAt(sc, 8 * 60_000 + DIP_MS / 2).gain, 0.5);
+    assert.equal(arcAt(sc, 4 * 60_000).gain, 1);
+    assert.equal(arcAt(sc, 20 * 60_000 - 30_000).gain, 0.5);
+  });
+  it('is done at the end and handles empty arcs', () => {
+    assert.equal(arcAt(sc, 20 * 60_000).done, true);
+    assert.equal(arcAt([], 0).done, true);
+  });
+  it('limits scenes and cycles minutes', () => {
+    let l = sc;
+    for (let i = 0; i < 10; i += 1) l = addScene(l, sc[0]);
+    assert.equal(l.length, MAX_SCENES);
+    assert.equal(nextMinutes(60), 10);
+    assert.equal(nextMinutes(10), 15);
+  });
+});

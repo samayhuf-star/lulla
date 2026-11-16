@@ -13,6 +13,7 @@ import {
 import { MAX_NAME, addMix, removeMix, type SavedMix } from './mixesLogic';
 import { dayKey, logEntry, weekSummary, type Ease, type Entry } from './journalLogic';
 import { loadJournal, loadMixes, saveJournal, saveMixes } from './nightsStore';
+import { NightArcModal } from './NightArc';
 
 const C = { text: '#f5f3ff', sub: '#c4b5fd', accent: '#a78bfa', accent2: '#7c3aed', card: 'rgba(255,255,255,0.08)', sheet: '#1d0f3d' };
 
@@ -27,14 +28,15 @@ interface Props {
 
 /** Home card with the three things only Lulla does: wind-down ritual, saved nights, sleep journal. */
 export function WindDown({ premium, reduceMotion, onStartTimer, onMixChanged }: Props) {
-  const [open, setOpen] = useState<null | 'ritual' | 'nights' | 'journal'>(null);
+  const [open, setOpen] = useState<null | 'ritual' | 'nights' | 'journal' | 'arc'>(null);
   return (
     <View style={s.card} testID="winddown-card">
       <Text style={s.title}>Tonight</Text>
-      <Text style={s.sub}>Wind down with your breath, save the mixes that work, and see how you slept.</Text>
+      <Text style={s.sub}>Wind down with your breath, chain mixes into a bedtime routine, and see how you slept.</Text>
       <View style={s.row}>
         <Btn label="🫁 Wind-down" hint="Guided breathing with your sounds" onPress={() => setOpen('ritual')} />
         <Btn label="🌙 My nights" hint="Saved sound mixes" onPress={() => setOpen('nights')} />
+        <Btn label="🌌 Night arc" hint="A bedtime routine that plays scene by scene" onPress={() => setOpen('arc')} />
         <Btn label="📓 Journal" hint="How you slept this week" onPress={() => setOpen('journal')} />
       </View>
       <RitualModal
@@ -45,6 +47,7 @@ export function WindDown({ premium, reduceMotion, onStartTimer, onMixChanged }: 
         visible={open === 'nights'} premium={premium}
         onClose={() => setOpen(null)} onMixChanged={onMixChanged}
       />
+      <NightArcModal visible={open === 'arc'} premium={premium} onClose={() => setOpen(null)} onMixChanged={onMixChanged} />
       <JournalModal visible={open === 'journal'} onClose={() => setOpen(null)} />
     </View>
   );
