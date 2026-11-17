@@ -1,9 +1,10 @@
 // Central product config. Change here only.
 export const FREE_SECONDS = 180; // 3 minutes of free listening, then paywall
-export const PRICE_LABEL = '$1.99 / month';
+export const PRICE_LABEL = '7-day free trial, then $1.99 / week';
 export const ENTITLEMENT_ID = 'premium';
-export const PRODUCT_ID_IOS = 'lulla_premium_monthly';
-export const PRODUCT_ID_ANDROID = 'lulla_premium_monthly';
+// Weekly plan (17 Nov 2026): $1.99/week with a 7-day free trial. Replaces lulla_premium_monthly.
+export const PRODUCT_ID_IOS = 'lulla_premium_weekly';
+export const PRODUCT_ID_ANDROID = 'lulla_premium_weekly';
 
 // RevenueCat PUBLIC SDK keys (safe to ship in the app). Replace before building.
 export const RC_API_KEY_IOS = process.env.EXPO_PUBLIC_RC_IOS_KEY ?? 'appl_REPLACE_ME';

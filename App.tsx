@@ -14,7 +14,7 @@ import { FREE_SECONDS, PRICE_LABEL, PRIVACY_URL, TERMS_URL } from './src/config'
 import { mixer } from './src/mixer';
 import { addUsed, loadUsed, persistUsed, remainingSeconds } from './src/trial';
 import {
-  getCustomerInfo, getMonthlyPackage, hasPremium, initPurchases, isConfigured,
+  getCustomerInfo, getWeeklyPackage, hasPremium, initPurchases, isConfigured,
   onCustomerInfo, purchase, restore,
 } from './src/purchases';
 
@@ -270,7 +270,7 @@ function Paywall({ visible, onClose, onUnlocked, expired }: {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (visible) getMonthlyPackage().then(setPkg);
+    if (visible) getWeeklyPackage().then(setPkg);
   }, [visible]);
 
   const buy = async () => {
@@ -310,10 +310,10 @@ function Paywall({ visible, onClose, onUnlocked, expired }: {
             ))}
           </View>
           <Pressable style={[styles.cta, busy && { opacity: 0.6 }]} disabled={busy} onPress={buy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Subscribe · {pkg?.product.priceString ?? '$1.99'} / month</Text>}
+            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Start 7-day free trial · then {pkg?.product.priceString ?? '$1.99'} / week</Text>}
           </Pressable>
           <Text style={styles.fine}>
-            {PRICE_LABEL}, auto-renews monthly until cancelled. Cancel anytime in your {Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.
+            {PRICE_LABEL}, auto-renews weekly until cancelled. Cancel anytime in your {Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.
           </Text>
           <View style={styles.links}>
             <Pressable onPress={doRestore}><Text style={styles.link}>Restore purchases</Text></Pressable>

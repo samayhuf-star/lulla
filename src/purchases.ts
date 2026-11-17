@@ -36,12 +36,12 @@ export function onCustomerInfo(cb: (info: CustomerInfo) => void) {
   };
 }
 
-export async function getMonthlyPackage(): Promise<PurchasesPackage | null> {
+export async function getWeeklyPackage(): Promise<PurchasesPackage | null> {
   if (!configured) return null;
   try {
     const offerings = await Purchases.getOfferings();
     const cur = offerings.current;
-    return cur?.monthly ?? cur?.availablePackages[0] ?? null;
+    return cur?.weekly ?? cur?.availablePackages[0] ?? null;
   } catch {
     return null;
   }
