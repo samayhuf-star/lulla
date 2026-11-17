@@ -1,21 +1,24 @@
 # Store listing – Lulla - Sleep Sounds
 
 **Name (30 max):** Lulla - Sleep Sounds
-**iOS subtitle (30 max):** Calm sounds to fall asleep
+**iOS subtitle (30 max):** Breathe, blend & drift off
 **Android short description (80 max):** Layer rain, ocean, wind and more into your perfect sleep mix.
 
-**Keywords (iOS, 100 max):** sleep,sounds,white noise,rain,relax,calm,ocean,nature,timer,baby,focus,brown noise,asmr
+**Keywords (iOS, 100 max):** breathing,wind down,bedtime,routine,journal,nap,calm,mix,432hz,528hz,timer,rest,baby,relax
+
+**Promotional text (170 max):** Guided breathing that moves your sounds, bedtime routines that play themselves, and a private sleep journal. 7 days free.
 
 **Full description**
-Fall asleep faster with Lulla. Pick a sound, layer your own mix, set a timer, and drift off.
+Lulla is a wind-down companion for the hour before sleep.
 
-• 25 calming sounds: rain, rain on window, ocean, creek, waterfall, wind, forest, fireplace, thunder and more
-• White, pink and brown noise for focus, babies and tinnitus relief
-• Mix any sounds together and set each volume
-• Sleep timer from 10 minutes to 3 hours with a gentle fade-out
-• Keeps playing with the screen off
+• Wind-down: a guided breathing pacer (Slow 4-6, 4-7-8, Box) while your sound mix swells on the inhale and ebbs on the exhale. When it ends, your sleep timer starts.
+• Night arc: a bedtime routine that plays by itself. Scenes blend into one another and the last one fades to silence. Use a preset or chain your own saved nights.
+• My nights: save named mixes with each sound's volume and bring them back in one tap.
+• Sleep journal: a 10-second morning check-in, a 7-day chart and the mix you rested best after. It stays on your device.
+• 25 calming sounds: rain, ocean, creek, waterfall, wind, forest, fireplace, thunder, white, pink and brown noise.
+• Sleep timer from 10 minutes to 3 hours with a gentle fade-out. Keeps playing with the screen off.
 
-Seven sounds are free forever. Lulla Premium is an auto-renewing yearly or monthly subscription. The price is shown in the app before you buy, and you can cancel anytime in your Apple ID or Google Play settings.
+Seven sounds are free forever. Lulla Premium is an auto-renewing yearly or monthly subscription with a 7-day free trial. The price is shown in the app before you buy, and you can cancel anytime in your Apple ID settings. Lulla is not a medical device and does not diagnose or treat any condition.
 
 **Category:** Health & Fitness · **Age rating:** 4+ / Everyone
 **Subscription display name:** Lulla Premium
