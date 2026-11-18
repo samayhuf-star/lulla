@@ -16,6 +16,15 @@
     },
     "production": {
       "autoIncrement": false
+    },
+    "simulator": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_LULLA_QA": "1"
+      }
     }
   },
   "submit": {
