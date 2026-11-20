@@ -50,7 +50,8 @@
       "expo-audio",
       "expo-secure-store",
       "expo-asset",
-      "expo-build-properties"
+      "expo-build-properties",
+      "expo-status-bar"
     ],
     "extra": {
       "eas": {

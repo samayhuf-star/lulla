@@ -10,6 +10,8 @@ class Mixer {
   private listeners = new Set<Listener>();
   private master = 1; // used for fade-out
   playing = false;
+  /** Set when the audio session could not be configured; the UI shows it instead of failing silently. */
+  audioError: string | null = null;
 
   async init() {
     try {
@@ -18,9 +20,11 @@ class Mixer {
         shouldPlayInBackground: true,
         interruptionMode: 'doNotMix',
       });
-    } catch {
-      /* ignore */
+      this.audioError = null;
+    } catch (e: any) {
+      this.audioError = String(e?.message || 'Audio could not be set up. Sounds may not play with the screen off.');
     }
+    this.emit();
   }
 
   subscribe(l: Listener) {

@@ -6,15 +6,14 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import type { PurchasesPackage } from 'react-native-purchases';
 
 import { CATEGORIES, SOUNDS, SOUND_BY_ID, TIMER_OPTIONS, Category } from './src/catalog';
-import { FREE_SECONDS, PRICE_LABEL, PRIVACY_URL, TERMS_URL } from './src/config';
+import { FREE_SECONDS, PRIVACY_URL, TERMS_URL } from './src/config';
 import { mixer } from './src/mixer';
 import { addUsed, loadUsed, persistUsed, remainingSeconds } from './src/trial';
 import {
-  getCustomerInfo, getMonthlyPackage, hasPremium, initPurchases, isConfigured,
+  describePackage, getCustomerInfo, getMonthlyPackage, hasPremium, initPurchases, isConfigured,
   onCustomerInfo, purchase, restore,
 } from './src/purchases';
 
@@ -62,22 +61,27 @@ export default function App() {
     return () => { un1(); un2(); };
   }, []);
 
+  // Sounds keep playing with the screen locked (background audio is on), so the screen is not held awake.
+
   useEffect(() => {
-    if (mixer.playing) activateKeepAwakeAsync('lulla'); else deactivateKeepAwake('lulla');
-  });
+    if (ready && mixer.audioError) {
+      Alert.alert('Audio problem', `${mixer.audioError}\n\nTry closing and reopening Lulla.`);
+    }
+  }, [ready]);
 
   // 1s heartbeat: trial accounting (timestamp-based, robust to JS throttling) + sleep timer
   useEffect(() => {
     const id = setInterval(() => {
       const now = Date.now();
-      const delta = Math.min(5, Math.max(0, (now - lastTick.current) / 1000));
+      // Count the real time elapsed, so a delayed tick cannot stretch the free preview. Capped at the whole allowance.
+      const delta = Math.min(FREE_SECONDS, Math.max(0, (now - lastTick.current) / 1000));
       lastTick.current = now;
 
       if (mixer.playing && !premiumRef.current) {
         const left = addUsed(delta);
         sinceSave.current += delta;
         setRemaining(left);
-        if (sinceSave.current >= 5 || left <= 0) { sinceSave.current = 0; persistUsed(); }
+        if (sinceSave.current >= 5 || left <= 0) { persistUsed().then((ok) => { if (ok) sinceSave.current = 0; }); } // keeps retrying every tick until it saves
         if (left <= 0) {
           mixer.pause();
           setShowPaywall(true);
@@ -268,6 +272,7 @@ function Paywall({ visible, onClose, onUnlocked, expired }: {
 }) {
   const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
   const [busy, setBusy] = useState(false);
+  const pkgInfo = describePackage(pkg);
 
   useEffect(() => {
     if (visible) getMonthlyPackage().then(setPkg);
@@ -310,10 +315,10 @@ function Paywall({ visible, onClose, onUnlocked, expired }: {
             ))}
           </View>
           <Pressable style={[styles.cta, busy && { opacity: 0.6 }]} disabled={busy} onPress={buy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Subscribe · {pkg?.product.priceString ?? '$1.99'} / month</Text>}
+            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>{pkgInfo ? `Subscribe · ${pkgInfo.price} / ${pkgInfo.period}` : 'Subscribe'}</Text>}
           </Pressable>
           <Text style={styles.fine}>
-            {PRICE_LABEL}, auto-renews monthly until cancelled. Cancel anytime in your {Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.
+            {pkgInfo ? `${pkgInfo.price} / ${pkgInfo.period}, auto-renews every ${pkgInfo.period} until cancelled.` : 'Price shown in the store.'} Cancel anytime in your {Platform.OS === 'ios' ? 'Apple ID' : 'Google Play'} subscription settings.
           </Text>
           <View style={styles.links}>
             <Pressable onPress={doRestore}><Text style={styles.link}>Restore purchases</Text></Pressable>

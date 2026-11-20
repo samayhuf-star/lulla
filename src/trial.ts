@@ -35,10 +35,12 @@ export function addUsed(sec: number) {
   return remainingSeconds();
 }
 
-export async function persistUsed() {
+/** Returns false if the listening time could not be saved, so the caller can retry. */
+export async function persistUsed(): Promise<boolean> {
   try {
     await SecureStore.setItemAsync(KEY, String(used));
+    return true;
   } catch {
-    /* best-effort */
+    return false;
   }
 }

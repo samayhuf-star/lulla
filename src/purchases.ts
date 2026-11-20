@@ -41,7 +41,8 @@ export async function getMonthlyPackage(): Promise<PurchasesPackage | null> {
   try {
     const offerings = await Purchases.getOfferings();
     const cur = offerings.current;
-    return cur?.monthly ?? cur?.availablePackages[0] ?? null;
+    // Prefer the monthly package; otherwise use whatever the offering has, and describe it truthfully (see describePackage).
+    return cur?.monthly ?? cur?.availablePackages.find((p) => p.packageType === 'MONTHLY') ?? cur?.availablePackages[0] ?? null;
   } catch {
     return null;
   }
@@ -61,4 +62,15 @@ export async function restore(): Promise<boolean> {
   if (!configured) return false;
   const info = await Purchases.restorePurchases();
   return hasPremium(info);
+}
+
+/** Price and billing period exactly as the store reports them, never a hard-coded guess. */
+export function describePackage(pkg: PurchasesPackage | null): { price: string; period: string } | null {
+  if (!pkg) return null;
+  const iso = (pkg.product as any).subscriptionPeriod as string | null | undefined;
+  const byIso: Record<string, string> = { P1W: 'week', P1M: 'month', P2M: '2 months', P3M: '3 months', P6M: '6 months', P1Y: 'year' };
+  const byType: Record<string, string> = { WEEKLY: 'week', MONTHLY: 'month', TWO_MONTH: '2 months', THREE_MONTH: '3 months', SIX_MONTH: '6 months', ANNUAL: 'year' };
+  const period = (iso && byIso[iso]) || byType[pkg.packageType] || null;
+  if (!period) return null;
+  return { price: pkg.product.priceString, period };
 }
