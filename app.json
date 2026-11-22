@@ -17,6 +17,19 @@
           "audio"
         ],
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": [],
+        "NSPrivacyCollectedDataTypes": [],
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
+          }
+        ]
       }
     },
     "android": {
@@ -56,8 +69,10 @@
     "extra": {
       "eas": {
         "projectId": "cf050aa6-2a3d-434d-ab15-f142be58d75c"
-      }
+      },
+      "privacyPolicyUrl": "https://momentumbysamay.com/lulla/privacy"
     },
-    "owner": "krosz"
+    "owner": "krosz",
+    "description": "Lulla plays calming sleep sounds to help you fall asleep and stay asleep."
   }
 }
