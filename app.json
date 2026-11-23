@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "com.samay.lulla",
-      "versionCode": 1,
+      "versionCode": 6,
       "adaptiveIcon": {
         "backgroundColor": "#150a2e",
         "foregroundImage": "./assets/android-icon-foreground-v2.png",
