@@ -1,0 +1,9 @@
+name: Submit Android build to Google Play (internal testing)
+
+jobs:
+  submit_android:
+    name: Submit to Google Play
+    type: submit
+    params:
+      build_id: 4feaba8e-e76e-4a45-9759-8ef26d69f9d1
+      profile: production
