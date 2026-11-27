@@ -25,6 +25,7 @@ import {
 import { Onboarding, onboardingDone } from './src/Onboarding';
 import { getPushConsent, initPush, setPushConsent } from './src/push';
 import { buy, initIAP, loadPlans, onEntitlementChange, refreshEntitlements, restore, type Plan } from './src/purchases';
+import { noteSuccess } from './src/reviewPrompt';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -179,6 +180,15 @@ export default function App() {
     if (mixer.playing) activateKeepAwakeAsync('lulla'); else deactivateKeepAwake('lulla');
   });
 
+  // Rating prompt: after the 2nd listening session of 20+ minutes, asked only when the listener
+  // pauses by hand (awake), never while sounds play and never on a sleep-timer stop.
+  const sessionStart = useRef(0);
+  useEffect(() => {
+    if (mixer.playing) { if (!sessionStart.current) sessionStart.current = Date.now(); return; }
+    // Paused by the sleep timer or the system: the listener may be asleep, so don't ask now.
+    sessionStart.current = 0;
+  }, [mixer.playing]);
+
   // 1s heartbeat: trial accounting (timestamp-based, robust to JS throttling) + sleep timer
   useEffect(() => {
     const id = setInterval(() => {
@@ -304,7 +314,11 @@ export default function App() {
 
   const onPlayPause = () => {
     if (mixer.active().length === 0) return;
-    if (mixer.playing) mixer.pause();
+    if (mixer.playing) {
+      const long = sessionStart.current && Date.now() - sessionStart.current >= 20 * 60 * 1000;
+      mixer.pause();
+      if (long) noteSuccess(2);
+    }
     else if (stripBlocked()) { lastTick.current = nowMs(); mixer.play(); }
     else setShowPaywall(true);
   };

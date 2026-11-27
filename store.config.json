@@ -1,0 +1,36 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "categories": [
+      "HEALTH_AND_FITNESS",
+      "LIFESTYLE"
+    ],
+    "info": {
+      "en-US": {
+        "title": "Lulla: Sleep Sounds & Rain",
+        "subtitle": "White noise, breathing & timer",
+        "description": "Lulla is a wind-down companion for the hour before sleep.\n\n• Wind-down: a guided breathing pacer (Slow 4-6, 4-7-8 or Box) while your sound mix swells on the inhale and ebbs on the exhale. When it ends, your sleep timer starts.\n• Night arc: a bedtime routine that plays by itself. Scenes blend into one another and the last one fades to silence. Use a preset or chain your own saved nights.\n• My nights: save named mixes with each sound's volume and bring them back in one tap.\n• Sleep journal: a 10-second morning check-in, a 7-day chart and the mix you rested best after. It stays on your device.\n• 43 calming sounds you can layer, each with its own volume: rain, ocean, creek, waterfall, wind, forest, fan, white, pink and brown noise, gentle frequencies and lullabies.\n• Sleep timer from 10 minutes to 4 hours, or All night, with a gentle fade-out. Keeps playing with the screen off.\n\nFREE FOREVER\nSeven sounds are free for everyone, with no time limit: Rain, Slow Ocean Waves, Forest, Fan, White Noise, Brown Noise and 432 Hz Deep Sleep.\n\nLULLA PREMIUM\nLulla Premium unlocks the rest of the library. It is an auto-renewing subscription, billed monthly or yearly at the price shown in the app before you buy. If you are eligible, the subscription starts with a 7-day free trial; the app shows the trial on the plan button only when it applies to you. Payment is charged to your Apple ID when the trial ends, or at purchase if there is no trial. The subscription renews unless cancelled at least 24 hours before the end of the trial or period. Manage or cancel it in your Apple ID settings. Already subscribed on another device? Tap Restore purchases in Settings or on the subscription screen.\n\nLulla is for relaxation and is not a medical device. It does not diagnose or treat any condition.\n\nTerms of Use: https://samayhuf-star.github.io/app-legal/lulla/terms.html\nPrivacy Policy: https://samayhuf-star.github.io/app-legal/lulla/privacy.html",
+        "keywords": [
+          "fan",
+          "brown",
+          "pink",
+          "ocean",
+          "thunder",
+          "nature",
+          "relax",
+          "calm",
+          "bedtime",
+          "soundscape",
+          "insomnia",
+          "nap",
+          "mix",
+          "432hz",
+          "528hz"
+        ],
+        "promoText": "Guided breathing that moves your sounds, bedtime routines that play themselves, and a private sleep journal. 7 days free.",
+        "supportUrl": "https://samayhuf-star.github.io/app-legal/lulla/support.html",
+        "privacyPolicyUrl": "https://samayhuf-star.github.io/app-legal/lulla/privacy.html"
+      }
+    }
+  }
+}
