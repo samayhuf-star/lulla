@@ -1,209 +1,87 @@
+// Lulla Premium billing via RevenueCat (react-native-purchases). Offering "default", entitlement "premium".
+// Startup only configures the SDK and reads cached customer info: it never restores (no Apple ID prompt).
 import { Platform } from 'react-native';
-import {
-  currentEntitlementIOS,
-  ErrorCode,
-  fetchProducts,
-  finishTransaction,
-  getActiveSubscriptions,
-  getAvailablePurchases,
-  hasActiveSubscriptions,
-  initConnection,
-  isEligibleForIntroOfferIOS,
-  isTransactionVerifiedIOS,
-  isUserCancelledError,
-  purchaseErrorListener,
-  purchaseUpdatedListener,
-  requestPurchase,
-  restorePurchases as storeRestore,
-  syncIOS,
-  type ProductOrSubscription,
-  type Purchase,
-} from 'expo-iap';
-import { ALL_PRODUCT_IDS, isKnownProduct, PRODUCT_CATALOG } from './config';
-import { freeTrialDays, type ProductLike } from './introOffer';
+import Purchases, { PURCHASES_ERROR_CODE, type CustomerInfo, type PurchasesPackage } from 'react-native-purchases';
+import { ENTITLEMENT_ID, PRODUCT_CATALOG } from './config';
 
 export type Plan = (typeof PRODUCT_CATALOG)[number] & {
   price: string;
-  product: ProductOrSubscription;
-  /** Free-trial days, set only when the store reports a trial AND this user is eligible. */
+  rcPackage: PurchasesPackage;
+  /** Free-trial days, set only when RevenueCat reports a free intro offer this user can still use. */
   trialDays: number | null;
 };
 
-/** iOS: StoreKit says whether this Apple ID may still use the group's intro offer. Android: Play only returns offers the user can use. Errors count as not eligible. */
-async function introEligible(product: ProductOrSubscription): Promise<boolean> {
-  if (Platform.OS !== 'ios') return true;
-  const group = (product as { subscriptionGroupIdIOS?: string | null }).subscriptionGroupIdIOS;
-  if (!group) return false;
-  try {
-    return !!(await isEligibleForIntroOfferIOS(group));
-  } catch (e) {
-    logErr('isEligibleForIntroOfferIOS', e);
-    return false;
-  }
-}
-
 export type BuyResult = 'purchased' | 'cancelled' | 'pending' | 'error';
-
 export type PlansLoad = { plans: Plan[]; error: string | null };
 
-let connected = false;
-let listeners = false;
+const KEY = Platform.OS === 'ios' ? process.env.EXPO_PUBLIC_RC_IOS_KEY : process.env.EXPO_PUBLIC_RC_ANDROID_KEY;
+const UNAVAILABLE = 'Plans unavailable right now. Please try again shortly.';
+const DAYS: Record<string, number> = { DAY: 1, WEEK: 7, MONTH: 30, YEAR: 365 };
+let configured = false;
 const entitlementListeners = new Set<(isPremium: boolean) => void>();
-let purchaseWaiter: ((result: BuyResult) => void) | null = null;
-
-const emitPremium = (isPremium: boolean) => {
-  entitlementListeners.forEach((cb) => cb(isPremium));
-};
 
 const logErr = (action: string, e: unknown) => {
-  const err = e as { code?: unknown; message?: string; debugMessage?: string };
-  console.log('[lulla-iap]', `${action} failed`, {
-    code: err?.code,
-    message: err?.message,
-    debugMessage: err?.debugMessage,
-  });
+  const err = e as { code?: unknown; message?: string };
+  console.log('[lulla-rc]', `${action} failed`, { code: err?.code, message: err?.message });
 };
 
-async function ensureConnected(): Promise<boolean> {
-  if (connected) return true;
-  try {
-    connected = !!(await initConnection());
-  } catch (e) {
-    logErr('initConnection', e);
-    connected = false;
-  }
-  return connected;
-}
+const isPremium = (info: CustomerInfo | null | undefined) => !!info?.entitlements.active[ENTITLEMENT_ID];
+const emitPremium = (value: boolean) => entitlementListeners.forEach((cb) => cb(value));
 
-async function verifyOnDevice(purchase: Purchase): Promise<boolean> {
-  if (purchase.purchaseState === 'pending') return false;
-  if ('isSuspendedAndroid' in purchase && purchase.isSuspendedAndroid) return false;
-  if (!isKnownProduct(purchase.productId)) return false;
-
-  if (Platform.OS === 'ios') {
-    try {
-      if (await isTransactionVerifiedIOS(purchase.productId)) return true;
-    } catch (e) {
-      logErr('isTransactionVerifiedIOS', e);
-    }
-    try {
-      const entitlement = await currentEntitlementIOS(purchase.productId);
-      if (entitlement) return true;
-    } catch (e) {
-      logErr('currentEntitlementIOS', e);
-    }
-    // StoreKit 2 already signed this transaction if it arrived via Transaction.updates.
-    // Do not call getAvailablePurchases or sync here — a listener firing at connect would prompt for the Apple ID.
-    return purchase.purchaseState === 'purchased' || purchase.purchaseState === 'unknown';
-  }
-
-  return purchase.purchaseState === 'purchased' || purchase.purchaseState === 'unknown';
-}
-
-async function verifyAndFinish(purchase: Purchase): Promise<boolean> {
-  if (purchase.purchaseState === 'pending') return false;
-  const ok = await verifyOnDevice(purchase);
-  if (!ok) return false;
-  try {
-    await finishTransaction({ purchase, isConsumable: false });
-  } catch (e) {
-    logErr('finishTransaction', e);
-  }
-  return true;
-}
-
-function attachListeners() {
-  if (listeners) return;
-  listeners = true;
-  purchaseUpdatedListener(async (purchase) => {
-    if (purchase.purchaseState === 'pending') {
-      purchaseWaiter?.('pending');
-      purchaseWaiter = null;
-      return;
-    }
-    const ok = await verifyAndFinish(purchase);
-    if (ok) {
-      const entitled = await refreshEntitlements();
-      emitPremium(entitled);
-    }
-    purchaseWaiter?.(ok ? 'purchased' : 'error');
-    purchaseWaiter = null;
-  });
-  purchaseErrorListener((error) => {
-    logErr('purchaseError', error);
-    if (isUserCancelledError(error) || error.code === ErrorCode.UserCancelled) {
-      purchaseWaiter?.('cancelled');
-    } else if (error.code === ErrorCode.Pending || error.code === ErrorCode.DeferredPayment) {
-      purchaseWaiter?.('pending');
-    } else {
-      purchaseWaiter?.('error');
-    }
-    purchaseWaiter = null;
-  });
-}
-
-/** Connect and listen for transaction updates. Never calls AppStore.sync or restore — those prompt for the Apple ID password. */
+/** Configure the SDK and listen for customer-info updates. Never restores or syncs. */
 export async function initIAP(): Promise<boolean> {
-  attachListeners();
-  return ensureConnected();
+  if (configured) return true;
+  if (!KEY) return false;
+  try {
+    Purchases.configure({ apiKey: KEY });
+    Purchases.addCustomerInfoUpdateListener((info) => emitPremium(isPremium(info)));
+    configured = true;
+  } catch (e) {
+    logErr('configure', e);
+  }
+  return configured;
+}
+
+/** Trial length when the package has a free intro offer and RevenueCat says this user is eligible. */
+async function trialDaysFor(p: PurchasesPackage): Promise<number | null> {
+  const intro = p.product.introPrice;
+  if (!intro || intro.price !== 0) return null;
+  const days = (DAYS[intro.periodUnit] ?? 0) * (intro.periodNumberOfUnits || 1) * (intro.cycles || 1);
+  if (!days) return null;
+  if (Platform.OS !== 'ios') return days;
+  try {
+    const res = await Purchases.checkTrialOrIntroductoryPriceEligibility([p.product.identifier]);
+    return res[p.product.identifier]?.status === Purchases.INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_ELIGIBLE ? days : null;
+  } catch (e) {
+    logErr('checkTrialOrIntroductoryPriceEligibility', e);
+    return null;
+  }
 }
 
 export async function loadPlans(): Promise<PlansLoad> {
-  if (!(await ensureConnected())) {
-    return { plans: [], error: 'Plans unavailable right now. Please try again shortly.' };
-  }
-  let subs: ProductOrSubscription[] = [];
+  if (!(await initIAP())) return { plans: [], error: UNAVAILABLE };
   try {
-    subs = (await fetchProducts({ skus: ALL_PRODUCT_IDS, type: 'subs' })) ?? [];
+    const offerings = await Purchases.getOfferings();
+    const pkgs = offerings.current?.availablePackages ?? [];
+    const plans: Plan[] = [];
+    for (const def of PRODUCT_CATALOG) {
+      const p = pkgs.find((x) => x.identifier === def.pkg);
+      if (p) plans.push({ ...def, price: p.product.priceString, rcPackage: p, trialDays: await trialDaysFor(p) });
+    }
+    return plans.length ? { plans, error: null } : { plans: [], error: UNAVAILABLE };
   } catch (e) {
-    logErr('fetchProducts subs', e);
+    logErr('getOfferings', e);
+    return { plans: [], error: UNAVAILABLE };
   }
-  const byId = new Map<string, ProductOrSubscription>();
-  for (const product of subs) {
-    if (product?.id && product.displayPrice) byId.set(product.id, product);
-  }
-  const plans: Plan[] = [];
-  for (const def of PRODUCT_CATALOG) {
-    const product = byId.get(def.id);
-    if (!product) continue;
-    const days = freeTrialDays(product as unknown as ProductLike);
-    const trialDays = days && (await introEligible(product)) ? days : null;
-    plans.push({ ...def, price: product.displayPrice, product, trialDays });
-  }
-  if (!plans.length) {
-    return { plans: [], error: 'Plans unavailable right now. Please try again shortly.' };
-  }
-  return { plans, error: null };
 }
 
+/** Cached customer info only: no restore, no Apple ID prompt. */
 export async function refreshEntitlements(): Promise<boolean> {
-  if (!(await ensureConnected())) return false;
+  if (!(await initIAP())) return false;
   try {
-    // Current entitlements only. Do not call syncIOS, restorePurchases, or getAvailablePurchases here —
-    // those can show Apple's "Sign in to Apple Account" prompt.
-    if (Platform.OS === 'ios') {
-      for (const id of ALL_PRODUCT_IDS) {
-        try {
-          if (await currentEntitlementIOS(id)) return true;
-        } catch (e) {
-          logErr(`currentEntitlementIOS ${id}`, e);
-        }
-      }
-    }
-    try {
-      if (await hasActiveSubscriptions(ALL_PRODUCT_IDS)) return true;
-    } catch (e) {
-      logErr('hasActiveSubscriptions', e);
-    }
-    try {
-      const active = await getActiveSubscriptions(ALL_PRODUCT_IDS);
-      if (active.some((s) => s.isActive)) return true;
-    } catch (e) {
-      logErr('getActiveSubscriptions', e);
-    }
-    return false;
+    return isPremium(await Purchases.getCustomerInfo());
   } catch (e) {
-    logErr('refreshEntitlements', e);
+    logErr('getCustomerInfo', e);
     return false;
   }
 }
@@ -216,61 +94,25 @@ export function onEntitlementChange(cb: (isPremium: boolean) => void): () => voi
 }
 
 export async function buy(plan: Plan): Promise<BuyResult> {
-  if (!(await ensureConnected())) return 'error';
-  const result = new Promise<BuyResult>((resolve) => {
-    purchaseWaiter = resolve;
-  });
+  if (!(await initIAP())) return 'error';
   try {
-    await requestPurchase({
-      request: {
-        apple: { sku: plan.id },
-        google: { skus: [plan.id] },
-      },
-      type: plan.type,
-    });
+    const { customerInfo } = await Purchases.purchasePackage(plan.rcPackage);
+    const ok = isPremium(customerInfo);
+    emitPremium(ok);
+    return ok ? 'purchased' : 'error';
   } catch (e) {
-    purchaseWaiter = null;
-    if (isUserCancelledError(e) || (e as { code?: string })?.code === ErrorCode.UserCancelled) return 'cancelled';
-    if ((e as { code?: string })?.code === ErrorCode.Pending || (e as { code?: string })?.code === ErrorCode.DeferredPayment) {
-      return 'pending';
-    }
-    logErr('requestPurchase', e);
+    const err = e as { userCancelled?: boolean; code?: string };
+    if (err?.userCancelled || err?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) return 'cancelled';
+    if (err?.code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) return 'pending';
+    logErr('purchasePackage', e);
     return 'error';
   }
-  return result;
 }
 
+/** User-initiated only (Restore purchases on the paywall or in Settings). */
 export async function restore(): Promise<boolean> {
-  if (!(await ensureConnected())) return false;
-  if (Platform.OS === 'ios') {
-    try {
-      await syncIOS();
-    } catch (e) {
-      logErr('syncIOS restore', e);
-    }
-  }
-  try {
-    await storeRestore();
-  } catch (e) {
-    logErr('restorePurchases', e);
-  }
-  try {
-    const purchases = await getAvailablePurchases({ onlyIncludeActiveItemsIOS: false });
-    for (const purchase of purchases) {
-      if (purchase.purchaseState === 'pending') continue;
-      if (!isKnownProduct(purchase.productId)) continue;
-      try {
-        if (await verifyOnDevice(purchase)) {
-          await finishTransaction({ purchase, isConsumable: false });
-        }
-      } catch (e) {
-        logErr('restore finish', e);
-      }
-    }
-  } catch (e) {
-    logErr('restore getAvailablePurchases', e);
-  }
-  const entitled = await refreshEntitlements();
-  emitPremium(entitled);
-  return entitled;
+  if (!(await initIAP())) return false;
+  const ok = isPremium(await Purchases.restorePurchases());
+  emitPremium(ok);
+  return ok;
 }

@@ -22,6 +22,8 @@ import { addUsed, loadUsed, persistUsed, remainingSeconds, setUsedForQa } from '
 import {
   PAYWALL_SUB, PAYWALL_TITLE, blockedInMix, countsTowardPreview, isLocked, onPreviewEnded, tileAction,
 } from './src/access';
+import { Onboarding, onboardingDone } from './src/Onboarding';
+import { getPushConsent, initPush, setPushConsent } from './src/push';
 import { buy, initIAP, loadPlans, onEntitlementChange, refreshEntitlements, restore, type Plan } from './src/purchases';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -90,6 +92,8 @@ export default function App() {
   const [reduceMotion, setReduceMotion] = useState(false);
   const [qaLine, setQaLine] = useState('');
   const [qaOverlay, setQaOverlay] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [pushOn, setPushOn] = useState(false);
 
   const premiumRef = useRef(false);
   const lastTick = useRef(0);
@@ -145,6 +149,13 @@ export default function App() {
     (async () => {
       await initIAP();
       setPremium(await refreshEntitlements());
+    })();
+
+    // Push: OneSignal starts with consent required; nothing is sent until the listener opts in.
+    (async () => {
+      await initPush();
+      setPushOn(await getPushConsent());
+      if (!QA_MODE && !(await onboardingDone())) setShowOnboarding(true);
     })();
 
     // Lock screen / Control Center play goes through the same gate as the play button:
@@ -305,6 +316,9 @@ export default function App() {
   return (
     <LinearGradient colors={[C.bg1, C.bg2, C.bg3]} style={styles.fill}>
       <StatusBar style="light" />
+      <Modal visible={showOnboarding} animationType="none" onRequestClose={() => {}}>
+        <Onboarding onDone={() => { setShowOnboarding(false); getPushConsent().then(setPushOn); if (!premiumRef.current) setTimeout(() => setShowPaywall(true), 400); }} />
+      </Modal>
       <SafeAreaView style={styles.fill}>
         <View style={styles.header}>
           <View>
@@ -471,6 +485,9 @@ export default function App() {
               <Text style={styles.timerText}>Unlock all sounds</Text>
             </Pressable>
           ) : null}
+          <Pressable style={styles.timerRow} onPress={() => { const on = !pushOn; setPushOn(on); setPushConsent(on); }} accessibilityRole="switch" accessibilityState={{ checked: pushOn }}>
+            <Text style={styles.timerText}>Bedtime reminders: {pushOn ? 'On' : 'Off'}</Text>
+          </Pressable>
           <Pressable style={styles.timerRow} onPress={() => Linking.openURL(TERMS_URL)}><Text style={styles.timerText}>Terms of Use</Text></Pressable>
           <Pressable style={styles.timerRow} onPress={() => Linking.openURL(PRIVACY_URL)}><Text style={styles.timerText}>Privacy Policy</Text></Pressable>
           <Pressable style={styles.timerRow} onPress={() => { setShowSettings(false); setShowCredits(true); }} accessibilityRole="button">

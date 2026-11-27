@@ -102,12 +102,12 @@ describe('paywall', () => {
       assert.doesNotMatch(text, /\bAI\b|artificial intelligence/);
     }
     assert.match(app, /\{PAYWALL_TITLE\}/);
-    assert.match(app, /planButtonText\(plan\)/); // localized store price from expo-iap, never hard-coded
+    assert.match(app, /planButtonText\(plan\)/); // localized store price from RevenueCat, never hard-coded
   });
 });
 
 describe('Restore purchases outside the paywall', () => {
-  it('the header gear opens a settings sheet with Restore purchases wired to expo-iap restore()', () => {
+  it('the header gear opens a settings sheet with Restore purchases wired to RevenueCat restore()', () => {
     assert.match(app, /accessibilityLabel="Settings"/);
     assert.match(app, /onPress=\{\(\) => setShowSettings\(true\)\}/);
     const sheet = app.slice(app.indexOf('{/* Settings sheet'), app.indexOf('</Modal>', app.indexOf('{/* Settings sheet')));
@@ -115,8 +115,8 @@ describe('Restore purchases outside the paywall', () => {
     assert.match(sheet, />Restore purchases</);
     const fn = app.slice(app.indexOf('async function runRestore'), app.indexOf('function Paywall'));
     assert.match(fn, /await restore\(\)/);
-    assert.match(read('src/purchases.ts'), /from 'expo-iap'/);
-    assert.doesNotMatch(app + read('src/purchases.ts'), /RevenueCat|react-native-purchases/);
+    assert.match(read('src/purchases.ts'), /from 'react-native-purchases'/);
+    assert.doesNotMatch(app + read('src/purchases.ts'), /expo-iap/);
   });
 });
 

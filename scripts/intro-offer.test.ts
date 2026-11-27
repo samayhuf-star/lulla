@@ -34,37 +34,42 @@ describe('7-day free trial copy', () => {
     assert.equal(planButtonText({ label: 'Yearly', price: '$19.99', kind: 'yearly' }), 'Yearly · $19.99 / year');
   });
 
-  it('trial days are only set when StoreKit says the user is eligible', () => {
+  it('weekly and lifetime copy', () => {
+    assert.equal(planButtonText({ label: 'Weekly', price: '$2.99', kind: 'weekly', trialDays: null }), 'Weekly · $2.99 / week');
+    assert.equal(planButtonText({ label: 'Lifetime', price: '$39.99', kind: 'lifetime', trialDays: 7 }), 'Lifetime · $39.99 once');
+  });
+
+  it('trial days are only set when RevenueCat says the user is eligible', () => {
     const src = read('src/purchases.ts');
-    assert.match(src, /const trialDays = days && \(await introEligible\(product\)\) \? days : null;/);
-    assert.match(src, /isEligibleForIntroOfferIOS\(group\)/);
-    const fn = src.slice(src.indexOf('async function introEligible'), src.indexOf('export type BuyResult'));
-    assert.match(fn, /catch[\s\S]*return false/);
+    assert.match(src, /checkTrialOrIntroductoryPriceEligibility/);
+    assert.match(src, /INTRO_ELIGIBILITY_STATUS_ELIGIBLE/);
+    const fn = src.slice(src.indexOf('async function trialDaysFor'), src.indexOf('export async function loadPlans'));
+    assert.match(fn, /catch[\s\S]*return null/);
     assert.match(read('App.tsx'), /planButtonText\(plan\)/);
     assert.match(read('src/introOffer.ts'), /plan\.price/);
   });
 
-  it('StoreKit test prices: monthly 2.99, yearly 19.99, and no lifetime product', () => {
+  it('StoreKit test prices match the standard plans (weekly 2.99, monthly 5.99, yearly 29.99, lifetime 39.99)', () => {
     const sk = JSON.parse(read('storekit/Lulla.storekit'));
     const subs = sk.subscriptionGroups[0].subscriptions;
     const price = (id: string) => subs.find((x: { productID: string }) => x.productID === id).displayPrice;
-    assert.equal(price('lulla_premium_monthly'), '2.99');
-    assert.equal(price('lulla_premium_yearly'), '19.99');
-    assert.deepEqual(sk.products, []);
+    assert.equal(price('lulla_premium_weekly'), '2.99');
+    assert.equal(price('lulla_premium_monthly'), '5.99');
+    assert.equal(price('lulla_premium_yearly'), '29.99');
+    assert.equal(sk.products.find((x: { productID: string }) => x.productID === 'lulla_premium_lifetime').displayPrice, '39.99');
     assert.deepEqual(sk.nonRenewingSubscriptions, []);
   });
 
   it('no hard-coded prices in app code: the paywall shows the store price only', () => {
-    for (const f of ['App.tsx', 'src/purchases.ts', 'src/introOffer.ts', 'src/access.ts', 'src/config.ts']) {
+    for (const f of ['App.tsx', 'src/purchases.ts', 'src/introOffer.ts', 'src/access.ts', 'src/config.ts', 'src/Onboarding.tsx']) {
       assert.doesNotMatch(read(f), /\$\s?\d+\.\d\d|\d+[.,]99/, f);
-      assert.doesNotMatch(read(f), /lifetime/i, f);
     }
   });
 
-  it('StoreKit test config gives both products a 1-week free intro offer', () => {
+  it('StoreKit test config gives every subscription a 1-week free intro offer', () => {
     const sk = JSON.parse(read('storekit/Lulla.storekit'));
     const subs = sk.subscriptionGroups[0].subscriptions;
-    for (const id of ['lulla_premium_monthly', 'lulla_premium_yearly']) {
+    for (const id of ['lulla_premium_weekly', 'lulla_premium_monthly', 'lulla_premium_yearly']) {
       const s = subs.find((x: { productID: string }) => x.productID === id);
       assert.deepEqual({ mode: s.introductoryOffer.paymentMode, period: s.introductoryOffer.subscriptionPeriod }, { mode: 'free', period: 'P1W' }, id);
     }

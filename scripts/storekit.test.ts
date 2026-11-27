@@ -8,18 +8,20 @@ import { ALL_PRODUCT_IDS, PRODUCT_CATALOG } from '../src/config.ts';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const sk = JSON.parse(readFileSync(join(root, 'storekit/Lulla.storekit'), 'utf8'));
 const subs = sk.subscriptionGroups.flatMap((g: { subscriptions: { productID: string; recurringSubscriptionPeriod: string }[] }) => g.subscriptions);
+const oneTime = sk.products.map((p: { productID: string }) => p.productID);
 
 describe('StoreKit test config', () => {
   it('has exactly the IAP product ids used in code', () => {
-    assert.deepEqual(subs.map((s: { productID: string }) => s.productID).sort(), [...ALL_PRODUCT_IDS].sort());
+    assert.deepEqual([...subs.map((s: { productID: string }) => s.productID), ...oneTime].sort(), [...ALL_PRODUCT_IDS].sort());
   });
   it('periods match the catalog', () => {
-    const want: Record<string, string> = { year: 'P1Y', month: 'P1M' };
+    const want: Record<string, string> = { year: 'P1Y', month: 'P1M', week: 'P1W' };
     for (const p of PRODUCT_CATALOG) {
+      if (!p.period) { assert.ok(oneTime.includes(p.id)); continue; }
       assert.equal(subs.find((s: { productID: string }) => s.productID === p.id).recurringSubscriptionPeriod, want[p.period]);
     }
   });
-  it('both subscriptions share one group', () => {
+  it('all subscriptions share one group', () => {
     assert.equal(sk.subscriptionGroups.length, 1);
   });
 });
